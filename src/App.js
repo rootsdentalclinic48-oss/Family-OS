@@ -33,6 +33,28 @@ const inr = n => "₹" + Math.abs(Number(n) || 0).toLocaleString("en-IN");
 const pct = (a, b) => b ? Math.min(100, Math.round((a / b) * 100)) : 0;
 const today = () => new Date().toISOString().split("T")[0];
 
+// ─── QUICK ADD CONFIG (Future-proof — add new types here only) ────────────────
+const QUICK_ADD_TYPES = [
+  { id:"expense",   emoji:"💸", label:"Expense",       color:T.accent,  table:"transactions" },
+  { id:"task",      emoji:"✅", label:"Task",           color:T.green,   table:"tasks" },
+  { id:"grocery",   emoji:"🛒", label:"Shopping",       color:T.amber,   table:"grocery" },
+  { id:"note",      emoji:"📝", label:"Note",           color:T.blue,    table:"notes" },
+  { id:"event",     emoji:"📅", label:"Event",          color:T.pink,    table:"events" },
+  { id:"memory",    emoji:"🧡", label:"Memory",         color:T.teal,    table:"memories" },
+  { id:"reminder",  emoji:"⏰", label:"Reminder",       color:T.red,     table:"reminders" },
+  { id:"goal",      emoji:"🎯", label:"Goal",           color:"#A78BFA",  table:"goals" },
+];
+
+// Screen → default type mapping (smart context)
+const SCREEN_DEFAULT_TYPE = {
+  finance:   "expense",
+  household: "task",
+  planner:   "event",
+  home:      "expense",
+  ai:        "note",
+  profile:   "note",
+};
+
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const Styles = () => (
   <style>{`
@@ -42,7 +64,6 @@ const Styles = () => (
     body{font-family:'Outfit',sans-serif;background:${T.bg};color:${T.text};min-height:100vh;}
     ::-webkit-scrollbar{width:3px;height:3px;}
     ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
-
     .root{
       display:flex;flex-direction:column;min-height:100vh;
       max-width:430px;margin:0 auto;background:${T.bg};
@@ -104,6 +125,25 @@ const Styles = () => (
     .empty-text{font-size:14px;}
     .alert-bar{padding:11px 15px;border-radius:14px;display:flex;gap:10px;align-items:center;margin-bottom:8px;}
     .fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
+
+    /* ── FAB STYLES ── */
+    .fab{position:fixed;bottom:96px;right:calc(50% - 205px);width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow};display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;}
+    .fab:active{transform:scale(0.92);}
+    .fab.open{transform:rotate(45deg);background:linear-gradient(135deg,#F87171,#E55);}
+    .fab-menu{position:fixed;bottom:160px;right:calc(50% - 215px);z-index:149;display:flex;flex-direction:column;gap:10px;align-items:flex-end;animation:fabMenuIn .28s cubic-bezier(.16,1,.3,1);}
+    @keyframes fabMenuIn{from{opacity:0;transform:translateY(20px) scale(0.92);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .fab-item{display:flex;align-items:center;gap:10px;cursor:pointer;animation:fabItemIn .25s cubic-bezier(.16,1,.3,1) both;}
+    @keyframes fabItemIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:translateX(0);}}
+    .fab-item-btn{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(20px);transition:transform .15s;}
+    .fab-item-btn:active{transform:scale(0.9);}
+    .fab-item-label{background:rgba(14,14,26,0.92);border:1px solid ${T.border};border-radius:10px;padding:5px 11px;font-size:12px;font-weight:600;color:${T.text};backdrop-filter:blur(20px);white-space:nowrap;}
+    .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
+
+    /* ── QUICK ADD MODAL TYPE SWITCHER ── */
+    .type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+    .type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:13px;cursor:pointer;transition:all .18s;border:1px solid transparent;}
+    .type-btn.active{border-color:rgba(139,124,248,0.35);background:rgba(139,124,248,0.1);}
+    .type-btn:active{transform:scale(0.93);}
   `}</style>
 );
 
@@ -148,7 +188,249 @@ const Modal = ({ title, onClose, children }) => (
   </div>
 );
 
-// ─── AUTH SCREENS ─────────────────────────────────────────────────────────────
+// ─── GLOBAL QUICK ADD MODAL ───────────────────────────────────────────────────
+const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
+  const [type, setType] = useState(defaultType);
+  const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Shared form state — each type uses relevant fields
+  const [f, setF] = useState({
+    // expense / transaction
+    description:"", amount:"", category:"Groceries", added_by:"Mayank", date: today(),
+    // task
+    title:"", assignee:"Mayank", priority:"medium", taskCategory:"General", due_date: today(),
+    // grocery
+    groceryName:"", groceryCategory:"Vegetables", quantity:"1", unit:"kg", par_level:"1",
+    // note
+    noteText:"",
+    // event
+    eventTitle:"", eventDate: today(), eventType:"personal",
+    // memory
+    memoryTitle:"", memoryText:"",
+    // reminder
+    reminderText:"", reminderDate: today(),
+    // goal
+    goalTitle:"", targetAmount:"", savedAmount:"0",
+  });
+
+  const set = (k,v) => setF(x=>({...x,[k]:v}));
+
+  const expenseCats = ["Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Home Loan EMI","Other"];
+  const emojiMap = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Home Loan EMI":"🏠","Other":"💸"};
+
+  const save = async () => {
+    setLoading(true);
+    try {
+      if (type === "expense") {
+        if (!f.description || !f.amount) { setLoading(false); return; }
+        await supabase.from("transactions").insert([{ description:f.description, amount:-Math.abs(Number(f.amount)), category:f.category, added_by:f.added_by, date:f.date, emoji:emojiMap[f.category]||"💸", family_id:familyId }]);
+      } else if (type === "task") {
+        if (!f.title) { setLoading(false); return; }
+        await supabase.from("tasks").insert([{ title:f.title, assignee:f.assignee, priority:f.priority, category:f.taskCategory, due_date:f.due_date, done:false, family_id:familyId }]);
+      } else if (type === "grocery") {
+        if (!f.groceryName) { setLoading(false); return; }
+        await supabase.from("grocery").insert([{ name:f.groceryName, category:f.groceryCategory, quantity:Number(f.quantity), unit:f.unit, par_level:Number(f.par_level), family_id:familyId }]);
+      } else if (type === "note") {
+        if (!f.noteText) { setLoading(false); return; }
+        await supabase.from("notes").insert([{ content:f.noteText, added_by:f.added_by, date:today(), family_id:familyId }]);
+      } else if (type === "event") {
+        if (!f.eventTitle) { setLoading(false); return; }
+        await supabase.from("events").insert([{ title:f.eventTitle, event_date:f.eventDate, type:f.eventType, emoji:"📅", family_id:familyId }]);
+      } else if (type === "memory") {
+        if (!f.memoryTitle) { setLoading(false); return; }
+        await supabase.from("memories").insert([{ title:f.memoryTitle, content:f.memoryText, date:today(), family_id:familyId }]);
+      } else if (type === "reminder") {
+        if (!f.reminderText) { setLoading(false); return; }
+        await supabase.from("reminders").insert([{ content:f.reminderText, due_date:f.reminderDate, done:false, family_id:familyId }]);
+      } else if (type === "goal") {
+        if (!f.goalTitle || !f.targetAmount) { setLoading(false); return; }
+        await supabase.from("goals").insert([{ title:f.goalTitle, target_amount:Number(f.targetAmount), saved_amount:Number(f.savedAmount), emoji:"🎯", family_id:familyId }]);
+      }
+      setSaved(true);
+      setTimeout(() => onClose(), 700);
+    } catch(e) { console.error(e); }
+    setLoading(false);
+  };
+
+  const currentType = QUICK_ADD_TYPES.find(t=>t.id===type);
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"90vh",overflowY:"auto"}}>
+        <div className="modal-handle"/>
+        <div className="row" style={{marginBottom:14}}>
+          <span style={{fontSize:19,fontWeight:700}}>Quick Add</span>
+          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            <I n="x" s={15} c={T.muted}/>
+          </div>
+        </div>
+
+        {/* Type switcher */}
+        <div className="type-grid">
+          {QUICK_ADD_TYPES.map((t,i)=>(
+            <div key={t.id} className={`type-btn ${type===t.id?"active":""}`} onClick={()=>setType(t.id)}
+              style={{"--delay":`${i*0.03}s`}}>
+              <div style={{width:38,height:38,borderRadius:12,background:type===t.id?`${t.color}22`:"rgba(255,255,255,0.05)",border:`1px solid ${type===t.id?t.color+"44":T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"all .18s"}}>{t.emoji}</div>
+              <span style={{fontSize:9.5,color:type===t.id?t.color:T.muted,fontWeight:600}}>{t.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{height:1,background:T.border,marginBottom:14}}/>
+
+        {/* Dynamic form based on type */}
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+
+          {type==="expense" && <>
+            <input className="input" placeholder="What did you spend on?" value={f.description} onChange={e=>set("description",e.target.value)} autoFocus/>
+            <input className="input" type="number" placeholder="Amount (₹)" value={f.amount} onChange={e=>set("amount",e.target.value)}/>
+            <select className="input" value={f.category} onChange={e=>set("category",e.target.value)}>
+              {expenseCats.map(c=><option key={c}>{c}</option>)}
+            </select>
+            <div style={{display:"flex",gap:8}}>
+              {["Mayank","Simmi"].map(m=>(
+                <div key={m} onClick={()=>set("added_by",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.added_by===m?"rgba(139,124,248,0.3)":T.border}`,background:f.added_by===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.added_by===m?T.accent:T.muted,transition:"all .2s"}}>
+                  {m==="Mayank"?"👨‍⚕️":"👩"} {m}
+                </div>
+              ))}
+            </div>
+          </>}
+
+          {type==="task" && <>
+            <input className="input" placeholder="What needs to be done?" value={f.title} onChange={e=>set("title",e.target.value)} autoFocus/>
+            <div style={{display:"flex",gap:8}}>
+              {["Mayank","Simmi"].map(m=>(
+                <div key={m} onClick={()=>set("assignee",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.assignee===m?"rgba(139,124,248,0.3)":T.border}`,background:f.assignee===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.assignee===m?T.accent:T.muted,transition:"all .2s"}}>
+                  {m==="Mayank"?"👨‍⚕️":"👩"} {m}
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              {["high","medium","low"].map(p=>(
+                <div key={p} onClick={()=>set("priority",p)} style={{flex:1,padding:"8px",borderRadius:12,border:`1px solid ${f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.border}`,background:f.priority===p?(p==="high"?T.redSoft:p==="medium"?T.amberSoft:T.greenSoft):"transparent",textAlign:"center",cursor:"pointer",fontSize:12,fontWeight:600,color:f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.muted,textTransform:"capitalize",transition:"all .2s"}}>
+                  {p}
+                </div>
+              ))}
+            </div>
+            <input className="input" type="date" value={f.due_date} onChange={e=>set("due_date",e.target.value)}/>
+          </>}
+
+          {type==="grocery" && <>
+            <input className="input" placeholder="Item name (e.g. Amul Milk)" value={f.groceryName} onChange={e=>set("groceryName",e.target.value)} autoFocus/>
+            <div style={{display:"flex",gap:8}}>
+              <input className="input" type="number" placeholder="Qty" value={f.quantity} onChange={e=>set("quantity",e.target.value)} style={{flex:1}}/>
+              <select className="input" value={f.unit} onChange={e=>set("unit",e.target.value)} style={{flex:1}}>
+                {["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}
+              </select>
+            </div>
+          </>}
+
+          {type==="note" && <>
+            <textarea className="input" placeholder="Write your note..." value={f.noteText} onChange={e=>set("noteText",e.target.value)} rows={4} style={{resize:"none"}} autoFocus/>
+            <div style={{display:"flex",gap:8}}>
+              {["Mayank","Simmi"].map(m=>(
+                <div key={m} onClick={()=>set("added_by",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.added_by===m?"rgba(139,124,248,0.3)":T.border}`,background:f.added_by===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.added_by===m?T.accent:T.muted,transition:"all .2s"}}>
+                  {m==="Mayank"?"👨‍⚕️":"👩"} {m}
+                </div>
+              ))}
+            </div>
+          </>}
+
+          {type==="event" && <>
+            <input className="input" placeholder="Event name" value={f.eventTitle} onChange={e=>set("eventTitle",e.target.value)} autoFocus/>
+            <input className="input" type="date" value={f.eventDate} onChange={e=>set("eventDate",e.target.value)}/>
+            <select className="input" value={f.eventType} onChange={e=>set("eventType",e.target.value)}>
+              {["personal","medical","school","family","holiday","anniversary","birthday","other"].map(t=><option key={t} style={{textTransform:"capitalize"}}>{t}</option>)}
+            </select>
+          </>}
+
+          {type==="memory" && <>
+            <input className="input" placeholder="Memory title" value={f.memoryTitle} onChange={e=>set("memoryTitle",e.target.value)} autoFocus/>
+            <textarea className="input" placeholder="Describe the memory..." value={f.memoryText} onChange={e=>set("memoryText",e.target.value)} rows={3} style={{resize:"none"}}/>
+          </>}
+
+          {type==="reminder" && <>
+            <input className="input" placeholder="What to remind?" value={f.reminderText} onChange={e=>set("reminderText",e.target.value)} autoFocus/>
+            <input className="input" type="date" value={f.reminderDate} onChange={e=>set("reminderDate",e.target.value)}/>
+          </>}
+
+          {type==="goal" && <>
+            <input className="input" placeholder="Goal name (e.g. New Car)" value={f.goalTitle} onChange={e=>set("goalTitle",e.target.value)} autoFocus/>
+            <input className="input" type="number" placeholder="Target amount (₹)" value={f.targetAmount} onChange={e=>set("targetAmount",e.target.value)}/>
+            <input className="input" type="number" placeholder="Already saved (₹)" value={f.savedAmount} onChange={e=>set("savedAmount",e.target.value)}/>
+          </>}
+
+        </div>
+
+        <button className="btn-primary" onClick={save} disabled={loading||saved} style={{marginTop:14,background:saved?"rgba(52,211,153,0.3)":undefined,borderColor:saved?T.green:undefined}}>
+          {saved ? "✓ Saved!" : loading ? <div className="spinner"/> : `Save ${currentType?.label}`}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── GLOBAL FAB ───────────────────────────────────────────────────────────────
+const GlobalFAB = ({ screen, familyId }) => {
+  const [open, setOpen] = useState(false);
+  const [quickAddType, setQuickAddType] = useState(null);
+
+  const openQuickAdd = (typeId) => {
+    setOpen(false);
+    setQuickAddType(typeId);
+  };
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e) => { if (e.key === "Escape") { setOpen(false); setQuickAddType(null); } };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  return (
+    <>
+      {/* Overlay when FAB menu open */}
+      {open && <div className="fab-overlay" onClick={()=>setOpen(false)}/>}
+
+      {/* FAB menu items */}
+      {open && (
+        <div className="fab-menu" role="menu" aria-label="Quick add menu">
+          {QUICK_ADD_TYPES.map((t, i) => (
+            <div key={t.id} className="fab-item" style={{"--delay":`${i*0.04}s`,animationDelay:`${i*0.04}s`}}
+              role="menuitem" onClick={()=>openQuickAdd(t.id)} aria-label={`Add ${t.label}`}>
+              <span className="fab-item-label">{t.label}</span>
+              <div className="fab-item-btn" style={{background:`${t.color}18`,borderColor:`${t.color}30`}}>
+                {t.emoji}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* FAB button */}
+      <button
+        className={`fab ${open?"open":""}`}
+        onClick={()=>setOpen(o=>!o)}
+        aria-label={open?"Close quick add menu":"Open quick add menu"}
+        aria-expanded={open}
+      >
+        <I n="plus" s={22} c="white" w={2.5}/>
+      </button>
+
+      {/* Quick Add Modal */}
+      {quickAddType && (
+        <QuickAddModal
+          onClose={()=>setQuickAddType(null)}
+          familyId={familyId}
+          defaultType={quickAddType}
+        />
+      )}
+    </>
+  );
+};
+
+// ─── AUTH SCREEN ──────────────────────────────────────────────────────────────
 const AuthScreen = ({ onLogin }) => {
   const [mode, setMode] = useState("signin");
   const [form, setForm] = useState({ name:"", email:"", password:"" });
@@ -156,6 +438,7 @@ const AuthScreen = ({ onLogin }) => {
   const [error, setError] = useState("");
 
   const prefill = who => { const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" }; setForm({ name: who, email: emails[who], password: "FamilyOS2026!" }); };
+
   const handle = async () => {
     if (!form.email || !form.password) { setError("Please fill all fields"); return; }
     setLoading(true); setError("");
@@ -180,7 +463,6 @@ const AuthScreen = ({ onLogin }) => {
         <div style={{fontSize:30,fontWeight:900,letterSpacing:"-.5px"}}>Family OS</div>
         <div style={{fontSize:14,color:T.muted,marginTop:6}}>Gupta Family · Sector 48, Gurgaon</div>
       </div>
-
       <div style={{marginBottom:20}}>
         <div style={{fontSize:11,color:T.dim,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Quick Sign In</div>
         <div style={{display:"flex",gap:10}}>
@@ -192,15 +474,12 @@ const AuthScreen = ({ onLogin }) => {
           ))}
         </div>
       </div>
-
       <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
         {mode==="signup" && <input className="input" placeholder="Your name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/>}
         <input className="input" type="email" placeholder="Email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} autoCapitalize="none"/>
         <input className="input" type="password" placeholder="Password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&handle()}/>
       </div>
-
       {error && <div style={{padding:"10px 14px",background:T.redSoft,border:"1px solid rgba(248,113,113,0.2)",borderRadius:12,fontSize:13,color:T.red,marginBottom:12}}>{error}</div>}
-
       <button className="btn-primary" onClick={handle} disabled={loading}>
         {loading ? <div className="spinner"/> : mode==="signin" ? "Sign In →" : "Create Account →"}
       </button>
@@ -215,8 +494,6 @@ const AuthScreen = ({ onLogin }) => {
 };
 
 // ─── HOOKS ────────────────────────────────────────────────────────────────────
-
-// Generic realtime hook
 function useTable(table, familyId, extra = {}) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -272,8 +549,8 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
   const urgentBills = bills.filter(b => !b.paid && b.is_urgent);
   const totalSpent = txns.filter(t => Number(t.amount) < 0).reduce((a, t) => a + Math.abs(Number(t.amount)), 0);
   const totalIncome = txns.filter(t => Number(t.amount) > 0).reduce((a, t) => a + Number(t.amount), 0);
-
   const userName = "Mayank & Simmi";
+
   return (
     <div className="screen">
       <div style={{padding:"44px 16px 0"}}>
@@ -293,7 +570,6 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         </div>
       </div>
 
-      {/* Urgent alerts */}
       {(urgentBills.length > 0 || lowGrocery.length > 0) && (
         <div style={{padding:"14px 20px 0"}}>
           {urgentBills.length > 0 && (
@@ -319,7 +595,6 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         </div>
       )}
 
-      {/* Finance Card */}
       <div style={{padding:"16px 20px 0"}}>
         <div className="card card-tap" style={{padding:14,background:"linear-gradient(135deg,rgba(139,124,248,0.14),rgba(96,165,250,0.07))",borderColor:"rgba(139,124,248,0.22)",cursor:"pointer"}} onClick={()=>navigate("finance")}>
           <div className="row">
@@ -346,7 +621,6 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         </div>
       </div>
 
-      {/* Quick Actions */}
       <div style={{padding:"18px 20px 0"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
           {[
@@ -363,7 +637,6 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         </div>
       </div>
 
-      {/* Tasks */}
       <div style={{padding:"18px 20px 0"}}>
         <div className="row" style={{marginBottom:12}}>
           <span className="sec-title">Pending Tasks</span>
@@ -377,9 +650,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
                   <div style={{width:21,height:21,borderRadius:7,border:`2px solid ${t.priority==="high"?T.red:t.priority==="medium"?T.amber:T.green}`,flexShrink:0}}/>
                   <div style={{flex:1}}>
                     <div style={{fontSize:14,fontWeight:500}}>{t.title}</div>
-                    <div style={{fontSize:11.5,color:T.muted}}>
-                      {t.assignee==="Mayank"?"👨‍⚕️":"👩"} {t.assignee} · {t.due_date||"No date"}
-                    </div>
+                    <div style={{fontSize:11.5,color:T.muted}}>{t.assignee==="Mayank"?"👨‍⚕️":"👩"} {t.assignee} · {t.due_date||"No date"}</div>
                   </div>
                   <span className="tag" style={{background:t.priority==="high"?T.redSoft:t.priority==="medium"?T.amberSoft:T.greenSoft,color:t.priority==="high"?T.red:t.priority==="medium"?T.amber:T.green}}>{t.priority}</span>
                 </div>
@@ -388,14 +659,13 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         }
       </div>
 
-      {/* Recent Transactions */}
       <div style={{padding:"18px 20px 0"}}>
         <div className="row" style={{marginBottom:12}}>
           <span className="sec-title">Recent</span>
           <span className="sec-link" onClick={()=>navigate("finance")}>All</span>
         </div>
         {txns.length === 0
-          ? <div className="card" style={{padding:"20px",textAlign:"center",color:T.muted,fontSize:14}}>No transactions yet. Add your first expense!</div>
+          ? <div className="card" style={{padding:"20px",textAlign:"center",color:T.muted,fontSize:14}}>No transactions yet.</div>
           : <div className="card" style={{padding:"4px 16px"}}>
               {txns.slice(0,4).map(tx=>(
                 <div key={tx.id} className="list-row">
@@ -413,7 +683,6 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         }
       </div>
 
-      {/* Goals */}
       {goals.length > 0 && (
         <div style={{padding:"18px 20px 24px"}}>
           <div className="row" style={{marginBottom:12}}>
@@ -449,7 +718,6 @@ const FinanceScreen = ({ familyId }) => {
   const { rows: txns, loading, remove } = useTable("transactions", familyId, { order: "date", limit: 50 });
   const { rows: bills } = useTable("bills", familyId, { order: "due_date", asc: true });
   const { rows: budgets } = useTable("budgets", familyId);
-
   const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
   const spent = txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
 
@@ -461,16 +729,10 @@ const FinanceScreen = ({ familyId }) => {
           <div style={{padding:"6px 12px",background:T.greenSoft,border:"1px solid rgba(52,211,153,0.22)",borderRadius:100,fontSize:12,color:T.green,fontWeight:600}}>Live ●</div>
         </div>
       </div>
-
-      {/* Summary */}
       <div style={{padding:"14px 20px 0"}}>
         <div className="card" style={{padding:18,background:"linear-gradient(135deg,rgba(139,124,248,0.12),rgba(96,165,250,0.06))",borderColor:"rgba(139,124,248,0.2)",marginBottom:12}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-            {[
-              {l:"Income",v:inr(income),c:T.green},
-              {l:"Spent",v:inr(spent),c:T.red},
-              {l:"Net",v:inr(income-spent),c:T.accent},
-            ].map(s=>(
+            {[{l:"Income",v:inr(income),c:T.green},{l:"Spent",v:inr(spent),c:T.red},{l:"Net",v:inr(income-spent),c:T.accent}].map(s=>(
               <div key={s.l} style={{textAlign:"center"}}>
                 <div style={{fontSize:10,color:T.muted,fontWeight:600,textTransform:"uppercase"}}>{s.l}</div>
                 <div style={{fontSize:16,fontWeight:800,color:s.c,marginTop:3}} className="mono">{s.v}</div>
@@ -479,18 +741,16 @@ const FinanceScreen = ({ familyId }) => {
           </div>
         </div>
       </div>
-
       <div className="scroll-x" style={{padding:"0 20px",marginBottom:16}}>
         {["transactions","bills","budgets"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
-
       <div style={{padding:"0 20px"}}>
         {tab==="transactions" && (
           loading ? <div style={{textAlign:"center",padding:40,color:T.muted}}>Loading...</div>
           : txns.length===0
-            ? <div className="empty"><div className="empty-icon">💸</div><div className="empty-text">No transactions yet. Add your first expense!</div></div>
+            ? <div className="empty"><div className="empty-icon">💸</div><div className="empty-text">No transactions yet.</div></div>
             : <div className="card" style={{padding:"4px 16px"}}>
                 {txns.map(tx=>(
                   <div key={tx.id} className="list-row">
@@ -509,7 +769,6 @@ const FinanceScreen = ({ familyId }) => {
                 ))}
               </div>
         )}
-
         {tab==="bills" && (
           bills.length===0
             ? <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">No bills added yet</div></div>
@@ -529,10 +788,9 @@ const FinanceScreen = ({ familyId }) => {
                 ))}
               </div>
         )}
-
         {tab==="budgets" && (
           budgets.length===0
-            ? <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No budgets set yet. Run the SQL setup to seed default budgets.</div></div>
+            ? <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No budgets set yet.</div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {budgets.map(b=>{
                   const spent_ = txns.filter(t=>t.category===b.category&&Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
@@ -566,10 +824,9 @@ const FinanceScreen = ({ familyId }) => {
 const HouseholdScreen = ({ familyId }) => {
   const [tab, setTab] = useState("chores");
   const { rows: tasks, update: updTask, remove: removeTask } = useTable("tasks", familyId, { order: "created_at" });
-  const { rows: grocery, update: updGrocery } = useTable("grocery", familyId, { order: "name", asc: true });
+  const { rows: grocery } = useTable("grocery", familyId, { order: "name", asc: true });
   const { rows: docs } = useTable("documents", familyId);
   const { rows: maint } = useTable("maintenance", familyId);
-
   const toggleTask = (id, done) => updTask(id, { done, done_at: done ? new Date().toISOString() : null });
 
   return (
@@ -583,7 +840,6 @@ const HouseholdScreen = ({ familyId }) => {
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
-
       <div style={{padding:"0 20px"}}>
         {tab==="chores" && (
           <>
@@ -613,10 +869,9 @@ const HouseholdScreen = ({ familyId }) => {
                 </div>
               );
             })}
-            {tasks.length===0 && <div className="empty"><div className="empty-icon">✅</div><div className="empty-text">No tasks yet. Add your first task!</div></div>}
+            {tasks.length===0 && <div className="empty"><div className="empty-icon">✅</div><div className="empty-text">No tasks yet.</div></div>}
           </>
         )}
-
         {tab==="grocery" && (
           <>
             {grocery.filter(g=>Number(g.quantity)<=Number(g.par_level)).length>0 && (
@@ -625,7 +880,7 @@ const HouseholdScreen = ({ familyId }) => {
               </div>
             )}
             {grocery.length===0
-              ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">No grocery items. Add items to track inventory!</div></div>
+              ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">No grocery items.</div></div>
               : <div className="card" style={{padding:"4px 16px"}}>
                   {grocery.map(item=>(
                     <div key={item.id} className="list-row">
@@ -644,7 +899,6 @@ const HouseholdScreen = ({ familyId }) => {
             }
           </>
         )}
-
         {tab==="maintenance" && (
           maint.length===0
             ? <div className="empty"><div className="empty-icon">🔧</div><div className="empty-text">No maintenance schedules yet</div></div>
@@ -668,10 +922,9 @@ const HouseholdScreen = ({ familyId }) => {
                 ))}
               </div>
         )}
-
         {tab==="documents" && (
           docs.length===0
-            ? <div className="empty"><div className="empty-icon">📁</div><div className="empty-text">No documents yet. Add your family documents!</div></div>
+            ? <div className="empty"><div className="empty-icon">📁</div><div className="empty-text">No documents yet.</div></div>
             : <div className="card" style={{padding:"4px 16px"}}>
                 {docs.map(doc=>(
                   <div key={doc.id} className="list-row">
@@ -693,7 +946,7 @@ const HouseholdScreen = ({ familyId }) => {
 // ─── PLANNER SCREEN ───────────────────────────────────────────────────────────
 const PlannerScreen = ({ familyId }) => {
   const [tab, setTab] = useState("goals");
-  const { rows: goals, update: updGoal } = useTable("goals", familyId);
+  const { rows: goals } = useTable("goals", familyId);
   const { rows: events } = useTable("events", familyId, { order: "event_date", asc: true });
   const { rows: health } = useTable("health", familyId);
   const [sel, setSel] = useState(new Date().getDate());
@@ -706,11 +959,10 @@ const PlannerScreen = ({ familyId }) => {
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
-
       <div style={{padding:"0 20px"}}>
         {tab==="goals" && (
           goals.length===0
-            ? <div className="empty"><div className="empty-icon">🎯</div><div className="empty-text">No goals yet. Add your first family goal!</div></div>
+            ? <div className="empty"><div className="empty-icon">🎯</div><div className="empty-text">No goals yet.</div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 {goals.map(g=>{
                   const p=pct(g.saved_amount,g.target_amount);
@@ -738,7 +990,6 @@ const PlannerScreen = ({ familyId }) => {
                 })}
               </div>
         )}
-
         {tab==="calendar" && (
           <>
             <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",marginBottom:6}}>
@@ -774,10 +1025,9 @@ const PlannerScreen = ({ familyId }) => {
             }
           </>
         )}
-
         {tab==="health" && (
           health.length===0
-            ? <div className="empty"><div className="empty-icon">💊</div><div className="empty-text">No health records yet. Add family health data!</div></div>
+            ? <div className="empty"><div className="empty-icon">💊</div><div className="empty-text">No health records yet.</div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 {health.map(h=>(
                   <div key={h.id} className="card" style={{padding:"18px"}}>
@@ -821,50 +1071,13 @@ const AIScreen = ({ familyId }) => {
 
   const [msgs, setMsgs] = useState([{
     role:"assistant",
-    text:"Namaste! 🙏 I'm your Family OS AI — now connected to your live Supabase data.\n\nI can see your real transactions, tasks, grocery inventory, and goals. Ask me anything!",
+    text:"Namaste! 🙏 I'm your Family OS AI.\n\nAsk me about spending, tasks, grocery, bills or goals!",
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
-  const suggestions = [
-    "Summarise this month's spending",
-    "What tasks are pending?",
-    "Which groceries need restocking?",
-    "How are our goals progressing?",
-    "What bills are due soon?",
-    "Give financial advice",
-  ];
-
-  const buildContext = () => {
-    const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
-    const spent = txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
-    const pendingTasks = tasks.filter(t=>!t.done);
-    const lowStock = grocery.filter(g=>Number(g.quantity)<=Number(g.par_level));
-    const dueBills = bills.filter(b=>!b.paid);
-
-    return `You are the personal AI assistant for the Gupta family in Sector 48, Gurgaon.
-You have access to their LIVE real-time household data from Supabase.
-Respond warmly, concisely, using ₹ for currency and Indian English. Use emojis naturally.
-
-LIVE DATA:
-Income this period: ₹${income.toLocaleString("en-IN")}
-Spent this period: ₹${spent.toLocaleString("en-IN")}
-Net: ₹${(income-spent).toLocaleString("en-IN")}
-
-Recent transactions (${txns.length}):
-${txns.slice(0,8).map(t=>`- ${t.description}: ₹${Math.abs(Number(t.amount)).toLocaleString("en-IN")} (${t.category}, ${t.added_by})`).join("\n")}
-
-Pending tasks (${pendingTasks.length}):
-${pendingTasks.slice(0,6).map(t=>`- ${t.title} → ${t.assignee} [${t.priority}] due ${t.due_date||"no date"}`).join("\n")}
-
-Low grocery items (${lowStock.length}): ${lowStock.map(g=>g.name).join(", ")||"None"}
-
-Goals:
-${goals.map(g=>`- ${g.title}: ${Math.round((g.saved_amount/g.target_amount)*100)}% (₹${Number(g.saved_amount).toLocaleString("en-IN")} / ₹${Number(g.target_amount).toLocaleString("en-IN")})`).join("\n")||"No goals set"}
-
-Unpaid bills: ${dueBills.map(b=>`${b.name} ₹${Number(b.amount).toLocaleString("en-IN")} due ${b.due_date}`).join(", ")||"None"}`;
-  };
+  const suggestions = ["Summarise spending","Pending tasks?","Grocery restock?","Goals progress?","Bills due?"];
 
   const send = useCallback(async (text) => {
     const q = (text || input).trim();
@@ -873,15 +1086,6 @@ Unpaid bills: ${dueBills.map(b=>`${b.name} ₹${Number(b.amount).toLocaleString(
     setMsgs(m=>[...m,{role:"user",text:q}]);
     setLoading(true);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",
-        headers:{"Content-Type":"application/json","x-api-key":process.env.REACT_APP_ANTHROPIC_KEY||"","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-        body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:500,
-          messages:[{role:"user",content:`${buildContext()}\n\nQuestion: ${q}`}],
-        }),
-      });
       const ql=q.toLowerCase();
       const income=txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
       const spent=txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
@@ -889,13 +1093,13 @@ Unpaid bills: ${dueBills.map(b=>`${b.name} ₹${Number(b.amount).toLocaleString(
       const lowStock=grocery.filter(g=>Number(g.quantity)<=Number(g.par_level));
       const dueBills=bills.filter(b=>b.paid===false);
       let ans="";
-      if(ql.includes("hi")||ql.includes("hello")||ql.includes("namaste")){ans="Namaste Mayank and Simmi! Saved: Rs"+(income-spent)+" | Tasks: "+pending.length+" | Restock: "+lowStock.length+" | Bills: "+dueBills.length;}
-      else if(ql.includes("spend")||ql.includes("expense")||ql.includes("money")){ans="Income: Rs"+income+" | Spent: Rs"+spent+" | Saved: Rs"+(income-spent);}
-      else if(ql.includes("task")||ql.includes("pending")){ans=pending.length===0?"All tasks done":pending.length+" pending: "+pending.slice(0,5).map(t=>t.title).join(", ");}
-      else if(ql.includes("grocery")||ql.includes("restock")){ans=lowStock.length===0?"All stocked":"Restock: "+lowStock.map(g=>g.name).join(", ");}
-      else if(ql.includes("bill")||ql.includes("pay")){ans=dueBills.length===0?"No pending bills":"Unpaid: "+dueBills.map(b=>b.name).join(", ");}
-      else if(ql.includes("goal")){ans=goals.length===0?"No goals yet":goals.map(g=>g.title+": "+Math.round((g.saved_amount/g.target_amount)*100)+"%").join(", ");}
-      else{ans="Ask me about spending, tasks, grocery, bills or goals";}
+      if(ql.includes("hi")||ql.includes("hello")||ql.includes("namaste")){ans="Namaste Mayank and Simmi! 🙏\n\nSaved: ₹"+(income-spent).toLocaleString("en-IN")+" | Tasks: "+pending.length+" | Restock: "+lowStock.length+" | Bills: "+dueBills.length;}
+      else if(ql.includes("spend")||ql.includes("expense")||ql.includes("money")||ql.includes("financ")){ans="💰 This month:\n\nIncome: ₹"+income.toLocaleString("en-IN")+"\nSpent: ₹"+spent.toLocaleString("en-IN")+"\nSaved: ₹"+(income-spent).toLocaleString("en-IN");}
+      else if(ql.includes("task")||ql.includes("pending")||ql.includes("todo")){ans=pending.length===0?"🎉 All tasks done!":"📋 "+pending.length+" pending:\n\n"+pending.slice(0,5).map(t=>"• "+t.title+" ("+t.assignee+")").join("\n");}
+      else if(ql.includes("grocery")||ql.includes("restock")||ql.includes("shopping")){ans=lowStock.length===0?"🛒 All groceries stocked!":"🛒 Restock needed:\n\n"+lowStock.map(g=>"• "+g.name+" ("+g.quantity+" "+g.unit+")").join("\n");}
+      else if(ql.includes("bill")||ql.includes("pay")||ql.includes("due")){ans=dueBills.length===0?"✅ No pending bills!":"📋 Unpaid bills:\n\n"+dueBills.map(b=>"• "+b.name+": ₹"+Number(b.amount).toLocaleString("en-IN")+" due "+b.due_date).join("\n");}
+      else if(ql.includes("goal")){ans=goals.length===0?"🎯 No goals yet!":"🎯 Goals:\n\n"+goals.map(g=>"• "+g.title+": "+Math.round((g.saved_amount/g.target_amount)*100)+"%").join("\n");}
+      else{ans="I can help with:\n\n💰 Spending & finances\n✅ Tasks\n🛒 Grocery\n📋 Bills\n🎯 Goals\n\nJust ask!";}
       setMsgs(m=>[...m,{role:"assistant",text:ans}]);
     } catch(e) {
       setMsgs(m=>[...m,{role:"assistant",text:"Something went wrong. Try again."}]);
@@ -914,18 +1118,16 @@ Unpaid bills: ${dueBills.map(b=>`${b.name} ₹${Number(b.amount).toLocaleString(
             <div className="pt" style={{fontSize:22}}>AI Assistant</div>
             <div style={{display:"flex",gap:5,alignItems:"center",marginTop:2}}>
               <div style={{width:6,height:6,borderRadius:"50%",background:T.green}}/>
-              <span style={{fontSize:11.5,color:T.green,fontWeight:600}}>Live data · Claude + Supabase</span>
+              <span style={{fontSize:11.5,color:T.green,fontWeight:600}}>Live Supabase data</span>
             </div>
           </div>
         </div>
       </div>
-
       <div className="scroll-x" style={{padding:"12px 20px 0"}}>
         {suggestions.map(s=>(
           <div key={s} className="chip" onClick={()=>send(s)} style={{fontSize:12}}>{s}</div>
         ))}
       </div>
-
       <div style={{flex:1,overflowY:"auto",padding:"14px 20px",display:"flex",flexDirection:"column",gap:12,minHeight:0}}>
         {msgs.map((m,i)=>(
           <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
@@ -943,9 +1145,8 @@ Unpaid bills: ${dueBills.map(b=>`${b.name} ₹${Number(b.amount).toLocaleString(
         )}
         <div ref={bottomRef}/>
       </div>
-
       <div style={{padding:"10px 20px 16px",display:"flex",gap:9}}>
-        <input className="input" style={{flex:1}} placeholder="Ask about your live family data..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
+        <input className="input" style={{flex:1}} placeholder="Ask about your family data..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
         <div onClick={()=>send()} style={{width:46,height:46,borderRadius:13,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,boxShadow:`0 4px 16px ${T.accentGlow}`,transition:"all .2s"}}>
           <I n="send" s={17} c="white"/>
         </div>
@@ -975,7 +1176,6 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
           </div>
         </div>
       </div>
-
       <div style={{padding:"16px 20px 0"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9,marginBottom:22}}>
           {[
@@ -990,7 +1190,6 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
             </div>
           ))}
         </div>
-
         <div style={{marginBottom:20}}>
           <div style={{fontSize:11.5,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:10}}>Database</div>
           <div className="card" style={{padding:"14px 16px"}}>
@@ -1000,38 +1199,33 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
             <div style={{fontSize:12,color:T.green,marginTop:4}}>● Real-time sync active</div>
           </div>
         </div>
-
         <button onClick={onSignOut} style={{width:"100%",padding:"14px",background:T.redSoft,border:`1px solid rgba(248,113,113,0.25)`,borderRadius:14,color:T.red,fontSize:15,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"'Outfit',sans-serif"}}>
           <I n="logout" s={18} c={T.red}/> Sign Out
         </button>
-
         <div style={{textAlign:"center",padding:"20px 0",color:T.dim,fontSize:12}}>
-          Family OS v1.0 · Built for Mayank & Simmi 💙<br/>Powered by Claude + Supabase
+          Family OS v2.0 · Built for Mayank & Simmi 💙<br/>Powered by Claude + Supabase
         </div>
       </div>
     </div>
   );
 };
 
-// ─── ADD MODALS ───────────────────────────────────────────────────────────────
+// ─── LEGACY MODALS (kept for home screen quick actions) ───────────────────────
 const AddExpenseModal = ({ onClose, familyId }) => {
   const [f, setF] = useState({ description:"", amount:"", category:"Groceries", added_by:"Mayank", emoji:"💸", date: today() });
   const [loading, setLoading] = useState(false);
   const cats = ["Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Home Loan EMI","Other"];
   const emojiMap = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Home Loan EMI":"🏠","Other":"💸"};
-
   const save = async () => {
     if (!f.description || !f.amount) return;
     setLoading(true);
     await supabase.from("transactions").insert([{ ...f, amount: -Math.abs(Number(f.amount)), family_id: familyId, emoji: emojiMap[f.category]||"💸" }]);
-    setLoading(false);
-    onClose();
+    setLoading(false); onClose();
   };
-
   return (
     <Modal title="Add Expense" onClose={onClose}>
       <div style={{display:"flex",flexDirection:"column",gap:11}}>
-        <input className="input" placeholder="Description (e.g. BigBasket, Petrol)" value={f.description} onChange={e=>setF(x=>({...x,description:e.target.value}))}/>
+        <input className="input" placeholder="Description" value={f.description} onChange={e=>setF(x=>({...x,description:e.target.value}))}/>
         <input className="input" type="number" placeholder="Amount (₹)" value={f.amount} onChange={e=>setF(x=>({...x,amount:e.target.value}))}/>
         <select className="input" value={f.category} onChange={e=>setF(x=>({...x,category:e.target.value}))}>
           {cats.map(c=><option key={c}>{c}</option>)}
@@ -1044,9 +1238,7 @@ const AddExpenseModal = ({ onClose, familyId }) => {
             </div>
           ))}
         </div>
-        <button className="btn-primary" onClick={save} disabled={loading}>
-          {loading?<div className="spinner"/>:"Save Expense"}
-        </button>
+        <button className="btn-primary" onClick={save} disabled={loading}>{loading?<div className="spinner"/>:"Save Expense"}</button>
       </div>
     </Modal>
   );
@@ -1055,15 +1247,12 @@ const AddExpenseModal = ({ onClose, familyId }) => {
 const AddTaskModal = ({ onClose, familyId }) => {
   const [f, setF] = useState({ title:"", assignee:"Mayank", priority:"medium", category:"General", due_date: today() });
   const [loading, setLoading] = useState(false);
-
   const save = async () => {
     if (!f.title) return;
     setLoading(true);
     await supabase.from("tasks").insert([{ ...f, done: false, family_id: familyId }]);
-    setLoading(false);
-    onClose();
+    setLoading(false); onClose();
   };
-
   return (
     <Modal title="Add Task" onClose={onClose}>
       <div style={{display:"flex",flexDirection:"column",gap:11}}>
@@ -1080,15 +1269,11 @@ const AddTaskModal = ({ onClose, familyId }) => {
         </div>
         <div style={{display:"flex",gap:8}}>
           {["high","medium","low"].map(p=>(
-            <div key={p} onClick={()=>setF(x=>({...x,priority:p}))} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.border}`,background:f.priority===p?(p==="high"?T.redSoft:p==="medium"?T.amberSoft:T.greenSoft):"transparent",textAlign:"center",cursor:"pointer",fontSize:12,fontWeight:600,color:f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.muted,textTransform:"capitalize",transition:"all .2s"}}>
-              {p}
-            </div>
+            <div key={p} onClick={()=>setF(x=>({...x,priority:p}))} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.border}`,background:f.priority===p?(p==="high"?T.redSoft:p==="medium"?T.amberSoft:T.greenSoft):"transparent",textAlign:"center",cursor:"pointer",fontSize:12,fontWeight:600,color:f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.muted,textTransform:"capitalize",transition:"all .2s"}}>{p}</div>
           ))}
         </div>
         <input className="input" type="date" value={f.due_date} onChange={e=>setF(x=>({...x,due_date:e.target.value}))}/>
-        <button className="btn-primary" onClick={save} disabled={loading}>
-          {loading?<div className="spinner"/>:"Save Task"}
-        </button>
+        <button className="btn-primary" onClick={save} disabled={loading}>{loading?<div className="spinner"/>:"Save Task"}</button>
       </div>
     </Modal>
   );
@@ -1097,19 +1282,16 @@ const AddTaskModal = ({ onClose, familyId }) => {
 const AddGroceryModal = ({ onClose, familyId }) => {
   const [f, setF] = useState({ name:"", category:"Vegetables", quantity:"1", unit:"kg", par_level:"1", expiry_date:"" });
   const [loading, setLoading] = useState(false);
-
   const save = async () => {
     if (!f.name) return;
     setLoading(true);
     await supabase.from("grocery").insert([{ ...f, quantity: Number(f.quantity), par_level: Number(f.par_level), family_id: familyId }]);
-    setLoading(false);
-    onClose();
+    setLoading(false); onClose();
   };
-
   return (
     <Modal title="Add Grocery Item" onClose={onClose}>
       <div style={{display:"flex",flexDirection:"column",gap:11}}>
-        <input className="input" placeholder="Item name (e.g. Amul Milk)" value={f.name} onChange={e=>setF(x=>({...x,name:e.target.value}))}/>
+        <input className="input" placeholder="Item name" value={f.name} onChange={e=>setF(x=>({...x,name:e.target.value}))}/>
         <select className="input" value={f.category} onChange={e=>setF(x=>({...x,category:e.target.value}))}>
           {["Vegetables","Dairy","Staples","Pantry","Bakery","Beverages","Snacks","Cleaning"].map(c=><option key={c}>{c}</option>)}
         </select>
@@ -1119,11 +1301,9 @@ const AddGroceryModal = ({ onClose, familyId }) => {
             {["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}
           </select>
         </div>
-        <input className="input" type="number" placeholder="Reorder level (par)" value={f.par_level} onChange={e=>setF(x=>({...x,par_level:e.target.value}))}/>
-        <input className="input" type="date" placeholder="Expiry date" value={f.expiry_date} onChange={e=>setF(x=>({...x,expiry_date:e.target.value}))}/>
-        <button className="btn-primary" onClick={save} disabled={loading}>
-          {loading?<div className="spinner"/>:"Add Item"}
-        </button>
+        <input className="input" type="number" placeholder="Reorder level" value={f.par_level} onChange={e=>setF(x=>({...x,par_level:e.target.value}))}/>
+        <input className="input" type="date" value={f.expiry_date} onChange={e=>setF(x=>({...x,expiry_date:e.target.value}))}/>
+        <button className="btn-primary" onClick={save} disabled={loading}>{loading?<div className="spinner"/>:"Add Item"}</button>
       </div>
     </Modal>
   );
@@ -1155,8 +1335,7 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [modal, setModal] = useState(null);
 
-  // Derive family_id from user email (simple approach — both use same family)
-  const FAMILY_ID = "gupta-family-001"; // Fixed for Gupta family
+  const FAMILY_ID = "gupta-family-001";
 
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
@@ -1182,12 +1361,12 @@ export default function App() {
   if (!user) return <div className="root"><Styles/><AuthScreen onLogin={setUser}/></div>;
 
   const screens = {
-    home: <HomeScreen navigate={setScreen} openModal={setModal} familyId={FAMILY_ID} user={user}/>,
-    finance: <FinanceScreen familyId={FAMILY_ID}/>,
+    home:      <HomeScreen navigate={setScreen} openModal={setModal} familyId={FAMILY_ID} user={user}/>,
+    finance:   <FinanceScreen familyId={FAMILY_ID}/>,
     household: <HouseholdScreen familyId={FAMILY_ID}/>,
-    planner: <PlannerScreen familyId={FAMILY_ID}/>,
-    ai: <AIScreen familyId={FAMILY_ID}/>,
-    profile: <ProfileScreen user={user} onSignOut={signOut} familyId={FAMILY_ID}/>,
+    planner:   <PlannerScreen familyId={FAMILY_ID}/>,
+    ai:        <AIScreen familyId={FAMILY_ID}/>,
+    profile:   <ProfileScreen user={user} onSignOut={signOut} familyId={FAMILY_ID}/>,
   };
 
   return (
@@ -1195,6 +1374,11 @@ export default function App() {
       <Styles/>
       {screens[screen]||screens.home}
       <Nav active={screen} go={setScreen}/>
+
+      {/* ── GLOBAL FAB — available on every screen ── */}
+      <GlobalFAB screen={screen} familyId={FAMILY_ID}/>
+
+      {/* Legacy modals from home screen quick actions */}
       {modal==="expense" && <AddExpenseModal onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="task"    && <AddTaskModal    onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="grocery" && <AddGroceryModal onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
