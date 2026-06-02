@@ -63,20 +63,20 @@ const Styles = () => (
     .input::placeholder{color:${T.dim};}
     select.input{appearance:none;}
     .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:10px 8px 26px;background:rgba(8,8,16,0.9);backdrop-filter:blur(40px);border-top:1px solid ${T.border};display:flex;justify-content:space-around;align-items:center;z-index:100;}
-    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 10px;border-radius:14px;transition:all .2s;min-width:52px;}
+    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 6px;border-radius:14px;transition:all .2s;min-width:44px;}
     .nav-btn.on{background:rgba(139,124,248,0.12);}
     .nav-btn:active{transform:scale(0.88);}
-    .nav-lbl{font-size:9.5px;font-weight:600;letter-spacing:.03em;}
+    .nav-lbl{font-size:9px;font-weight:600;letter-spacing:.01em;}
     .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
     .modal{width:100%;max-width:430px;background:#0E0E1A;border:1px solid ${T.border};border-bottom:none;border-radius:26px 26px 0 0;padding:22px 22px 40px;animation:slideUp .32s cubic-bezier(.16,1,.3,1);}
     @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
     .modal-handle{width:36px;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;margin:0 auto 18px;}
     .ph{padding:52px 20px 0;}
-    .pt{font-size:26px;font-weight:800;letter-spacing:-.4px;}
+    .pt{font-size:18px;font-weight:800;letter-spacing:-.4px;}
     .ps{font-size:13px;color:${T.muted};margin-top:3px;}
     .row{display:flex;justify-content:space-between;align-items:center;}
-    .sec-title{font-size:16px;font-weight:700;}
+    .sec-title{font-size:13px;font-weight:700;}
     .sec-link{font-size:12.5px;color:${T.accent};font-weight:600;cursor:pointer;}
     .chip{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:100px;background:rgba(255,255,255,0.055);border:1px solid ${T.border};font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
     .chip.on{background:rgba(139,124,248,0.14);border-color:rgba(139,124,248,0.38);color:${T.accent};}
@@ -155,7 +155,7 @@ const AuthScreen = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const prefill = who => setForm({ name: who, email: `${who.toLowerCase()}@guptafamily.com`, password: "FamilyOS2026!" });
+  const prefill = who => { const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" }; setForm({ name: who, email: emails[who], password: "FamilyOS2026!" }); };
 
   const handle = async () => {
     if (!form.email || !form.password) { setError("Please fill all fields"); return; }
@@ -277,11 +277,11 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
 
   return (
     <div className="screen">
-      <div style={{padding:"52px 20px 0"}}>
+      <div style={{padding:"44px 16px 0"}}>
         <div className="row">
           <div>
             <div style={{fontSize:12,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em"}}>Good morning ☀️</div>
-            <div style={{fontSize:26,fontWeight:900,letterSpacing:"-.4px",marginTop:2}}>{userName} & Family</div>
+            <div style={{fontSize:20,fontWeight:900,letterSpacing:"-.4px",marginTop:2}}>{userName}</div>
             <div style={{fontSize:12,color:T.dim,marginTop:2}}>📍 Sector 48, Gurgaon</div>
           </div>
           <div style={{display:"flex",gap:8}}>
@@ -322,11 +322,11 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
 
       {/* Finance Card */}
       <div style={{padding:"16px 20px 0"}}>
-        <div className="card card-tap" style={{padding:20,background:"linear-gradient(135deg,rgba(139,124,248,0.14),rgba(96,165,250,0.07))",borderColor:"rgba(139,124,248,0.22)",cursor:"pointer"}} onClick={()=>navigate("finance")}>
+        <div className="card card-tap" style={{padding:14,background:"linear-gradient(135deg,rgba(139,124,248,0.14),rgba(96,165,250,0.07))",borderColor:"rgba(139,124,248,0.22)",cursor:"pointer"}} onClick={()=>navigate("finance")}>
           <div className="row">
             <div>
               <div style={{fontSize:11,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:".05em"}}>This Month</div>
-              <div style={{fontSize:34,fontWeight:900,letterSpacing:"-1px",marginTop:2}} className="mono">{inr(totalIncome - totalSpent)}</div>
+              <div style={{fontSize:22,fontWeight:900,letterSpacing:"-1px",marginTop:2}} className="mono">{inr(totalIncome - totalSpent)}</div>
             </div>
             <div style={{padding:"6px 11px",background:T.greenSoft,border:"1px solid rgba(52,211,153,0.22)",borderRadius:100,fontSize:12,color:T.green,fontWeight:600}}>
               ↑ {inr(totalIncome - totalSpent)} saved
@@ -357,8 +357,8 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
             {emoji:"🤖",label:"Ask AI",color:T.pink,action:()=>navigate("ai")},
           ].map(q=>(
             <div key={q.label} onClick={q.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,cursor:"pointer"}}>
-              <div style={{width:52,height:52,borderRadius:16,background:`${q.color}14`,border:`1px solid ${q.color}28`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,transition:"all .2s"}}>{q.emoji}</div>
-              <span style={{fontSize:11,color:T.muted,fontWeight:600}}>{q.label}</span>
+              <div style={{width:44,height:44,borderRadius:13,background:`${q.color}14`,border:`1px solid ${q.color}28`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,transition:"all .2s"}}>{q.emoji}</div>
+              <span style={{fontSize:10,color:T.muted,fontWeight:600}}>{q.label}</span>
             </div>
           ))}
         </div>
@@ -876,7 +876,7 @@ Unpaid bills: ${dueBills.map(b=>`${b.name} ₹${Number(b.amount).toLocaleString(
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json","x-api-key":process.env.REACT_APP_ANTHROPIC_KEY||"","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
         body:JSON.stringify({
           model:"claude-sonnet-4-20250514",
           max_tokens:500,
