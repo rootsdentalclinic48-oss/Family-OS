@@ -294,59 +294,195 @@ const SCREEN_DEFAULT_TYPE = {
 const Styles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    /* ── RESET & BASE ── */
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    html{-webkit-tap-highlight-color:transparent;}
-    body{font-family:'Outfit',sans-serif;background:${T.bg};color:${T.text};min-height:100vh;}
-    ::-webkit-scrollbar{width:3px;height:3px;}
-    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
-    .root{
-      display:flex;flex-direction:column;min-height:100vh;
-      max-width:430px;margin:0 auto;background:${T.bg};
-      background-image:
-        radial-gradient(ellipse 700px 500px at 30% -150px,rgba(139,124,248,0.09) 0%,transparent 65%),
-        radial-gradient(ellipse 400px 300px at 90% 40%,rgba(96,165,250,0.05) 0%,transparent 60%);
+    html{
+      -webkit-tap-highlight-color:transparent;
+      -webkit-text-size-adjust:100%;
+      touch-action:manipulation;
     }
-    .screen{flex:1;padding-bottom:88px;animation:fadeUp .3s cubic-bezier(.16,1,.3,1);}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-    .card{background:${T.card};border:1px solid ${T.border};border-radius:20px;backdrop-filter:blur(20px);transition:all .2s;}
-    .card-tap:active{transform:scale(0.975);background:${T.cardHover};}
-    .btn{border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
-    .btn-primary{background:${T.accent};color:#fff;border-radius:14px;padding:14px 22px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;width:100%;}
-    .btn-primary:active{transform:scale(0.97);}
-    .btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
-    .input{width:100%;background:rgba(255,255,255,0.055);border:1px solid ${T.border};border-radius:13px;padding:13px 15px;color:${T.text};font-family:'Outfit',sans-serif;font-size:15px;outline:none;transition:all .2s;}
-    .input:focus{border-color:${T.accent};background:rgba(139,124,248,0.05);}
+    body{
+      font-family:'Outfit',sans-serif;
+      background:${T.bg};
+      color:${T.text};
+      min-height:100vh;
+      overscroll-behavior:none;
+      -webkit-font-smoothing:antialiased;
+    }
+    ::-webkit-scrollbar{display:none;}
+    *{scrollbar-width:none;}
+
+    /* ── ROOT CONTAINER ── */
+    .root{
+      display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;
+      max-width:430px;margin:0 auto;
+      background:${T.bg};
+      background-image:
+        radial-gradient(ellipse 600px 400px at 20% -100px,rgba(139,124,248,0.08) 0%,transparent 60%),
+        radial-gradient(ellipse 300px 300px at 85% 30%,rgba(96,165,250,0.04) 0%,transparent 55%);
+      position:relative;
+    }
+
+    /* ── SCREENS ── */
+    .screen{
+      flex:1;
+      padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      animation:fadeUp .25s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+    /* ── CARDS ── */
+    .card{
+      background:${T.card};
+      border:1px solid ${T.border};
+      border-radius:18px;
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      transition:all .18s;
+    }
+    .card-tap{cursor:pointer;}
+    .card-tap:active{transform:scale(0.982);background:${T.cardHover};}
+
+    /* ── BUTTONS ── */
+    .btn{border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-primary{
+      background:${T.accent};color:#fff;border-radius:14px;
+      padding:0 22px;height:52px;font-size:15px;font-weight:700;
+      box-shadow:0 4px 20px ${T.accentGlow};
+      border:none;cursor:pointer;font-family:'Outfit',sans-serif;
+      transition:all .18s;width:100%;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+      min-height:52px;
+    }
+    .btn-primary:active{transform:scale(0.97);opacity:0.9;}
+    .btn-primary:disabled{opacity:0.45;cursor:not-allowed;}
+
+    /* ── INPUTS ── */
+    .input{
+      width:100%;
+      background:rgba(255,255,255,0.058);
+      border:1px solid ${T.border};
+      border-radius:14px;
+      padding:0 16px;
+      height:52px;
+      color:${T.text};
+      font-family:'Outfit',sans-serif;
+      font-size:16px;
+      outline:none;
+      transition:all .18s;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .input:focus{border-color:${T.accent};background:rgba(139,124,248,0.06);}
     .input::placeholder{color:${T.dim};}
-    select.input{appearance:none;}
-    .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:10px 8px 26px;background:rgba(8,8,16,0.9);backdrop-filter:blur(40px);border-top:1px solid ${T.border};display:flex;justify-content:space-around;align-items:center;z-index:100;}
-    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 6px;border-radius:14px;transition:all .2s;min-width:44px;}
+    textarea.input{height:auto;padding:14px 16px;resize:none;line-height:1.5;}
+    select.input{appearance:none;-webkit-appearance:none;}
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav{
+      position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+      width:100%;max-width:430px;
+      padding:10px 4px calc(10px + env(safe-area-inset-bottom, 0px));
+      background:rgba(8,8,16,0.92);
+      backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+      border-top:1px solid ${T.border};
+      display:flex;justify-content:space-around;align-items:center;
+      z-index:100;
+    }
+    .nav-btn{
+      display:flex;flex-direction:column;align-items:center;gap:3px;
+      cursor:pointer;
+      padding:8px 12px;
+      border-radius:14px;
+      transition:all .18s;
+      flex:1;
+      min-height:44px;
+      justify-content:center;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+    }
     .nav-btn.on{background:rgba(139,124,248,0.12);}
     .nav-btn:active{transform:scale(0.88);}
-    .nav-lbl{font-size:9px;font-weight:600;letter-spacing:.01em;}
-    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
+    .nav-lbl{font-size:10px;font-weight:600;letter-spacing:.01em;margin-top:1px;}
+
+    /* ── MODALS ── */
+    .modal-bg{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,0.7);
+      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+      z-index:200;
+      display:flex;align-items:flex-end;justify-content:center;
+      animation:fadeIn .2s ease;
+    }
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-    .modal{width:100%;max-width:430px;background:#0E0E1A;border:1px solid ${T.border};border-bottom:none;border-radius:26px 26px 0 0;padding:22px 22px 40px;animation:slideUp .32s cubic-bezier(.16,1,.3,1);}
+    .modal{
+      width:100%;max-width:430px;
+      background:#0D0D1C;
+      border:1px solid ${T.border};
+      border-bottom:none;
+      border-radius:24px 24px 0 0;
+      padding:20px 20px calc(32px + env(safe-area-inset-bottom, 0px));
+      animation:slideUp .3s cubic-bezier(.16,1,.3,1);
+      max-height:92dvh;
+      overflow-y:auto;
+    }
     @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-    .modal-handle{width:36px;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;margin:0 auto 18px;}
-    .ph{padding:52px 20px 0;}
-    .pt{font-size:18px;font-weight:800;letter-spacing:-.4px;}
-    .ps{font-size:13px;color:${T.muted};margin-top:3px;}
+    .modal-handle{width:40px;height:4px;background:rgba(255,255,255,0.14);border-radius:2px;margin:0 auto 18px;}
+
+    /* ── PAGE HEADERS ── */
+    .ph{padding:calc(52px + env(safe-area-inset-top, 0px)) 18px 0;}
+    .pt{font-size:22px;font-weight:800;letter-spacing:-.3px;}
+    .ps{font-size:12.5px;color:${T.muted};margin-top:3px;}
+
+    /* ── LAYOUT HELPERS ── */
     .row{display:flex;justify-content:space-between;align-items:center;}
-    .sec-title{font-size:13px;font-weight:700;}
-    .sec-link{font-size:12.5px;color:${T.accent};font-weight:600;cursor:pointer;}
-    .chip{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:100px;background:rgba(255,255,255,0.055);border:1px solid ${T.border};font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
-    .chip.on{background:rgba(139,124,248,0.14);border-color:rgba(139,124,248,0.38);color:${T.accent};}
+    .sec-title{font-size:14px;font-weight:700;}
+    .sec-link{font-size:12.5px;color:${T.accent};font-weight:600;cursor:pointer;padding:4px 0;min-height:44px;display:flex;align-items:center;}
+
+    /* ── CHIPS ── */
+    .chip{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:8px 14px;border-radius:100px;
+      background:rgba(255,255,255,0.058);border:1px solid ${T.border};
+      font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;
+      white-space:nowrap;
+      min-height:36px;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .chip.on{background:rgba(139,124,248,0.16);border-color:rgba(139,124,248,0.4);color:${T.accent};}
     .chip:active{transform:scale(0.94);}
-    .scroll-x{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+    .scroll-x{
+      display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
     .scroll-x::-webkit-scrollbar{display:none;}
-    .list-row{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid ${T.border};cursor:pointer;transition:opacity .15s;}
+
+    /* ── LIST ROWS ── */
+    .list-row{
+      display:flex;align-items:center;gap:13px;
+      padding:14px 0;
+      border-bottom:1px solid ${T.border};
+      cursor:pointer;transition:opacity .15s;
+      min-height:56px;
+    }
     .list-row:last-child{border-bottom:none;}
     .list-row:active{opacity:.6;}
+
+    /* ── PROGRESS ── */
     .progress{height:5px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden;}
-    .progress-fill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(.16,1,.3,1);}
-    .tag{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;}
+    .progress-fill{height:100%;border-radius:100px;transition:width 1s cubic-bezier(.16,1,.3,1);}
+
+    /* ── TAGS ── */
+    .tag{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600;}
     .mono{font-family:'JetBrains Mono',monospace;}
     .divider{height:1px;background:${T.border};margin:14px 0;}
+
+    /* ── ANIMATIONS ── */
     @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
     .float{animation:float 3.5s ease-in-out infinite;}
     .ai-dot{width:7px;height:7px;background:${T.accent};border-radius:50%;animation:pulse 1.4s ease-in-out infinite;}
@@ -354,47 +490,165 @@ const Styles = () => (
     .ai-dot:nth-child(3){animation-delay:.36s;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(0.75);}}
     @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-    .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
-    .empty{text-align:center;padding:40px 20px;color:${T.muted};}
-    .empty-icon{font-size:36px;margin-bottom:10px;}
-    .empty-text{font-size:14px;}
-    .alert-bar{padding:11px 15px;border-radius:14px;display:flex;gap:10px;align-items:center;margin-bottom:8px;}
+    .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+
+    /* ── EMPTY STATES ── */
+    .empty{text-align:center;padding:48px 20px;color:${T.muted};}
+    .empty-icon{font-size:40px;margin-bottom:12px;}
+    .empty-text{font-size:14px;line-height:1.5;}
+    .alert-bar{padding:12px 15px;border-radius:14px;display:flex;gap:10px;align-items:center;margin-bottom:8px;}
     .fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
-    /* ── TOAST NOTIFICATIONS ── */
-    .toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;width:calc(100% - 32px);max-width:398px;pointer-events:none;}
-    .toast{background:#14141F;border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:12px 15px;display:flex;gap:11px;align-items:flex-start;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:toastIn .35s cubic-bezier(.16,1,.3,1);}
-    @keyframes toastIn{from{opacity:0;transform:translateY(-16px) scale(0.95);}to{opacity:1;transform:translateY(0) scale(1);}}
-    .toast.out{animation:toastOut .3s cubic-bezier(.4,0,1,1) forwards;}
-    @keyframes toastOut{to{opacity:0;transform:translateY(-12px) scale(0.95);}}
-    .toast-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
-    .toast-title{font-size:13px;font-weight:700;color:#EEECf8;line-height:1.3;}
-    .toast-body{font-size:12px;color:rgba(238,236,248,0.55);margin-top:2px;line-height:1.4;}
-    .notif-badge{position:absolute;top:-4px;right:-4px;background:#F87171;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #080810;}
-    /* ── NOTIFICATION CENTER ── */
-    .notif-item{display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.055);cursor:pointer;transition:background .15s;position:relative;}
-    .notif-item:last-child{border-bottom:none;}
-    .notif-item:active{background:rgba(255,255,255,0.03);}
-    .notif-item.unread::before{content:'';position:absolute;left:6px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#8B7CF8;}
 
-
-    /* ── FAB STYLES ── */
-    .fab{position:fixed;bottom:96px;right:calc(50% - 205px);width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow};display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;}
-    .fab:active{transform:scale(0.92);}
+    /* ── FAB ── */
+    .fab{
+      position:fixed;
+      bottom:calc(80px + env(safe-area-inset-bottom, 0px));
+      right:max(16px, calc(50vw - 199px));
+      width:54px;height:54px;border-radius:17px;
+      background:linear-gradient(135deg,${T.accent},#6D5CE8);
+      box-shadow:0 4px 24px ${T.accentGlow},0 2px 8px rgba(0,0,0,0.4);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;z-index:150;
+      transition:all .25s cubic-bezier(.16,1,.3,1);
+      border:none;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+    }
+    .fab:active{transform:scale(0.91);}
     .fab.open{transform:rotate(45deg);background:linear-gradient(135deg,#F87171,#E55);}
-    .fab-menu{position:fixed;bottom:160px;right:calc(50% - 215px);z-index:149;display:flex;flex-direction:column;gap:10px;align-items:flex-end;animation:fabMenuIn .28s cubic-bezier(.16,1,.3,1);}
-    @keyframes fabMenuIn{from{opacity:0;transform:translateY(20px) scale(0.92);}to{opacity:1;transform:translateY(0) scale(1);}}
-    .fab-item{display:flex;align-items:center;gap:10px;cursor:pointer;animation:fabItemIn .25s cubic-bezier(.16,1,.3,1) both;}
-    @keyframes fabItemIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:translateX(0);}}
-    .fab-item-btn{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(20px);transition:transform .15s;}
-    .fab-item-btn:active{transform:scale(0.9);}
-    .fab-item-label{background:rgba(14,14,26,0.92);border:1px solid ${T.border};border-radius:10px;padding:5px 11px;font-size:12px;font-weight:600;color:${T.text};backdrop-filter:blur(20px);white-space:nowrap;}
-    .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
+    .fab-menu{
+      position:fixed;
+      bottom:calc(148px + env(safe-area-inset-bottom, 0px));
+      right:max(12px, calc(50vw - 210px));
+      z-index:149;
+      display:flex;flex-direction:column;gap:10px;align-items:flex-end;
+      animation:fabMenuIn .25s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes fabMenuIn{from{opacity:0;transform:translateY(16px) scale(0.94);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .fab-item{display:flex;align-items:center;gap:10px;cursor:pointer;animation:fabItemIn .22s cubic-bezier(.16,1,.3,1) both;}
+    @keyframes fabItemIn{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
+    .fab-item-btn{
+      width:46px;height:46px;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;font-size:21px;
+      border:1px solid rgba(255,255,255,0.1);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      transition:transform .15s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .fab-item-btn:active{transform:scale(0.88);}
+    .fab-item-label{
+      background:rgba(12,12,22,0.94);border:1px solid ${T.border};
+      border-radius:10px;padding:6px 12px;
+      font-size:12.5px;font-weight:600;color:${T.text};
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      white-space:nowrap;
+    }
+    .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
 
-    /* ── QUICK ADD MODAL TYPE SWITCHER ── */
+    /* ── QUICK ADD TYPE GRID ── */
     .type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
-    .type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:13px;cursor:pointer;transition:all .18s;border:1px solid transparent;}
+    .type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;cursor:pointer;transition:all .18s;border:1px solid transparent;min-height:68px;justify-content:center;-webkit-tap-highlight-color:transparent;}
     .type-btn.active{border-color:rgba(139,124,248,0.35);background:rgba(139,124,248,0.1);}
     .type-btn:active{transform:scale(0.93);}
+
+    /* ── TOAST NOTIFICATIONS ── */
+    .toast-container{
+      position:fixed;
+      top:calc(16px + env(safe-area-inset-top, 0px));
+      left:50%;transform:translateX(-50%);
+      z-index:500;display:flex;flex-direction:column;gap:8px;
+      width:calc(100% - 28px);max-width:402px;
+      pointer-events:none;
+    }
+    .toast{
+      background:#13131F;
+      border:1px solid rgba(255,255,255,0.11);
+      border-radius:16px;padding:12px 14px;
+      display:flex;gap:11px;align-items:flex-start;
+      pointer-events:all;
+      box-shadow:0 8px 32px rgba(0,0,0,0.55),0 2px 8px rgba(0,0,0,0.3);
+      animation:toastIn .3s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(0.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .toast.out{animation:toastOut .28s cubic-bezier(.4,0,1,1) forwards;}
+    @keyframes toastOut{to{opacity:0;transform:translateY(-10px) scale(0.96);}}
+    .toast-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+    .toast-title{font-size:13px;font-weight:700;color:#EEECf8;line-height:1.3;}
+    .toast-body{font-size:11.5px;color:rgba(238,236,248,0.5);margin-top:2px;line-height:1.4;}
+
+    /* ── NOTIFICATION BADGE ── */
+    .notif-badge{
+      position:absolute;top:-5px;right:-5px;
+      background:#F87171;color:white;border-radius:100px;
+      font-size:9px;font-weight:800;min-width:17px;height:17px;
+      display:flex;align-items:center;justify-content:center;
+      padding:0 4px;border:2px solid #080810;
+    }
+    .notif-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.055);cursor:pointer;transition:background .15s;position:relative;min-height:60px;align-items:center;}
+    .notif-item:last-child{border-bottom:none;}
+    .notif-item:active{background:rgba(255,255,255,0.03);}
+    .notif-item.unread::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#8B7CF8;}
+
+    /* ── PERSON SELECTOR (quick toggle) ── */
+    .person-sel{display:flex;gap:8px;}
+    .person-btn{
+      flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+      height:48px;border-radius:13px;
+      border:1px solid ${T.border};
+      background:transparent;
+      cursor:pointer;transition:all .18s;
+      font-size:14px;font-weight:600;color:${T.muted};
+      -webkit-tap-highlight-color:transparent;
+    }
+    .person-btn.on{border-color:rgba(139,124,248,0.35);background:rgba(139,124,248,0.1);color:${T.accent};}
+    .person-btn:active{transform:scale(0.96);}
+
+    /* ── PRIORITY SELECTOR ── */
+    .priority-sel{display:flex;gap:8px;}
+    .priority-btn{
+      flex:1;height:44px;border-radius:12px;
+      border:1px solid ${T.border};background:transparent;
+      cursor:pointer;transition:all .18s;
+      font-size:12px;font-weight:700;
+      text-transform:capitalize;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .priority-btn:active{transform:scale(0.95);}
+
+    /* ── SECTION HEADER ── */
+    .sec-header{display:flex;justify-content:space-between;align-items:center;padding:0 18px;margin-bottom:10px;}
+
+    /* ── ICON BUTTON ── */
+    .icon-btn{
+      width:40px;height:40px;border-radius:12px;
+      background:${T.card};border:1px solid ${T.border};
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;position:relative;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+      flex-shrink:0;
+    }
+    .icon-btn:active{transform:scale(0.9);}
+
+    /* ── BALANCE CARD ── */
+    .balance-card{
+      margin:12px 18px 0;
+      background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(139,124,248,0.08));
+      border:1px solid rgba(52,211,153,0.2);
+      border-radius:20px;padding:18px;
+      cursor:pointer;
+      transition:all .18s;
+    }
+    .balance-card:active{transform:scale(0.985);}
+    .balance-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+    .balance-stat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;}
+
+    /* ── QUICK ACTIONS ── */
+    .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 18px 0;}
+    .quick-action{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+    .quick-action-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:all .18s;}
+    .quick-action-icon:active{transform:scale(0.88);}
+    .quick-action-label{font-size:10.5px;font-weight:600;color:${T.muted};}
   `}</style>
 );
 
@@ -736,8 +990,8 @@ const AuthScreen = ({ onLogin }) => {
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
         {mode==="signup" && <input className="input" placeholder="Your name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/>}
-        <input className="input" type="email" placeholder="Email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} autoCapitalize="none"/>
-        <input className="input" type="password" placeholder="Password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&handle()}/>
+        <input className="input" type="email" placeholder="Email" inputMode="email" autoComplete="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} autoCapitalize="none"/>
+        <input className="input" type="password" placeholder="Password" autoComplete="current-password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&handle()}/>
       </div>
       {error && <div style={{padding:"10px 14px",background:T.redSoft,border:"1px solid rgba(248,113,113,0.2)",borderRadius:12,fontSize:13,color:T.red,marginBottom:12}}>{error}</div>}
       <button className="btn-primary" onClick={handle} disabled={loading}>
@@ -814,16 +1068,16 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
         <div style={{fontSize:11,color:T.muted,marginTop:3}}>
           {bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}
         </div>
-        <div style={{display:"flex",marginTop:12,paddingTop:10,borderTop:`1px solid ${T.border}`,gap:0}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12,paddingTop:12,borderTop:`1px solid ${T.border}`}}>
           {[
-            {l:"Clinic",v:inr(bal.clinicIncome),c:T.green},
-            {l:"Simmi",v:inr(bal.simmiIncome),c:T.blue},
-            {l:"Spent",v:inr(bal.totalExpenses),c:T.red},
-            {l:"Tasks",v:`${pendingTasks.length} left`,c:T.accent},
+            {l:"🏥 Clinic",v:inr(bal.clinicIncome),c:T.green},
+            {l:"👩 Simmi",v:inr(bal.simmiIncome),c:T.blue},
+            {l:"💸 Spent",v:inr(bal.totalExpenses),c:T.red},
+            {l:"✅ Tasks",v:`${pendingTasks.length} left`,c:T.accent},
           ].map((s,i)=>(
-            <div key={s.l} style={{flex:1,borderRight:i<3?`1px solid ${T.border}`:"none",paddingRight:i<3?8:0,paddingLeft:i>0?8:0}}>
-              <div style={{fontSize:9.5,color:T.muted}}>{s.l}</div>
-              <div style={{fontSize:12,fontWeight:700,color:s.c,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+            <div key={s.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px 10px"}}>
+              <div style={{fontSize:10,color:T.muted,fontWeight:600}}>{s.l}</div>
+              <div style={{fontSize:13,fontWeight:800,color:s.c,marginTop:2,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
             </div>
           ))}
         </div>
@@ -863,9 +1117,9 @@ const AddIncomeModal = ({ onClose, familyId }) => {
     <Modal title="Add Income" onClose={onClose}>
       <div style={{display:"flex",gap:8,marginBottom:12}}>
         {Object.entries(sources).map(([key,cfg])=>(
-          <div key={key} onClick={()=>setSource(key)} style={{flex:1,padding:"11px 8px",borderRadius:14,border:`1px solid ${source===key?cfg.color+"55":T.border}`,background:source===key?cfg.color+"12":T.card,textAlign:"center",cursor:"pointer",transition:"all .2s"}}>
-            <div style={{fontSize:22,marginBottom:3}}>{cfg.emoji}</div>
-            <div style={{fontSize:11,fontWeight:700,color:source===key?cfg.color:T.muted}}>{key}</div>
+          <div key={key} onClick={()=>setSource(key)} style={{flex:1,minHeight:72,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,padding:"12px 8px",borderRadius:16,border:`1px solid ${source===key?cfg.color+"55":T.border}`,background:source===key?cfg.color+"12":T.card,cursor:"pointer",transition:"all .18s"}}>
+            <div style={{fontSize:24}}>{cfg.emoji}</div>
+            <div style={{fontSize:11.5,fontWeight:700,color:source===key?cfg.color:T.muted,textAlign:"center",lineHeight:1.2}}>{key}</div>
           </div>
         ))}
       </div>
@@ -916,7 +1170,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
 
   return (
     <div className="screen">
-      <div style={{padding:"44px 16px 0"}}>
+      <div style={{padding:"calc(44px + env(safe-area-inset-top,0px)) 18px 0"}}>
         <div className="row">
           <div>
             <div style={{fontSize:12,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em"}}>Good morning ☀️</div>
@@ -930,7 +1184,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
       </div>
 
       {(urgentBills.length > 0 || lowGrocery.length > 0) && (
-        <div style={{padding:"14px 20px 0"}}>
+        <div style={{padding:"12px 18px 0"}}>
           {urgentBills.length > 0 && (
             <div className="alert-bar" style={{background:T.redSoft,border:"1px solid rgba(248,113,113,0.2)"}}>
               <span style={{fontSize:15}}>🔴</span>
@@ -957,30 +1211,28 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
       {/* ── LIVE BALANCE WIDGET ── */}
       <InlineBalanceWidget txns={txns} navigate={navigate} pendingTasks={pendingTasks}/>
 
-      <div style={{padding:"14px 20px 0"}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
-          {[
-            {emoji:"🏥",label:"Income",color:T.green,action:()=>openModal("income")},
-            {emoji:"💸",label:"Expense",color:T.accent,action:()=>openModal("expense")},
-            {emoji:"✅",label:"Task",color:T.teal,action:()=>openModal("task")},
-            {emoji:"🤖",label:"Ask AI",color:T.pink,action:()=>navigate("ai")},
-          ].map(q=>(
-            <div key={q.label} onClick={q.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,cursor:"pointer"}}>
-              <div style={{width:44,height:44,borderRadius:13,background:`${q.color}14`,border:`1px solid ${q.color}28`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,transition:"all .2s"}}>{q.emoji}</div>
-              <span style={{fontSize:10,color:T.muted,fontWeight:600}}>{q.label}</span>
-            </div>
-          ))}
-        </div>
+      <div className="quick-actions">
+        {[
+          {emoji:"🏥",label:"Income",color:T.green,action:()=>openModal("income")},
+          {emoji:"💸",label:"Expense",color:T.accent,action:()=>openModal("expense")},
+          {emoji:"✅",label:"Task",color:T.teal,action:()=>openModal("task")},
+          {emoji:"🤖",label:"Ask AI",color:T.pink,action:()=>navigate("ai")},
+        ].map(q=>(
+          <div key={q.label} className="quick-action" onClick={q.action}>
+            <div className="quick-action-icon" style={{background:`${q.color}16`,border:`1px solid ${q.color}30`}}>{q.emoji}</div>
+            <span className="quick-action-label">{q.label}</span>
+          </div>
+        ))}
       </div>
 
-      <div style={{padding:"18px 20px 0"}}>
+      <div style={{padding:"16px 18px 0"}}>
         <div className="row" style={{marginBottom:12}}>
           <span className="sec-title">Pending Tasks</span>
           <span className="sec-link" onClick={()=>navigate("household")}>{pendingTasks.length} total</span>
         </div>
         {pendingTasks.length === 0
           ? <div className="card" style={{padding:"20px",textAlign:"center",color:T.muted,fontSize:14}}>🎉 All tasks done!</div>
-          : <div className="card" style={{padding:"4px 16px"}}>
+          : <div className="card" style={{padding:"2px 14px"}}>
               {pendingTasks.slice(0,4).map(t=>(
                 <div key={t.id} className="list-row">
                   <div style={{width:21,height:21,borderRadius:7,border:`2px solid ${t.priority==="high"?T.red:t.priority==="medium"?T.amber:T.green}`,flexShrink:0}}/>
@@ -995,14 +1247,14 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         }
       </div>
 
-      <div style={{padding:"18px 20px 0"}}>
+      <div style={{padding:"16px 18px 0"}}>
         <div className="row" style={{marginBottom:12}}>
           <span className="sec-title">Recent</span>
           <span className="sec-link" onClick={()=>navigate("finance")}>All</span>
         </div>
         {txns.length === 0
           ? <div className="card" style={{padding:"20px",textAlign:"center",color:T.muted,fontSize:14}}>No transactions yet.</div>
-          : <div className="card" style={{padding:"4px 16px"}}>
+          : <div className="card" style={{padding:"2px 14px"}}>
               {txns.slice(0,4).map(tx=>(
                 <div key={tx.id} className="list-row">
                   <div style={{width:38,height:38,borderRadius:11,background:Number(tx.amount)>0?T.greenSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{tx.emoji||"💸"}</div>
@@ -1020,7 +1272,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
       </div>
 
       {goals.length > 0 && (
-        <div style={{padding:"18px 20px 24px"}}>
+        <div style={{padding:"16px 18px 24px"}}>
           <div className="row" style={{marginBottom:12}}>
             <span className="sec-title">Goals</span>
             <span className="sec-link" onClick={()=>navigate("planner")}>All {goals.length}</span>
@@ -1059,13 +1311,13 @@ const FinanceScreen = ({ familyId }) => {
 
   return (
     <div className="screen">
-      <div className="ph">
+      <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div className="row">
           <div><div className="pt">Finance</div><div className="ps">Live data · Supabase ✓</div></div>
           <div style={{padding:"6px 12px",background:T.greenSoft,border:"1px solid rgba(52,211,153,0.22)",borderRadius:100,fontSize:12,color:T.green,fontWeight:600}}>Live ●</div>
         </div>
       </div>
-      <div style={{padding:"14px 20px 0"}}>
+      <div style={{padding:"12px 18px 0"}}>
         <div className="card" style={{padding:18,background:"linear-gradient(135deg,rgba(139,124,248,0.12),rgba(96,165,250,0.06))",borderColor:"rgba(139,124,248,0.2)",marginBottom:12}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             {[{l:"Income",v:inr(income),c:T.green},{l:"Spent",v:inr(spent),c:T.red},{l:"Net",v:inr(income-spent),c:T.accent}].map(s=>(
@@ -1077,17 +1329,17 @@ const FinanceScreen = ({ familyId }) => {
           </div>
         </div>
       </div>
-      <div className="scroll-x" style={{padding:"0 20px",marginBottom:16}}>
+      <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
         {["transactions","bills","budgets"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
-      <div style={{padding:"0 20px"}}>
+      <div style={{padding:"0 18px"}}>
         {tab==="transactions" && (
           loading ? <div style={{textAlign:"center",padding:40,color:T.muted}}>Loading...</div>
           : txns.length===0
             ? <div className="empty"><div className="empty-icon">💸</div><div className="empty-text">No transactions yet.</div></div>
-            : <div className="card" style={{padding:"4px 16px"}}>
+            : <div className="card" style={{padding:"2px 14px"}}>
                 {txns.map(tx=>(
                   <div key={tx.id} className="list-row">
                     <div style={{width:38,height:38,borderRadius:11,background:Number(tx.amount)>0?T.greenSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{tx.emoji||"💸"}</div>
@@ -1108,7 +1360,7 @@ const FinanceScreen = ({ familyId }) => {
         {tab==="bills" && (
           bills.length===0
             ? <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">No bills added yet</div></div>
-            : <div className="card" style={{padding:"4px 16px"}}>
+            : <div className="card" style={{padding:"2px 14px"}}>
                 {bills.map(b=>(
                   <div key={b.id} className="list-row">
                     <div style={{width:38,height:38,borderRadius:11,background:b.is_urgent?T.redSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{b.emoji||"📋"}</div>
@@ -1167,16 +1419,16 @@ const HouseholdScreen = ({ familyId }) => {
 
   return (
     <div className="screen">
-      <div className="ph">
+      <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div className="pt">Household</div>
         <div className="ps">{tasks.filter(t=>!t.done).length} tasks pending · {grocery.filter(g=>Number(g.quantity)<=Number(g.par_level)).length} grocery alerts</div>
       </div>
-      <div className="scroll-x" style={{padding:"0 20px",marginBottom:16}}>
+      <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
         {["chores","grocery","maintenance","documents"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
-      <div style={{padding:"0 20px"}}>
+      <div style={{padding:"0 18px"}}>
         {tab==="chores" && (
           <>
             {["Mayank","Simmi"].map(person=>{
@@ -1187,7 +1439,7 @@ const HouseholdScreen = ({ familyId }) => {
                   <div style={{fontSize:13,fontWeight:700,color:person==="Mayank"?T.accent:T.pink,marginBottom:10}}>
                     {person==="Mayank"?"👨‍⚕️":"👩"} {person} ({mine.filter(t=>!t.done).length} pending)
                   </div>
-                  <div className="card" style={{padding:"4px 16px"}}>
+                  <div className="card" style={{padding:"2px 14px"}}>
                     {mine.map(task=>(
                       <div key={task.id} className="list-row" onClick={()=>toggleTask(task.id,!task.done)}>
                         <div style={{width:22,height:22,borderRadius:7,border:`2px solid ${task.done?T.green:task.priority==="high"?T.red:task.priority==="medium"?T.amber:T.green}`,display:"flex",alignItems:"center",justifyContent:"center",background:task.done?T.green:"transparent",flexShrink:0,transition:"all .2s"}}>
@@ -1217,7 +1469,7 @@ const HouseholdScreen = ({ familyId }) => {
             )}
             {grocery.length===0
               ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">No grocery items.</div></div>
-              : <div className="card" style={{padding:"4px 16px"}}>
+              : <div className="card" style={{padding:"2px 14px"}}>
                   {grocery.map(item=>(
                     <div key={item.id} className="list-row">
                       <div style={{width:8,height:8,borderRadius:"50%",background:Number(item.quantity)<=Number(item.par_level)?T.red:T.green,flexShrink:0}}/>
@@ -1261,7 +1513,7 @@ const HouseholdScreen = ({ familyId }) => {
         {tab==="documents" && (
           docs.length===0
             ? <div className="empty"><div className="empty-icon">📁</div><div className="empty-text">No documents yet.</div></div>
-            : <div className="card" style={{padding:"4px 16px"}}>
+            : <div className="card" style={{padding:"2px 14px"}}>
                 {docs.map(doc=>(
                   <div key={doc.id} className="list-row">
                     <div style={{width:38,height:38,borderRadius:11,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{doc.emoji||"📄"}</div>
@@ -1289,13 +1541,13 @@ const PlannerScreen = ({ familyId }) => {
 
   return (
     <div className="screen">
-      <div className="ph"><div className="pt">Planner</div><div className="ps">Goals · Health · Calendar</div></div>
-      <div className="scroll-x" style={{padding:"0 20px",marginBottom:16}}>
+      <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}><div className="pt">Planner</div><div className="ps">Goals · Health · Calendar</div></div>
+      <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
         {["goals","calendar","health"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
-      <div style={{padding:"0 20px"}}>
+      <div style={{padding:"0 18px"}}>
         {tab==="goals" && (
           goals.length===0
             ? <div className="empty"><div className="empty-icon">🎯</div><div className="empty-text">No goals yet.</div></div>
@@ -1346,7 +1598,7 @@ const PlannerScreen = ({ familyId }) => {
             </div>
             {events.length===0
               ? <div className="empty"><div className="empty-icon">📅</div><div className="empty-text">No events yet</div></div>
-              : <div className="card" style={{padding:"4px 16px"}}>
+              : <div className="card" style={{padding:"2px 14px"}}>
                   {events.map(ev=>(
                     <div key={ev.id} className="list-row">
                       <div style={{width:38,height:38,borderRadius:11,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{ev.emoji||"📅"}</div>
@@ -1500,7 +1752,7 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
 
   return (
     <div className="screen">
-      <div className="ph">
+      <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div style={{display:"flex",gap:15,alignItems:"center"}}>
           <div style={{width:68,height:68,borderRadius:22,background:"linear-gradient(135deg,rgba(139,124,248,0.25),rgba(96,165,250,0.15))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,border:"2px solid rgba(139,124,248,0.3)"}}>
             {name==="Simmi"?"👩":"👨‍⚕️"}
@@ -1512,7 +1764,7 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
           </div>
         </div>
       </div>
-      <div style={{padding:"16px 20px 0"}}>
+      <div style={{padding:"14px 18px 0"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9,marginBottom:22}}>
           {[
             {emoji:"✅",val:tasks.filter(t=>t.done).length,lbl:"Done"},
@@ -1573,7 +1825,7 @@ const AddExpenseModal = ({ onClose, familyId }) => {
         <input className="input" type="date" value={f.date} onChange={e=>setF(x=>({...x,date:e.target.value}))}/>
         <div style={{display:"flex",gap:8}}>
           {["Mayank","Simmi"].map(m=>(
-            <div key={m} onClick={()=>setF(x=>({...x,added_by:m}))} style={{flex:1,padding:"10px",borderRadius:12,border:`1px solid ${f.added_by===m?"rgba(139,124,248,0.3)":T.border}`,background:f.added_by===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:14,fontWeight:500,color:f.added_by===m?T.accent:T.muted,transition:"all .2s"}}>
+            <div key={m} className={`person-btn ${f.added_by===m?"on":""}`} onClick={()=>setF(x=>({...x,added_by:m}))}>
               {m==="Mayank"?"👨‍⚕️":"👩"} {m}
             </div>
           ))}
@@ -1603,14 +1855,17 @@ const AddTaskModal = ({ onClose, familyId }) => {
         </select>
         <div style={{display:"flex",gap:8}}>
           {["Mayank","Simmi"].map(m=>(
-            <div key={m} onClick={()=>setF(x=>({...x,assignee:m}))} style={{flex:1,padding:"10px",borderRadius:12,border:`1px solid ${f.assignee===m?"rgba(139,124,248,0.3)":T.border}`,background:f.assignee===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:14,fontWeight:500,color:f.assignee===m?T.accent:T.muted,transition:"all .2s"}}>
+            <div key={m} className={`person-btn ${f.assignee===m?"on":""}`} onClick={()=>setF(x=>({...x,assignee:m}))}>
               {m==="Mayank"?"👨‍⚕️":"👩"} {m}
             </div>
           ))}
         </div>
         <div style={{display:"flex",gap:8}}>
           {["high","medium","low"].map(p=>(
-            <div key={p} onClick={()=>setF(x=>({...x,priority:p}))} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.border}`,background:f.priority===p?(p==="high"?T.redSoft:p==="medium"?T.amberSoft:T.greenSoft):"transparent",textAlign:"center",cursor:"pointer",fontSize:12,fontWeight:600,color:f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.muted,textTransform:"capitalize",transition:"all .2s"}}>{p}</div>
+            <div key={p} className="priority-btn" onClick={()=>setF(x=>({...x,priority:p}))}
+              style={{border:`1px solid ${f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.border}`,background:f.priority===p?(p==="high"?T.redSoft:p==="medium"?T.amberSoft:T.greenSoft):"transparent",color:f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.muted}}>
+              {p==="high"?"🔴":"p"==="medium"?"🟡":"🟢"} {p}
+            </div>
           ))}
         </div>
         <input className="input" type="date" value={f.due_date} onChange={e=>setF(x=>({...x,due_date:e.target.value}))}/>
@@ -1655,9 +1910,9 @@ const Nav = ({ active, go }) => (
   <nav className="bottom-nav">
     {[
       {id:"home",icon:"home",lbl:"Home"},
-      {id:"finance",icon:"finance",lbl:"Finance"},
-      {id:"household",icon:"house",lbl:"House"},
-      {id:"planner",icon:"plan",lbl:"Planner"},
+      {id:"finance",icon:"finance",lbl:"Wallet"},
+      {id:"household",icon:"house",lbl:"Home"},
+      {id:"planner",icon:"plan",lbl:"Plan"},
       {id:"ai",icon:"ai",lbl:"AI"},
       {id:"profile",icon:"profile",lbl:"You"},
     ].map(it=>(
