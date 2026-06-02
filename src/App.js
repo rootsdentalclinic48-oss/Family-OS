@@ -155,15 +155,7 @@ const AuthScreen = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-<<<<<<< Updated upstream
   const prefill = who => { const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" }; setForm({ name: who, email: emails[who], password: "FamilyOS2026!" }); };
-
-=======
-  const prefill = who => {
-  const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" };
-  setForm({ name: who, email: emails[who], password: "Vedarth@2705!" });
-};
->>>>>>> Stashed changes
   const handle = async () => {
     if (!form.email || !form.password) { setError("Please fill all fields"); return; }
     setLoading(true); setError("");
