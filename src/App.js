@@ -272,7 +272,6 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
   const urgentBills = bills.filter(b => !b.paid && b.is_urgent);
   const totalSpent = txns.filter(t => Number(t.amount) < 0).reduce((a, t) => a + Math.abs(Number(t.amount)), 0);
   const totalIncome = txns.filter(t => Number(t.amount) > 0).reduce((a, t) => a + Number(t.amount), 0);
-  .user_metadata?.name || "Mayank & Simmi";
 
   const userName = "Mayank & Simmi";
   return (
