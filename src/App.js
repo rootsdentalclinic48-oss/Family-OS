@@ -1077,7 +1077,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
           ].map((s,i)=>(
             <div key={s.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px 10px"}}>
               <div style={{fontSize:10,color:T.muted,fontWeight:600}}>{s.l}</div>
-              <div style={{fontSize:13,fontWeight:800,color:s.c,marginTop:2,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+            <div style={{fontSize:14,fontWeight:700,color:s.c,marginTop:2}}>{s.v}</div>
             </div>
           ))}
         </div>
