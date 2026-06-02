@@ -53,6 +53,221 @@ const calcBalance = (transactions) => {
 };
 
 
+
+// ─── NOTIFICATION SYSTEM ─────────────────────────────────────────
+
+// Save notification to Supabase
+const saveNotif = async (familyId, { title, body, type, icon, color }) => {
+  try {
+    await supabase.from("notifications").insert([{
+      family_id: familyId,
+      title,
+      body,
+      type,
+      icon,
+      color,
+      read: false,
+      created_at: new Date().toISOString(),
+    }]);
+  } catch(e) { console.error("Notif save failed", e); }
+};
+
+// Global toast state (module-level so any component can trigger)
+let _toastFn = null;
+const registerToast = fn => { _toastFn = fn; };
+const showToast = (notif) => { if (_toastFn) _toastFn(notif); };
+
+// Notification helpers — call these after any action
+const notifyIncomeAdded = (familyId, { amount, category, balance }) => {
+  const n = {
+    title: `${category === "Clinic Income" ? "🏥" : "👩"} ${category} Added`,
+    body: `₹${Number(amount).toLocaleString("en-IN")} added. Balance: ₹${Number(balance).toLocaleString("en-IN")}`,
+    icon: category === "Clinic Income" ? "🏥" : "👩",
+    color: "#34D399", type: "income",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+const notifyExpenseAdded = (familyId, { amount, category, balance }) => {
+  const n = {
+    title: "💸 Expense Recorded",
+    body: `₹${Math.abs(Number(amount)).toLocaleString("en-IN")} on ${category}. Balance: ₹${Number(balance).toLocaleString("en-IN")}`,
+    icon: "💸", color: "#F87171", type: "expense",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+const notifyTaskAdded = (familyId, { title }) => {
+  const n = {
+    title: "✅ New Task Added",
+    body: title,
+    icon: "✅", color: "#34D399", type: "task",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+const notifyEventAdded = (familyId, { title, date }) => {
+  const n = {
+    title: "📅 Event Scheduled",
+    body: `${title}${date ? " on " + date : ""}`,
+    icon: "📅", color: "#60A5FA", type: "event",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+const notifyGroceryAdded = (familyId, { name }) => {
+  const n = {
+    title: "🛒 Shopping Item Added",
+    body: `${name} added to shopping list.`,
+    icon: "🛒", color: "#FBBF24", type: "grocery",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+const notifyNoteAdded = (familyId) => {
+  const n = {
+    title: "📝 Note Saved",
+    body: "Note saved successfully.",
+    icon: "📝", color: "#60A5FA", type: "note",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+const notifyReminderAdded = (familyId, { content }) => {
+  const n = {
+    title: "⏰ Reminder Set",
+    body: content,
+    icon: "⏰", color: "#F472B6", type: "reminder",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+const notifyGoalAdded = (familyId, { title }) => {
+  const n = {
+    title: "🎯 Goal Created",
+    body: title,
+    icon: "🎯", color: "#A78BFA", type: "goal",
+  };
+  showToast(n); saveNotif(familyId, n);
+};
+
+// ─── TOAST RENDERER ──────────────────────────────────────────────
+const ToastRenderer = () => {
+  const [toasts, setToasts] = useState([]);
+
+  useEffect(() => {
+    registerToast((notif) => {
+      const id = Date.now();
+      setToasts(t => [...t, { ...notif, id, out: false }]);
+      setTimeout(() => {
+        setToasts(t => t.map(x => x.id === id ? { ...x, out: true } : x));
+        setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 320);
+      }, 3500);
+    });
+  }, []);
+
+  if (!toasts.length) return null;
+
+  return (
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast ${t.out ? "out" : ""}`}
+          onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))}>
+          <div className="toast-icon" style={{ background: t.color + "18", border: `1px solid ${t.color}33` }}>
+            {t.icon}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="toast-title">{t.title}</div>
+            <div className="toast-body">{t.body}</div>
+          </div>
+          <div style={{ fontSize: 16, color: "rgba(238,236,248,0.25)", marginLeft: 4 }}>×</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ─── NOTIFICATION CENTER SCREEN ───────────────────────────────────
+const NotificationsScreen = ({ familyId, onClose }) => {
+  const { rows: notifs, update: updNotif, remove: removeNotif, refresh } = useTable(
+    "notifications", familyId, { order: "created_at", asc: false, limit: 50 }
+  );
+
+  const unread = notifs.filter(n => !n.read);
+
+  const markAll = async () => {
+    await Promise.all(unread.map(n => updNotif(n.id, { read: true })));
+  };
+
+  const markRead = (id) => updNotif(id, { read: true });
+
+  const timeAgo = (ts) => {
+    const diff = Date.now() - new Date(ts).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  };
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" style={{ maxHeight: "80vh", overflowY: "auto", paddingBottom: 24 }}
+        onClick={e => e.stopPropagation()}>
+        <div className="modal-handle"/>
+        <div className="row" style={{ marginBottom: 16 }}>
+          <div>
+            <span style={{ fontSize: 18, fontWeight: 700 }}>Notifications</span>
+            {unread.length > 0 && (
+              <span style={{ marginLeft: 8, background: "rgba(139,124,248,0.15)", color: "#8B7CF8", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 100 }}>
+                {unread.length} unread
+              </span>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {unread.length > 0 && (
+              <span onClick={markAll} style={{ fontSize: 12, color: "#8B7CF8", fontWeight: 600, cursor: "pointer" }}>
+                Mark all read
+              </span>
+            )}
+            <div onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(238,236,248,0.42)" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </div>
+          </div>
+        </div>
+
+        {notifs.length === 0 ? (
+          <div className="empty">
+            <div className="empty-icon">🔔</div>
+            <div className="empty-text">No notifications yet</div>
+          </div>
+        ) : (
+          <div className="card" style={{ padding: "0 0" }}>
+            {notifs.map(n => (
+              <div key={n.id} className={`notif-item ${!n.read ? "unread" : ""}`}
+                onClick={() => !n.read && markRead(n.id)}>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: (n.color || "#8B7CF8") + "18", border: `1px solid ${n.color || "#8B7CF8"}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
+                  {n.icon || "🔔"}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: n.read ? "rgba(238,236,248,0.6)" : "#EEECf8" }}>{n.title}</div>
+                  <div style={{ fontSize: 11.5, color: "rgba(238,236,248,0.4)", marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
+                  <div style={{ fontSize: 10.5, color: "rgba(238,236,248,0.25)", marginTop: 3 }}>{timeAgo(n.created_at)}</div>
+                </div>
+                <div onClick={e => { e.stopPropagation(); removeNotif(n.id); }}
+                  style={{ opacity: 0.3, cursor: "pointer", padding: "4px", flexShrink: 0 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── QUICK ADD CONFIG (Future-proof — add new types here only) ────────────────
 const QUICK_ADD_TYPES = [
   { id:"expense",   emoji:"💸", label:"Expense",       color:T.accent,  table:"transactions" },
@@ -145,6 +360,22 @@ const Styles = () => (
     .empty-text{font-size:14px;}
     .alert-bar{padding:11px 15px;border-radius:14px;display:flex;gap:10px;align-items:center;margin-bottom:8px;}
     .fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
+    /* ── TOAST NOTIFICATIONS ── */
+    .toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;width:calc(100% - 32px);max-width:398px;pointer-events:none;}
+    .toast{background:#14141F;border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:12px 15px;display:flex;gap:11px;align-items:flex-start;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:toastIn .35s cubic-bezier(.16,1,.3,1);}
+    @keyframes toastIn{from{opacity:0;transform:translateY(-16px) scale(0.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+    .toast.out{animation:toastOut .3s cubic-bezier(.4,0,1,1) forwards;}
+    @keyframes toastOut{to{opacity:0;transform:translateY(-12px) scale(0.95);}}
+    .toast-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+    .toast-title{font-size:13px;font-weight:700;color:#EEECf8;line-height:1.3;}
+    .toast-body{font-size:12px;color:rgba(238,236,248,0.55);margin-top:2px;line-height:1.4;}
+    .notif-badge{position:absolute;top:-4px;right:-4px;background:#F87171;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #080810;}
+    /* ── NOTIFICATION CENTER ── */
+    .notif-item{display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,0.055);cursor:pointer;transition:background .15s;position:relative;}
+    .notif-item:last-child{border-bottom:none;}
+    .notif-item:active{background:rgba(255,255,255,0.03);}
+    .notif-item.unread::before{content:'';position:absolute;left:6px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#8B7CF8;}
+
 
     /* ── FAB STYLES ── */
     .fab{position:fixed;bottom:96px;right:calc(50% - 205px);width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow};display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;}
@@ -244,28 +475,37 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
     try {
       if (type === "expense") {
         if (!f.description || !f.amount) { setLoading(false); return; }
+        const allTxns3 = await supabase.from("transactions").select("amount").eq("family_id", familyId);
+        const bal3 = calcBalance(allTxns3.data || []);
         await supabase.from("transactions").insert([{ description:f.description, amount:-Math.abs(Number(f.amount)), category:f.category, added_by:f.added_by, date:f.date, emoji:emojiMap[f.category]||"💸", family_id:familyId }]);
+        notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal3.available - Math.abs(Number(f.amount)) });
       } else if (type === "task") {
         if (!f.title) { setLoading(false); return; }
         await supabase.from("tasks").insert([{ title:f.title, assignee:f.assignee, priority:f.priority, category:f.taskCategory, due_date:f.due_date, done:false, family_id:familyId }]);
+        notifyTaskAdded(familyId, { title: f.title });
       } else if (type === "grocery") {
         if (!f.groceryName) { setLoading(false); return; }
         await supabase.from("grocery").insert([{ name:f.groceryName, category:f.groceryCategory, quantity:Number(f.quantity), unit:f.unit, par_level:Number(f.par_level), family_id:familyId }]);
+        notifyGroceryAdded(familyId, { name: f.groceryName });
       } else if (type === "note") {
         if (!f.noteText) { setLoading(false); return; }
         await supabase.from("notes").insert([{ content:f.noteText, added_by:f.added_by, date:today(), family_id:familyId }]);
+        notifyNoteAdded(familyId);
       } else if (type === "event") {
         if (!f.eventTitle) { setLoading(false); return; }
         await supabase.from("events").insert([{ title:f.eventTitle, event_date:f.eventDate, type:f.eventType, emoji:"📅", family_id:familyId }]);
+        notifyEventAdded(familyId, { title: f.eventTitle, date: f.eventDate });
       } else if (type === "memory") {
         if (!f.memoryTitle) { setLoading(false); return; }
         await supabase.from("memories").insert([{ title:f.memoryTitle, content:f.memoryText, date:today(), family_id:familyId }]);
       } else if (type === "reminder") {
         if (!f.reminderText) { setLoading(false); return; }
         await supabase.from("reminders").insert([{ content:f.reminderText, due_date:f.reminderDate, done:false, family_id:familyId }]);
+        notifyReminderAdded(familyId, { content: f.reminderText });
       } else if (type === "goal") {
         if (!f.goalTitle || !f.targetAmount) { setLoading(false); return; }
         await supabase.from("goals").insert([{ title:f.goalTitle, target_amount:Number(f.targetAmount), saved_amount:Number(f.savedAmount), emoji:"🎯", family_id:familyId }]);
+        notifyGoalAdded(familyId, { title: f.goalTitle });
       }
       setSaved(true);
       setTimeout(() => onClose(), 700);
@@ -604,6 +844,9 @@ const AddIncomeModal = ({ onClose, familyId }) => {
   const save = async () => {
     if (!f.amount) return;
     setLoading(true);
+    const allTxns = await supabase.from("transactions").select("amount").eq("family_id", familyId);
+    const bal = calcBalance(allTxns.data || []);
+    const newBal = bal.available + Math.abs(Number(f.amount));
     await supabase.from("transactions").insert([{
       description: f.description || source,
       amount: Math.abs(Number(f.amount)),
@@ -613,6 +856,7 @@ const AddIncomeModal = ({ onClose, familyId }) => {
       emoji: sources[source].emoji,
       family_id: familyId,
     }]);
+    notifyIncomeAdded(familyId, { amount: f.amount, category: source, balance: newBal });
     setLoading(false); onClose();
   };
   return (
@@ -634,6 +878,24 @@ const AddIncomeModal = ({ onClose, familyId }) => {
         </button>
       </div>
     </Modal>
+  );
+};
+
+
+// ─── BELL BUTTON WITH UNREAD BADGE ───────────────────────────────
+const BellButton = ({ familyId }) => {
+  const { rows: notifs } = useTable("notifications", familyId, { order: "created_at", asc: false, limit: 50 });
+  const [open, setOpen] = useState(false);
+  const unread = notifs.filter(n => !n.read).length;
+  return (
+    <>
+      <div style={{width:38,height:38,borderRadius:11,background:"rgba(255,255,255,0.042)",border:"1px solid rgba(255,255,255,0.075)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}}
+        onClick={()=>setOpen(true)}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(238,236,248,0.42)" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        {unread > 0 && <div className="notif-badge">{unread > 9 ? "9+" : unread}</div>}
+      </div>
+      {open && <NotificationsScreen familyId={familyId} onClose={()=>setOpen(false)}/>}
+    </>
   );
 };
 
@@ -662,11 +924,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
             <div style={{fontSize:12,color:T.dim,marginTop:2}}>📍 Sector 48, Gurgaon</div>
           </div>
           <div style={{display:"flex",gap:8}}>
-            <div style={{width:38,height:38,borderRadius:11,background:T.card,border:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}}
-              onClick={()=>navigate("notifications")}>
-              <I n="bell" s={17} c={T.muted}/>
-              {urgentBills.length > 0 && <div style={{position:"absolute",top:7,right:7,width:8,height:8,background:T.red,borderRadius:"50%",border:"2px solid #080810"}}/>}
-            </div>
+            <BellButton familyId={familyId}/>
           </div>
         </div>
       </div>
@@ -1297,7 +1555,11 @@ const AddExpenseModal = ({ onClose, familyId }) => {
   const save = async () => {
     if (!f.description || !f.amount) return;
     setLoading(true);
+    const allTxns2 = await supabase.from("transactions").select("amount").eq("family_id", familyId);
+    const bal2 = calcBalance(allTxns2.data || []);
+    const newBal2 = bal2.available - Math.abs(Number(f.amount));
     await supabase.from("transactions").insert([{ ...f, amount: -Math.abs(Number(f.amount)), family_id: familyId, emoji: emojiMap[f.category]||"💸" }]);
+    notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: newBal2 });
     setLoading(false); onClose();
   };
   return (
@@ -1329,6 +1591,7 @@ const AddTaskModal = ({ onClose, familyId }) => {
     if (!f.title) return;
     setLoading(true);
     await supabase.from("tasks").insert([{ ...f, done: false, family_id: familyId }]);
+    notifyTaskAdded(familyId, { title: f.title });
     setLoading(false); onClose();
   };
   return (
@@ -1452,6 +1715,9 @@ export default function App() {
       <Styles/>
       {screens[screen]||screens.home}
       <Nav active={screen} go={setScreen}/>
+
+      {/* ── TOAST NOTIFICATIONS ── */}
+      <ToastRenderer/>
 
       {/* ── GLOBAL FAB — available on every screen ── */}
       <GlobalFAB screen={screen} familyId={FAMILY_ID}/>
