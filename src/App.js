@@ -891,11 +891,23 @@ Unpaid bills: ${dueBills.map(b=>`${b.name} ₹${Number(b.amount).toLocaleString(
           messages:[{role:"user",content:`${buildContext()}\n\nQuestion: ${q}`}],
         }),
       });
-      const data = await res.json();
-      const ans = data.content?.[0]?.text || "Sorry, couldn't get a response.";
+      const ql=q.toLowerCase();
+      const income=txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
+      const spent=txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
+      const pending=tasks.filter(t=>t.done===false);
+      const lowStock=grocery.filter(g=>Number(g.quantity)<=Number(g.par_level));
+      const dueBills=bills.filter(b=>b.paid===false);
+      let ans="";
+      if(ql.includes("hi")||ql.includes("hello")||ql.includes("namaste")){ans="Namaste Mayank and Simmi! Saved: Rs"+(income-spent)+" | Tasks: "+pending.length+" | Restock: "+lowStock.length+" | Bills: "+dueBills.length;}
+      else if(ql.includes("spend")||ql.includes("expense")||ql.includes("money")){ans="Income: Rs"+income+" | Spent: Rs"+spent+" | Saved: Rs"+(income-spent);}
+      else if(ql.includes("task")||ql.includes("pending")){ans=pending.length===0?"All tasks done":pending.length+" pending: "+pending.slice(0,5).map(t=>t.title).join(", ");}
+      else if(ql.includes("grocery")||ql.includes("restock")){ans=lowStock.length===0?"All stocked":"Restock: "+lowStock.map(g=>g.name).join(", ");}
+      else if(ql.includes("bill")||ql.includes("pay")){ans=dueBills.length===0?"No pending bills":"Unpaid: "+dueBills.map(b=>b.name).join(", ");}
+      else if(ql.includes("goal")){ans=goals.length===0?"No goals yet":goals.map(g=>g.title+": "+Math.round((g.saved_amount/g.target_amount)*100)+"%").join(", ");}
+      else{ans="Ask me about spending, tasks, grocery, bills or goals";}
       setMsgs(m=>[...m,{role:"assistant",text:ans}]);
-    } catch {
-      setMsgs(m=>[...m,{role:"assistant",text:"Connection issue. Please try again."}]);
+    } catch(e) {
+      setMsgs(m=>[...m,{role:"assistant",text:"Something went wrong. Try again."}]);
     }
     setLoading(false);
   },[input,loading,txns,tasks,grocery,goals,bills]);
