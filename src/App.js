@@ -33,6 +33,26 @@ const inr = n => "₹" + Math.abs(Number(n) || 0).toLocaleString("en-IN");
 const pct = (a, b) => b ? Math.min(100, Math.round((a / b) * 100)) : 0;
 const today = () => new Date().toISOString().split("T")[0];
 
+// ─── BALANCE CALCULATOR (Single source of truth) ─────────────────
+const calcBalance = (transactions) => {
+  const clinicIncome = transactions
+    .filter(t => t.category === "Clinic Income" && Number(t.amount) > 0)
+    .reduce((a, t) => a + Number(t.amount), 0);
+  const simmiIncome = transactions
+    .filter(t => t.category === "Simmi Income" && Number(t.amount) > 0)
+    .reduce((a, t) => a + Number(t.amount), 0);
+  const otherIncome = transactions
+    .filter(t => !["Clinic Income","Simmi Income"].includes(t.category) && Number(t.amount) > 0)
+    .reduce((a, t) => a + Number(t.amount), 0);
+  const totalIncome = clinicIncome + simmiIncome + otherIncome;
+  const totalExpenses = transactions
+    .filter(t => Number(t.amount) < 0)
+    .reduce((a, t) => a + Math.abs(Number(t.amount)), 0);
+  const available = totalIncome - totalExpenses;
+  return { clinicIncome, simmiIncome, otherIncome, totalIncome, totalExpenses, available };
+};
+
+
 // ─── QUICK ADD CONFIG (Future-proof — add new types here only) ────────────────
 const QUICK_ADD_TYPES = [
   { id:"expense",   emoji:"💸", label:"Expense",       color:T.accent,  table:"transactions" },
@@ -536,6 +556,87 @@ function useTable(table, familyId, extra = {}) {
   return { rows, loading, add, update: update_, remove, refresh: fetch_ };
 }
 
+
+// ─── INLINE BALANCE WIDGET (used inside HomeScreen) ──────────────
+const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
+  const bal = calcBalance(txns);
+  return (
+    <div style={{padding:"12px 20px 0"}}>
+      <div style={{
+        background:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(139,124,248,0.10))",
+        border:`1px solid rgba(52,211,153,0.22)`,
+        borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer",
+      }} onClick={()=>navigate("finance")}>
+        <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
+        <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
+          {bal.available<0?"-":""}₹{Math.abs(bal.available).toLocaleString("en-IN")}
+        </div>
+        <div style={{fontSize:11,color:T.muted,marginTop:3}}>
+          {bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}
+        </div>
+        <div style={{display:"flex",marginTop:12,paddingTop:10,borderTop:`1px solid ${T.border}`,gap:0}}>
+          {[
+            {l:"Clinic",v:inr(bal.clinicIncome),c:T.green},
+            {l:"Simmi",v:inr(bal.simmiIncome),c:T.blue},
+            {l:"Spent",v:inr(bal.totalExpenses),c:T.red},
+            {l:"Tasks",v:`${pendingTasks.length} left`,c:T.accent},
+          ].map((s,i)=>(
+            <div key={s.l} style={{flex:1,borderRight:i<3?`1px solid ${T.border}`:"none",paddingRight:i<3?8:0,paddingLeft:i>0?8:0}}>
+              <div style={{fontSize:9.5,color:T.muted}}>{s.l}</div>
+              <div style={{fontSize:12,fontWeight:700,color:s.c,marginTop:1,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── ADD INCOME MODAL ─────────────────────────────────────────────
+const AddIncomeModal = ({ onClose, familyId }) => {
+  const [source, setSource] = useState("Clinic Income");
+  const [f, setF] = useState({ amount:"", description:"", date: today() });
+  const [loading, setLoading] = useState(false);
+  const sources = {
+    "Clinic Income": { emoji:"🏥", color:T.green,  placeholder:"OPD, Procedures, Consultations" },
+    "Simmi Income":  { emoji:"👩", color:T.blue,   placeholder:"Salary, Freelance, Other" },
+  };
+  const save = async () => {
+    if (!f.amount) return;
+    setLoading(true);
+    await supabase.from("transactions").insert([{
+      description: f.description || source,
+      amount: Math.abs(Number(f.amount)),
+      category: source,
+      added_by: source==="Clinic Income"?"Mayank":"Simmi",
+      date: f.date,
+      emoji: sources[source].emoji,
+      family_id: familyId,
+    }]);
+    setLoading(false); onClose();
+  };
+  return (
+    <Modal title="Add Income" onClose={onClose}>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
+        {Object.entries(sources).map(([key,cfg])=>(
+          <div key={key} onClick={()=>setSource(key)} style={{flex:1,padding:"11px 8px",borderRadius:14,border:`1px solid ${source===key?cfg.color+"55":T.border}`,background:source===key?cfg.color+"12":T.card,textAlign:"center",cursor:"pointer",transition:"all .2s"}}>
+            <div style={{fontSize:22,marginBottom:3}}>{cfg.emoji}</div>
+            <div style={{fontSize:11,fontWeight:700,color:source===key?cfg.color:T.muted}}>{key}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        <input className="input" type="number" placeholder="Amount (₹)" value={f.amount} onChange={e=>setF(x=>({...x,amount:e.target.value}))} autoFocus/>
+        <input className="input" placeholder={sources[source].placeholder} value={f.description} onChange={e=>setF(x=>({...x,description:e.target.value}))}/>
+        <input className="input" type="date" value={f.date} onChange={e=>setF(x=>({...x,date:e.target.value}))}/>
+        <button className="btn-primary" onClick={save} disabled={loading} style={{background:sources[source].color}}>
+          {loading?<div className="spinner"/>:`Add ${source}`}
+        </button>
+      </div>
+    </Modal>
+  );
+};
+
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 const HomeScreen = ({ navigate, openModal, familyId, user }) => {
   const { rows: tasks } = useTable("tasks", familyId, { order: "created_at" });
@@ -595,38 +696,15 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         </div>
       )}
 
-      <div style={{padding:"16px 20px 0"}}>
-        <div className="card card-tap" style={{padding:14,background:"linear-gradient(135deg,rgba(139,124,248,0.14),rgba(96,165,250,0.07))",borderColor:"rgba(139,124,248,0.22)",cursor:"pointer"}} onClick={()=>navigate("finance")}>
-          <div className="row">
-            <div>
-              <div style={{fontSize:11,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:".05em"}}>This Month</div>
-              <div style={{fontSize:22,fontWeight:900,letterSpacing:"-1px",marginTop:2}} className="mono">{inr(totalIncome - totalSpent)}</div>
-            </div>
-            <div style={{padding:"6px 11px",background:T.greenSoft,border:"1px solid rgba(52,211,153,0.22)",borderRadius:100,fontSize:12,color:T.green,fontWeight:600}}>
-              ↑ {inr(totalIncome - totalSpent)} saved
-            </div>
-          </div>
-          <div style={{display:"flex",gap:0,marginTop:16,borderTop:`1px solid ${T.border}`,paddingTop:13}}>
-            {[
-              {l:"Income",v:inr(totalIncome),c:T.green},
-              {l:"Spent",v:inr(totalSpent),c:T.red},
-              {l:"Tasks",v:`${pendingTasks.length} left`,c:T.accent},
-            ].map((s,i)=>(
-              <div key={s.l} style={{flex:1,borderRight:i<2?`1px solid ${T.border}`:"none",paddingRight:i<2?12:0,paddingLeft:i>0?12:0}}>
-                <div style={{fontSize:11,color:T.muted}}>{s.l}</div>
-                <div style={{fontSize:14,fontWeight:700,color:s.c,marginTop:2}} className="mono">{s.v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* ── LIVE BALANCE WIDGET ── */}
+      <InlineBalanceWidget txns={txns} navigate={navigate} pendingTasks={pendingTasks}/>
 
-      <div style={{padding:"18px 20px 0"}}>
+      <div style={{padding:"14px 20px 0"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
           {[
+            {emoji:"🏥",label:"Income",color:T.green,action:()=>openModal("income")},
             {emoji:"💸",label:"Expense",color:T.accent,action:()=>openModal("expense")},
-            {emoji:"✅",label:"Task",color:T.green,action:()=>openModal("task")},
-            {emoji:"🛒",label:"Grocery",color:T.amber,action:()=>openModal("grocery")},
+            {emoji:"✅",label:"Task",color:T.teal,action:()=>openModal("task")},
             {emoji:"🤖",label:"Ask AI",color:T.pink,action:()=>navigate("ai")},
           ].map(q=>(
             <div key={q.label} onClick={q.action} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:7,cursor:"pointer"}}>
@@ -1379,6 +1457,7 @@ export default function App() {
       <GlobalFAB screen={screen} familyId={FAMILY_ID}/>
 
       {/* Legacy modals from home screen quick actions */}
+      {modal==="income"  && <AddIncomeModal  onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="expense" && <AddExpenseModal onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="task"    && <AddTaskModal    onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="grocery" && <AddGroceryModal onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
