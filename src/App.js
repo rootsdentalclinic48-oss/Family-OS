@@ -1624,7 +1624,6 @@ const KitchenScreen = ({ familyId }) => {
 
   useEffect(() => {
   if (familyId) { seedRecipes(familyId).then(() => setSeeded(true)); }
-}, [familyId]);
   }, [familyId, seeded]);
 
   const todayStr = today();
