@@ -33,7 +33,7 @@ const inr = n => "₹" + Math.abs(Number(n) || 0).toLocaleString("en-IN");
 const pct = (a, b) => b ? Math.min(100, Math.round((a / b) * 100)) : 0;
 const today = () => new Date().toISOString().split("T")[0];
 
-// ─── BALANCE CALCULATOR (Single source of truth) ─────────────────
+// ─── BALANCE CALCULATOR ───────────────────────────────────────────────────────
 const calcBalance = (transactions) => {
   const clinicIncome = transactions
     .filter(t => t.category === "Clinic Income" && Number(t.amount) > 0)
@@ -52,32 +52,20 @@ const calcBalance = (transactions) => {
   return { clinicIncome, simmiIncome, otherIncome, totalIncome, totalExpenses, available };
 };
 
-
-
-// ─── NOTIFICATION SYSTEM ─────────────────────────────────────────
-
-// Save notification to Supabase
+// ─── NOTIFICATION SYSTEM ──────────────────────────────────────────────────────
 const saveNotif = async (familyId, { title, body, type, icon, color }) => {
   try {
     await supabase.from("notifications").insert([{
-      family_id: familyId,
-      title,
-      body,
-      type,
-      icon,
-      color,
-      read: false,
-      created_at: new Date().toISOString(),
+      family_id: familyId, title, body, type, icon, color,
+      read: false, created_at: new Date().toISOString(),
     }]);
   } catch(e) { console.error("Notif save failed", e); }
 };
 
-// Global toast state (module-level so any component can trigger)
 let _toastFn = null;
 const registerToast = fn => { _toastFn = fn; };
 const showToast = (notif) => { if (_toastFn) _toastFn(notif); };
 
-// Notification helpers — call these after any action
 const notifyIncomeAdded = (familyId, { amount, category, balance }) => {
   const n = {
     title: `${category === "Clinic Income" ? "🏥" : "👩"} ${category} Added`,
@@ -87,7 +75,6 @@ const notifyIncomeAdded = (familyId, { amount, category, balance }) => {
   };
   showToast(n); saveNotif(familyId, n);
 };
-
 const notifyExpenseAdded = (familyId, { amount, category, balance }) => {
   const n = {
     title: "💸 Expense Recorded",
@@ -96,16 +83,10 @@ const notifyExpenseAdded = (familyId, { amount, category, balance }) => {
   };
   showToast(n); saveNotif(familyId, n);
 };
-
 const notifyTaskAdded = (familyId, { title }) => {
-  const n = {
-    title: "✅ New Task Added",
-    body: title,
-    icon: "✅", color: "#34D399", type: "task",
-  };
+  const n = { title: "✅ New Task Added", body: title, icon: "✅", color: "#34D399", type: "task" };
   showToast(n); saveNotif(familyId, n);
 };
-
 const notifyEventAdded = (familyId, { title, date }) => {
   const n = {
     title: "📅 Event Scheduled",
@@ -114,47 +95,26 @@ const notifyEventAdded = (familyId, { title, date }) => {
   };
   showToast(n); saveNotif(familyId, n);
 };
-
 const notifyGroceryAdded = (familyId, { name }) => {
-  const n = {
-    title: "🛒 Shopping Item Added",
-    body: `${name} added to shopping list.`,
-    icon: "🛒", color: "#FBBF24", type: "grocery",
-  };
+  const n = { title: "🛒 Shopping Item Added", body: `${name} added to shopping list.`, icon: "🛒", color: "#FBBF24", type: "grocery" };
   showToast(n); saveNotif(familyId, n);
 };
-
 const notifyNoteAdded = (familyId) => {
-  const n = {
-    title: "📝 Note Saved",
-    body: "Note saved successfully.",
-    icon: "📝", color: "#60A5FA", type: "note",
-  };
+  const n = { title: "📝 Note Saved", body: "Note saved successfully.", icon: "📝", color: "#60A5FA", type: "note" };
   showToast(n); saveNotif(familyId, n);
 };
-
 const notifyReminderAdded = (familyId, { content }) => {
-  const n = {
-    title: "⏰ Reminder Set",
-    body: content,
-    icon: "⏰", color: "#F472B6", type: "reminder",
-  };
+  const n = { title: "⏰ Reminder Set", body: content, icon: "⏰", color: "#F472B6", type: "reminder" };
   showToast(n); saveNotif(familyId, n);
 };
-
 const notifyGoalAdded = (familyId, { title }) => {
-  const n = {
-    title: "🎯 Goal Created",
-    body: title,
-    icon: "🎯", color: "#A78BFA", type: "goal",
-  };
+  const n = { title: "🎯 Goal Created", body: title, icon: "🎯", color: "#A78BFA", type: "goal" };
   showToast(n); saveNotif(familyId, n);
 };
 
-// ─── TOAST RENDERER ──────────────────────────────────────────────
+// ─── TOAST RENDERER ───────────────────────────────────────────────────────────
 const ToastRenderer = () => {
   const [toasts, setToasts] = useState([]);
-
   useEffect(() => {
     registerToast((notif) => {
       const id = Date.now();
@@ -165,17 +125,13 @@ const ToastRenderer = () => {
       }, 3500);
     });
   }, []);
-
   if (!toasts.length) return null;
-
   return (
     <div className="toast-container">
       {toasts.map(t => (
         <div key={t.id} className={`toast ${t.out ? "out" : ""}`}
           onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))}>
-          <div className="toast-icon" style={{ background: t.color + "18", border: `1px solid ${t.color}33` }}>
-            {t.icon}
-          </div>
+          <div className="toast-icon" style={{ background: t.color + "18", border: `1px solid ${t.color}33` }}>{t.icon}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="toast-title">{t.title}</div>
             <div className="toast-body">{t.body}</div>
@@ -187,20 +143,14 @@ const ToastRenderer = () => {
   );
 };
 
-// ─── NOTIFICATION CENTER SCREEN ───────────────────────────────────
+// ─── NOTIFICATION CENTER ──────────────────────────────────────────────────────
 const NotificationsScreen = ({ familyId, onClose }) => {
-  const { rows: notifs, update: updNotif, remove: removeNotif, refresh } = useTable(
+  const { rows: notifs, update: updNotif, remove: removeNotif } = useTable(
     "notifications", familyId, { order: "created_at", asc: false, limit: 50 }
   );
-
   const unread = notifs.filter(n => !n.read);
-
-  const markAll = async () => {
-    await Promise.all(unread.map(n => updNotif(n.id, { read: true })));
-  };
-
+  const markAll = async () => { await Promise.all(unread.map(n => updNotif(n.id, { read: true }))); };
   const markRead = (id) => updNotif(id, { read: true });
-
   const timeAgo = (ts) => {
     const diff = Date.now() - new Date(ts).getTime();
     const m = Math.floor(diff / 60000);
@@ -210,7 +160,6 @@ const NotificationsScreen = ({ familyId, onClose }) => {
     if (h < 24) return `${h}h ago`;
     return `${Math.floor(h / 24)}d ago`;
   };
-
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" style={{ maxHeight: "80vh", overflowY: "auto", paddingBottom: 24 }}
@@ -227,36 +176,26 @@ const NotificationsScreen = ({ familyId, onClose }) => {
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {unread.length > 0 && (
-              <span onClick={markAll} style={{ fontSize: 12, color: "#8B7CF8", fontWeight: 600, cursor: "pointer" }}>
-                Mark all read
-              </span>
+              <span onClick={markAll} style={{ fontSize: 12, color: "#8B7CF8", fontWeight: 600, cursor: "pointer" }}>Mark all read</span>
             )}
             <div onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(238,236,248,0.42)" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </div>
           </div>
         </div>
-
         {notifs.length === 0 ? (
-          <div className="empty">
-            <div className="empty-icon">🔔</div>
-            <div className="empty-text">No notifications yet</div>
-          </div>
+          <div className="empty"><div className="empty-icon">🔔</div><div className="empty-text">No notifications yet</div></div>
         ) : (
           <div className="card" style={{ padding: "0 0" }}>
             {notifs.map(n => (
-              <div key={n.id} className={`notif-item ${!n.read ? "unread" : ""}`}
-                onClick={() => !n.read && markRead(n.id)}>
-                <div style={{ width: 38, height: 38, borderRadius: 11, background: (n.color || "#8B7CF8") + "18", border: `1px solid ${n.color || "#8B7CF8"}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
-                  {n.icon || "🔔"}
-                </div>
+              <div key={n.id} className={`notif-item ${!n.read ? "unread" : ""}`} onClick={() => !n.read && markRead(n.id)}>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: (n.color || "#8B7CF8") + "18", border: `1px solid ${n.color || "#8B7CF8"}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{n.icon || "🔔"}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: n.read ? "rgba(238,236,248,0.6)" : "#EEECf8" }}>{n.title}</div>
                   <div style={{ fontSize: 11.5, color: "rgba(238,236,248,0.4)", marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
                   <div style={{ fontSize: 10.5, color: "rgba(238,236,248,0.25)", marginTop: 3 }}>{timeAgo(n.created_at)}</div>
                 </div>
-                <div onClick={e => { e.stopPropagation(); removeNotif(n.id); }}
-                  style={{ opacity: 0.3, cursor: "pointer", padding: "4px", flexShrink: 0 }}>
+                <div onClick={e => { e.stopPropagation(); removeNotif(n.id); }} style={{ opacity: 0.3, cursor: "pointer", padding: "4px", flexShrink: 0 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
                 </div>
               </div>
@@ -268,221 +207,71 @@ const NotificationsScreen = ({ familyId, onClose }) => {
   );
 };
 
-// ─── QUICK ADD CONFIG (Future-proof — add new types here only) ────────────────
+// ─── QUICK ADD CONFIG ─────────────────────────────────────────────────────────
 const QUICK_ADD_TYPES = [
-  { id:"expense",   emoji:"💸", label:"Expense",       color:T.accent,  table:"transactions" },
-  { id:"task",      emoji:"✅", label:"Task",           color:T.green,   table:"tasks" },
-  { id:"grocery",   emoji:"🛒", label:"Shopping",       color:T.amber,   table:"grocery" },
-  { id:"note",      emoji:"📝", label:"Note",           color:T.blue,    table:"notes" },
-  { id:"event",     emoji:"📅", label:"Event",          color:T.pink,    table:"events" },
-  { id:"memory",    emoji:"🧡", label:"Memory",         color:T.teal,    table:"memories" },
-  { id:"reminder",  emoji:"⏰", label:"Reminder",       color:T.red,     table:"reminders" },
-  { id:"goal",      emoji:"🎯", label:"Goal",           color:"#A78BFA",  table:"goals" },
+  { id:"expense",  emoji:"💸", label:"Expense",  color:T.accent, table:"transactions" },
+  { id:"task",     emoji:"✅", label:"Task",      color:T.green,  table:"tasks" },
+  { id:"grocery",  emoji:"🛒", label:"Shopping",  color:T.amber,  table:"grocery" },
+  { id:"note",     emoji:"📝", label:"Note",      color:T.blue,   table:"notes" },
+  { id:"event",    emoji:"📅", label:"Event",     color:T.pink,   table:"events" },
+  { id:"memory",   emoji:"🧡", label:"Memory",    color:T.teal,   table:"memories" },
+  { id:"reminder", emoji:"⏰", label:"Reminder",  color:T.red,    table:"reminders" },
+  { id:"goal",     emoji:"🎯", label:"Goal",      color:"#A78BFA", table:"goals" },
 ];
-
-// Screen → default type mapping (smart context)
-const SCREEN_DEFAULT_TYPE = {
-  finance:   "expense",
-  household: "task",
-  planner:   "event",
-  home:      "expense",
-  ai:        "note",
-  profile:   "note",
-};
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const Styles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
-
-    /* ── RESET & BASE ── */
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    html{
-      -webkit-tap-highlight-color:transparent;
-      -webkit-text-size-adjust:100%;
-      touch-action:manipulation;
-    }
-    body{
-      font-family:'Outfit',sans-serif;
-      background:${T.bg};
-      color:${T.text};
-      min-height:100vh;
-      overscroll-behavior:none;
-      -webkit-font-smoothing:antialiased;
-    }
+    html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation;}
+    body{font-family:'Outfit',sans-serif;background:${T.bg};color:${T.text};min-height:100vh;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
     ::-webkit-scrollbar{display:none;}
     *{scrollbar-width:none;}
-
-    /* ── ROOT CONTAINER ── */
-    .root{
-      display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;
-      max-width:430px;margin:0 auto;
-      background:${T.bg};
-      background-image:
-        radial-gradient(ellipse 600px 400px at 20% -100px,rgba(139,124,248,0.08) 0%,transparent 60%),
-        radial-gradient(ellipse 300px 300px at 85% 30%,rgba(96,165,250,0.04) 0%,transparent 55%);
-      position:relative;
-    }
-
-    /* ── SCREENS ── */
-    .screen{
-      flex:1;
-      padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      animation:fadeUp .25s cubic-bezier(.16,1,.3,1);
-    }
+    .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};background-image:radial-gradient(ellipse 600px 400px at 20% -100px,rgba(139,124,248,0.08) 0%,transparent 60%),radial-gradient(ellipse 300px 300px at 85% 30%,rgba(96,165,250,0.04) 0%,transparent 55%);position:relative;}
+    .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-
-    /* ── CARDS ── */
-    .card{
-      background:${T.card};
-      border:1px solid ${T.border};
-      border-radius:18px;
-      backdrop-filter:blur(20px);
-      -webkit-backdrop-filter:blur(20px);
-      transition:all .18s;
-    }
+    .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;}
     .card-tap{cursor:pointer;}
     .card-tap:active{transform:scale(0.982);background:${T.cardHover};}
-
-    /* ── BUTTONS ── */
     .btn{border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
-    .btn-primary{
-      background:${T.accent};color:#fff;border-radius:14px;
-      padding:0 22px;height:52px;font-size:15px;font-weight:700;
-      box-shadow:0 4px 20px ${T.accentGlow};
-      border:none;cursor:pointer;font-family:'Outfit',sans-serif;
-      transition:all .18s;width:100%;
-      -webkit-tap-highlight-color:transparent;
-      touch-action:manipulation;
-      min-height:52px;
-    }
+    .btn-primary{background:${T.accent};color:#fff;border-radius:14px;padding:0 22px;height:52px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:52px;}
     .btn-primary:active{transform:scale(0.97);opacity:0.9;}
     .btn-primary:disabled{opacity:0.45;cursor:not-allowed;}
-
-    /* ── INPUTS ── */
-    .input{
-      width:100%;
-      background:rgba(255,255,255,0.058);
-      border:1px solid ${T.border};
-      border-radius:14px;
-      padding:0 16px;
-      height:52px;
-      color:${T.text};
-      font-family:'Outfit',sans-serif;
-      font-size:16px;
-      outline:none;
-      transition:all .18s;
-      -webkit-appearance:none;
-      appearance:none;
-    }
+    .input{width:100%;background:rgba(255,255,255,0.058);border:1px solid ${T.border};border-radius:14px;padding:0 16px;height:52px;color:${T.text};font-family:'Outfit',sans-serif;font-size:16px;outline:none;transition:all .18s;-webkit-appearance:none;appearance:none;}
     .input:focus{border-color:${T.accent};background:rgba(139,124,248,0.06);}
     .input::placeholder{color:${T.dim};}
     textarea.input{height:auto;padding:14px 16px;resize:none;line-height:1.5;}
     select.input{appearance:none;-webkit-appearance:none;}
-
-    /* ── BOTTOM NAV ── */
-    .bottom-nav{
-      position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-      width:100%;max-width:430px;
-      padding:10px 4px calc(10px + env(safe-area-inset-bottom, 0px));
-      background:rgba(8,8,16,0.92);
-      backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
-      border-top:1px solid ${T.border};
-      display:flex;justify-content:space-around;align-items:center;
-      z-index:100;
-    }
-    .nav-btn{
-      display:flex;flex-direction:column;align-items:center;gap:3px;
-      cursor:pointer;
-      padding:8px 12px;
-      border-radius:14px;
-      transition:all .18s;
-      flex:1;
-      min-height:44px;
-      justify-content:center;
-      -webkit-tap-highlight-color:transparent;
-      touch-action:manipulation;
-    }
+    .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:8px 2px calc(8px + env(safe-area-inset-bottom, 0px));background:rgba(8,8,16,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid ${T.border};display:flex;justify-content:space-around;align-items:center;z-index:100;}
+    .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 8px;border-radius:12px;transition:all .18s;flex:1;min-height:44px;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .nav-btn.on{background:rgba(139,124,248,0.12);}
     .nav-btn:active{transform:scale(0.88);}
-    .nav-lbl{font-size:10px;font-weight:600;letter-spacing:.01em;margin-top:1px;}
-
-    /* ── MODALS ── */
-    .modal-bg{
-      position:fixed;inset:0;
-      background:rgba(0,0,0,0.7);
-      backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-      z-index:200;
-      display:flex;align-items:flex-end;justify-content:center;
-      animation:fadeIn .2s ease;
-    }
+    .nav-lbl{font-size:9px;font-weight:600;letter-spacing:.01em;margin-top:1px;}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-    .modal{
-      width:100%;max-width:430px;
-      background:#0D0D1C;
-      border:1px solid ${T.border};
-      border-bottom:none;
-      border-radius:24px 24px 0 0;
-      padding:20px 20px calc(32px + env(safe-area-inset-bottom, 0px));
-      animation:slideUp .3s cubic-bezier(.16,1,.3,1);
-      max-height:92dvh;
-      overflow-y:auto;
-    }
+    .modal{width:100%;max-width:430px;background:#0D0D1C;border:1px solid ${T.border};border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px calc(32px + env(safe-area-inset-bottom, 0px));animation:slideUp .3s cubic-bezier(.16,1,.3,1);max-height:92dvh;overflow-y:auto;}
     @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
     .modal-handle{width:40px;height:4px;background:rgba(255,255,255,0.14);border-radius:2px;margin:0 auto 18px;}
-
-    /* ── PAGE HEADERS ── */
     .ph{padding:calc(52px + env(safe-area-inset-top, 0px)) 18px 0;}
     .pt{font-size:22px;font-weight:800;letter-spacing:-.3px;}
     .ps{font-size:12.5px;color:${T.muted};margin-top:3px;}
-
-    /* ── LAYOUT HELPERS ── */
     .row{display:flex;justify-content:space-between;align-items:center;}
     .sec-title{font-size:14px;font-weight:700;}
     .sec-link{font-size:12.5px;color:${T.accent};font-weight:600;cursor:pointer;padding:4px 0;min-height:44px;display:flex;align-items:center;}
-
-    /* ── CHIPS ── */
-    .chip{
-      display:inline-flex;align-items:center;gap:5px;
-      padding:8px 14px;border-radius:100px;
-      background:rgba(255,255,255,0.058);border:1px solid ${T.border};
-      font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;
-      white-space:nowrap;
-      min-height:36px;
-      -webkit-tap-highlight-color:transparent;
-    }
+    .chip{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:100px;background:rgba(255,255,255,0.058);border:1px solid ${T.border};font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap;min-height:36px;-webkit-tap-highlight-color:transparent;}
     .chip.on{background:rgba(139,124,248,0.16);border-color:rgba(139,124,248,0.4);color:${T.accent};}
     .chip:active{transform:scale(0.94);}
-    .scroll-x{
-      display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;
-      scrollbar-width:none;
-      -webkit-overflow-scrolling:touch;
-    }
+    .scroll-x{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
     .scroll-x::-webkit-scrollbar{display:none;}
-
-    /* ── LIST ROWS ── */
-    .list-row{
-      display:flex;align-items:center;gap:13px;
-      padding:14px 0;
-      border-bottom:1px solid ${T.border};
-      cursor:pointer;transition:opacity .15s;
-      min-height:56px;
-    }
+    .list-row{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid ${T.border};cursor:pointer;transition:opacity .15s;min-height:56px;}
     .list-row:last-child{border-bottom:none;}
     .list-row:active{opacity:.6;}
-
-    /* ── PROGRESS ── */
     .progress{height:5px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden;}
     .progress-fill{height:100%;border-radius:100px;transition:width 1s cubic-bezier(.16,1,.3,1);}
-
-    /* ── TAGS ── */
     .tag{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600;}
     .mono{font-family:'JetBrains Mono',monospace;}
     .divider{height:1px;background:${T.border};margin:14px 0;}
-
-    /* ── ANIMATIONS ── */
     @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
     .float{animation:float 3.5s ease-in-out infinite;}
     .ai-dot{width:7px;height:7px;background:${T.accent};border-radius:50%;animation:pulse 1.4s ease-in-out infinite;}
@@ -491,159 +280,51 @@ const Styles = () => (
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(0.75);}}
     @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
     .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
-
-    /* ── EMPTY STATES ── */
     .empty{text-align:center;padding:48px 20px;color:${T.muted};}
     .empty-icon{font-size:40px;margin-bottom:12px;}
     .empty-text{font-size:14px;line-height:1.5;}
     .alert-bar{padding:12px 15px;border-radius:14px;display:flex;gap:10px;align-items:center;margin-bottom:8px;}
     .fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
-
-    /* ── FAB ── */
-    .fab{
-      position:fixed;
-      bottom:calc(80px + env(safe-area-inset-bottom, 0px));
-      right:max(16px, calc(50vw - 199px));
-      width:54px;height:54px;border-radius:17px;
-      background:linear-gradient(135deg,${T.accent},#6D5CE8);
-      box-shadow:0 4px 24px ${T.accentGlow},0 2px 8px rgba(0,0,0,0.4);
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer;z-index:150;
-      transition:all .25s cubic-bezier(.16,1,.3,1);
-      border:none;
-      -webkit-tap-highlight-color:transparent;
-      touch-action:manipulation;
-    }
+    .fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom, 0px));right:max(16px, calc(50vw - 199px));width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow},0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .fab:active{transform:scale(0.91);}
     .fab.open{transform:rotate(45deg);background:linear-gradient(135deg,#F87171,#E55);}
-    .fab-menu{
-      position:fixed;
-      bottom:calc(148px + env(safe-area-inset-bottom, 0px));
-      right:max(12px, calc(50vw - 210px));
-      z-index:149;
-      display:flex;flex-direction:column;gap:10px;align-items:flex-end;
-      animation:fabMenuIn .25s cubic-bezier(.16,1,.3,1);
-    }
+    .fab-menu{position:fixed;bottom:calc(148px + env(safe-area-inset-bottom, 0px));right:max(12px, calc(50vw - 210px));z-index:149;display:flex;flex-direction:column;gap:10px;align-items:flex-end;animation:fabMenuIn .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fabMenuIn{from{opacity:0;transform:translateY(16px) scale(0.94);}to{opacity:1;transform:translateY(0) scale(1);}}
     .fab-item{display:flex;align-items:center;gap:10px;cursor:pointer;animation:fabItemIn .22s cubic-bezier(.16,1,.3,1) both;}
     @keyframes fabItemIn{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
-    .fab-item-btn{
-      width:46px;height:46px;border-radius:14px;
-      display:flex;align-items:center;justify-content:center;font-size:21px;
-      border:1px solid rgba(255,255,255,0.1);
-      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-      transition:transform .15s;
-      -webkit-tap-highlight-color:transparent;
-    }
+    .fab-item-btn{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:transform .15s;-webkit-tap-highlight-color:transparent;}
     .fab-item-btn:active{transform:scale(0.88);}
-    .fab-item-label{
-      background:rgba(12,12,22,0.94);border:1px solid ${T.border};
-      border-radius:10px;padding:6px 12px;
-      font-size:12.5px;font-weight:600;color:${T.text};
-      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-      white-space:nowrap;
-    }
+    .fab-item-label{background:rgba(12,12,22,0.94);border:1px solid ${T.border};border-radius:10px;padding:6px 12px;font-size:12.5px;font-weight:600;color:${T.text};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);white-space:nowrap;}
     .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
-
-    /* ── QUICK ADD TYPE GRID ── */
     .type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
     .type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;cursor:pointer;transition:all .18s;border:1px solid transparent;min-height:68px;justify-content:center;-webkit-tap-highlight-color:transparent;}
     .type-btn.active{border-color:rgba(139,124,248,0.35);background:rgba(139,124,248,0.1);}
     .type-btn:active{transform:scale(0.93);}
-
-    /* ── TOAST NOTIFICATIONS ── */
-    .toast-container{
-      position:fixed;
-      top:calc(16px + env(safe-area-inset-top, 0px));
-      left:50%;transform:translateX(-50%);
-      z-index:500;display:flex;flex-direction:column;gap:8px;
-      width:calc(100% - 28px);max-width:402px;
-      pointer-events:none;
-    }
-    .toast{
-      background:#13131F;
-      border:1px solid rgba(255,255,255,0.11);
-      border-radius:16px;padding:12px 14px;
-      display:flex;gap:11px;align-items:flex-start;
-      pointer-events:all;
-      box-shadow:0 8px 32px rgba(0,0,0,0.55),0 2px 8px rgba(0,0,0,0.3);
-      animation:toastIn .3s cubic-bezier(.16,1,.3,1);
-    }
+    .toast-container{position:fixed;top:calc(16px + env(safe-area-inset-top, 0px));left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;width:calc(100% - 28px);max-width:402px;pointer-events:none;}
+    .toast{background:#13131F;border:1px solid rgba(255,255,255,0.11);border-radius:16px;padding:12px 14px;display:flex;gap:11px;align-items:flex-start;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.55),0 2px 8px rgba(0,0,0,0.3);animation:toastIn .3s cubic-bezier(.16,1,.3,1);}
     @keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(0.96);}to{opacity:1;transform:translateY(0) scale(1);}}
     .toast.out{animation:toastOut .28s cubic-bezier(.4,0,1,1) forwards;}
     @keyframes toastOut{to{opacity:0;transform:translateY(-10px) scale(0.96);}}
     .toast-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
     .toast-title{font-size:13px;font-weight:700;color:#EEECf8;line-height:1.3;}
     .toast-body{font-size:11.5px;color:rgba(238,236,248,0.5);margin-top:2px;line-height:1.4;}
-
-    /* ── NOTIFICATION BADGE ── */
-    .notif-badge{
-      position:absolute;top:-5px;right:-5px;
-      background:#F87171;color:white;border-radius:100px;
-      font-size:9px;font-weight:800;min-width:17px;height:17px;
-      display:flex;align-items:center;justify-content:center;
-      padding:0 4px;border:2px solid #080810;
-    }
+    .notif-badge{position:absolute;top:-5px;right:-5px;background:#F87171;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #080810;}
     .notif-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.055);cursor:pointer;transition:background .15s;position:relative;min-height:60px;align-items:center;}
     .notif-item:last-child{border-bottom:none;}
     .notif-item:active{background:rgba(255,255,255,0.03);}
     .notif-item.unread::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#8B7CF8;}
-
-    /* ── PERSON SELECTOR (quick toggle) ── */
     .person-sel{display:flex;gap:8px;}
-    .person-btn{
-      flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
-      height:48px;border-radius:13px;
-      border:1px solid ${T.border};
-      background:transparent;
-      cursor:pointer;transition:all .18s;
-      font-size:14px;font-weight:600;color:${T.muted};
-      -webkit-tap-highlight-color:transparent;
-    }
+    .person-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:13px;border:1px solid ${T.border};background:transparent;cursor:pointer;transition:all .18s;font-size:14px;font-weight:600;color:${T.muted};-webkit-tap-highlight-color:transparent;}
     .person-btn.on{border-color:rgba(139,124,248,0.35);background:rgba(139,124,248,0.1);color:${T.accent};}
     .person-btn:active{transform:scale(0.96);}
-
-    /* ── PRIORITY SELECTOR ── */
     .priority-sel{display:flex;gap:8px;}
-    .priority-btn{
-      flex:1;height:44px;border-radius:12px;
-      border:1px solid ${T.border};background:transparent;
-      cursor:pointer;transition:all .18s;
-      font-size:12px;font-weight:700;
-      text-transform:capitalize;
-      -webkit-tap-highlight-color:transparent;
-    }
+    .priority-btn{flex:1;height:44px;border-radius:12px;border:1px solid ${T.border};background:transparent;cursor:pointer;transition:all .18s;font-size:12px;font-weight:700;text-transform:capitalize;-webkit-tap-highlight-color:transparent;}
     .priority-btn:active{transform:scale(0.95);}
-
-    /* ── SECTION HEADER ── */
     .sec-header{display:flex;justify-content:space-between;align-items:center;padding:0 18px;margin-bottom:10px;}
-
-    /* ── ICON BUTTON ── */
-    .icon-btn{
-      width:40px;height:40px;border-radius:12px;
-      background:${T.card};border:1px solid ${T.border};
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer;position:relative;
-      -webkit-tap-highlight-color:transparent;
-      touch-action:manipulation;
-      flex-shrink:0;
-    }
+    .icon-btn{width:40px;height:40px;border-radius:12px;background:${T.card};border:1px solid ${T.border};display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;}
     .icon-btn:active{transform:scale(0.9);}
-
-    /* ── BALANCE CARD ── */
-    .balance-card{
-      margin:12px 18px 0;
-      background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(139,124,248,0.08));
-      border:1px solid rgba(52,211,153,0.2);
-      border-radius:20px;padding:18px;
-      cursor:pointer;
-      transition:all .18s;
-    }
+    .balance-card{margin:12px 18px 0;background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(139,124,248,0.08));border:1px solid rgba(52,211,153,0.2);border-radius:20px;padding:18px;cursor:pointer;transition:all .18s;}
     .balance-card:active{transform:scale(0.985);}
-    .balance-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
-    .balance-stat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;}
-
-    /* ── QUICK ACTIONS ── */
     .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 18px 0;}
     .quick-action{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .quick-action-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:all .18s;}
@@ -659,6 +340,7 @@ const I = ({ n, s = 20, c = "currentColor", w = 1.8 }) => {
     finance:"M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",
     house:"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2zM9 22V12h6v10",
     plan:"M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
+    kitchen:"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 17v-2h8v2H8zM8 13V7l4 3 4-3v6H8z",
     ai:"M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 010 2h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 010-2h1a7 7 0 017-7h1V5.73A2 2 0 0112 2z",
     profile:"M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z",
     plus:"M12 5v14M5 12h14", x:"M18 6L6 18M6 6l12 12",
@@ -698,29 +380,17 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
   const [type, setType] = useState(defaultType);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
-
-  // Shared form state — each type uses relevant fields
   const [f, setF] = useState({
-    // expense / transaction
     description:"", amount:"", category:"Groceries", added_by:"Mayank", date: today(),
-    // task
     title:"", assignee:"Mayank", priority:"medium", taskCategory:"General", due_date: today(),
-    // grocery
     groceryName:"", groceryCategory:"Vegetables", quantity:"1", unit:"kg", par_level:"1",
-    // note
     noteText:"",
-    // event
     eventTitle:"", eventDate: today(), eventType:"personal",
-    // memory
     memoryTitle:"", memoryText:"",
-    // reminder
     reminderText:"", reminderDate: today(),
-    // goal
     goalTitle:"", targetAmount:"", savedAmount:"0",
   });
-
   const set = (k,v) => setF(x=>({...x,[k]:v}));
-
   const expenseCats = ["Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Home Loan EMI","Other"];
   const emojiMap = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Home Loan EMI":"🏠","Other":"💸"};
 
@@ -768,7 +438,6 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
   };
 
   const currentType = QUICK_ADD_TYPES.find(t=>t.id===type);
-
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"90vh",overflowY:"auto"}}>
@@ -779,23 +448,16 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
             <I n="x" s={15} c={T.muted}/>
           </div>
         </div>
-
-        {/* Type switcher */}
         <div className="type-grid">
           {QUICK_ADD_TYPES.map((t,i)=>(
-            <div key={t.id} className={`type-btn ${type===t.id?"active":""}`} onClick={()=>setType(t.id)}
-              style={{"--delay":`${i*0.03}s`}}>
+            <div key={t.id} className={`type-btn ${type===t.id?"active":""}`} onClick={()=>setType(t.id)}>
               <div style={{width:38,height:38,borderRadius:12,background:type===t.id?`${t.color}22`:"rgba(255,255,255,0.05)",border:`1px solid ${type===t.id?t.color+"44":T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"all .18s"}}>{t.emoji}</div>
               <span style={{fontSize:9.5,color:type===t.id?t.color:T.muted,fontWeight:600}}>{t.label}</span>
             </div>
           ))}
         </div>
-
         <div style={{height:1,background:T.border,marginBottom:14}}/>
-
-        {/* Dynamic form based on type */}
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-
           {type==="expense" && <>
             <input className="input" placeholder="What did you spend on?" value={f.description} onChange={e=>set("description",e.target.value)} autoFocus/>
             <input className="input" type="number" placeholder="Amount (₹)" value={f.amount} onChange={e=>set("amount",e.target.value)}/>
@@ -810,7 +472,6 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
               ))}
             </div>
           </>}
-
           {type==="task" && <>
             <input className="input" placeholder="What needs to be done?" value={f.title} onChange={e=>set("title",e.target.value)} autoFocus/>
             <div style={{display:"flex",gap:8}}>
@@ -829,7 +490,6 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
             </div>
             <input className="input" type="date" value={f.due_date} onChange={e=>set("due_date",e.target.value)}/>
           </>}
-
           {type==="grocery" && <>
             <input className="input" placeholder="Item name (e.g. Amul Milk)" value={f.groceryName} onChange={e=>set("groceryName",e.target.value)} autoFocus/>
             <div style={{display:"flex",gap:8}}>
@@ -839,7 +499,6 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
               </select>
             </div>
           </>}
-
           {type==="note" && <>
             <textarea className="input" placeholder="Write your note..." value={f.noteText} onChange={e=>set("noteText",e.target.value)} rows={4} style={{resize:"none"}} autoFocus/>
             <div style={{display:"flex",gap:8}}>
@@ -850,7 +509,6 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
               ))}
             </div>
           </>}
-
           {type==="event" && <>
             <input className="input" placeholder="Event name" value={f.eventTitle} onChange={e=>set("eventTitle",e.target.value)} autoFocus/>
             <input className="input" type="date" value={f.eventDate} onChange={e=>set("eventDate",e.target.value)}/>
@@ -858,25 +516,20 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
               {["personal","medical","school","family","holiday","anniversary","birthday","other"].map(t=><option key={t} style={{textTransform:"capitalize"}}>{t}</option>)}
             </select>
           </>}
-
           {type==="memory" && <>
             <input className="input" placeholder="Memory title" value={f.memoryTitle} onChange={e=>set("memoryTitle",e.target.value)} autoFocus/>
             <textarea className="input" placeholder="Describe the memory..." value={f.memoryText} onChange={e=>set("memoryText",e.target.value)} rows={3} style={{resize:"none"}}/>
           </>}
-
           {type==="reminder" && <>
             <input className="input" placeholder="What to remind?" value={f.reminderText} onChange={e=>set("reminderText",e.target.value)} autoFocus/>
             <input className="input" type="date" value={f.reminderDate} onChange={e=>set("reminderDate",e.target.value)}/>
           </>}
-
           {type==="goal" && <>
             <input className="input" placeholder="Goal name (e.g. New Car)" value={f.goalTitle} onChange={e=>set("goalTitle",e.target.value)} autoFocus/>
             <input className="input" type="number" placeholder="Target amount (₹)" value={f.targetAmount} onChange={e=>set("targetAmount",e.target.value)}/>
             <input className="input" type="number" placeholder="Already saved (₹)" value={f.savedAmount} onChange={e=>set("savedAmount",e.target.value)}/>
           </>}
-
         </div>
-
         <button className="btn-primary" onClick={save} disabled={loading||saved} style={{marginTop:14,background:saved?"rgba(52,211,153,0.3)":undefined,borderColor:saved?T.green:undefined}}>
           {saved ? "✓ Saved!" : loading ? <div className="spinner"/> : `Save ${currentType?.label}`}
         </button>
@@ -889,57 +542,29 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
 const GlobalFAB = ({ screen, familyId }) => {
   const [open, setOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState(null);
-
-  const openQuickAdd = (typeId) => {
-    setOpen(false);
-    setQuickAddType(typeId);
-  };
-
-  // Close on Escape
+  const openQuickAdd = (typeId) => { setOpen(false); setQuickAddType(typeId); };
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") { setOpen(false); setQuickAddType(null); } };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
-
   return (
     <>
-      {/* Overlay when FAB menu open */}
       {open && <div className="fab-overlay" onClick={()=>setOpen(false)}/>}
-
-      {/* FAB menu items */}
       {open && (
-        <div className="fab-menu" role="menu" aria-label="Quick add menu">
+        <div className="fab-menu">
           {QUICK_ADD_TYPES.map((t, i) => (
-            <div key={t.id} className="fab-item" style={{"--delay":`${i*0.04}s`,animationDelay:`${i*0.04}s`}}
-              role="menuitem" onClick={()=>openQuickAdd(t.id)} aria-label={`Add ${t.label}`}>
+            <div key={t.id} className="fab-item" style={{animationDelay:`${i*0.04}s`}} onClick={()=>openQuickAdd(t.id)}>
               <span className="fab-item-label">{t.label}</span>
-              <div className="fab-item-btn" style={{background:`${t.color}18`,borderColor:`${t.color}30`}}>
-                {t.emoji}
-              </div>
+              <div className="fab-item-btn" style={{background:`${t.color}18`,borderColor:`${t.color}30`}}>{t.emoji}</div>
             </div>
           ))}
         </div>
       )}
-
-      {/* FAB button */}
-      <button
-        className={`fab ${open?"open":""}`}
-        onClick={()=>setOpen(o=>!o)}
-        aria-label={open?"Close quick add menu":"Open quick add menu"}
-        aria-expanded={open}
-      >
+      <button className={`fab ${open?"open":""}`} onClick={()=>setOpen(o=>!o)}>
         <I n="plus" s={22} c="white" w={2.5}/>
       </button>
-
-      {/* Quick Add Modal */}
-      {quickAddType && (
-        <QuickAddModal
-          onClose={()=>setQuickAddType(null)}
-          familyId={familyId}
-          defaultType={quickAddType}
-        />
-      )}
+      {quickAddType && <QuickAddModal onClose={()=>setQuickAddType(null)} familyId={familyId} defaultType={quickAddType}/>}
     </>
   );
 };
@@ -950,9 +575,10 @@ const AuthScreen = ({ onLogin }) => {
   const [form, setForm] = useState({ name:"", email:"", password:"" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const prefill = who => { const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" }; setForm({ name: who, email: emails[who], password: "FamilyOS2026!" }); };
-
+  const prefill = who => {
+    const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" };
+    setForm({ name: who, email: emails[who], password: "FamilyOS2026!" });
+  };
   const handle = async () => {
     if (!form.email || !form.password) { setError("Please fill all fields"); return; }
     setLoading(true); setError("");
@@ -968,10 +594,8 @@ const AuthScreen = ({ onLogin }) => {
     } catch(e) { setError("Connection error. Check your internet."); }
     setLoading(false);
   };
-
   return (
-    <div style={{flex:1,display:"flex",flexDirection:"column",padding:"60px 24px 40px",background:T.bg,minHeight:"100vh",
-      backgroundImage:`radial-gradient(ellipse 600px 500px at 50% -100px,rgba(139,124,248,0.12) 0%,transparent 65%)`}}>
+    <div style={{flex:1,display:"flex",flexDirection:"column",padding:"60px 24px 40px",background:T.bg,minHeight:"100vh",backgroundImage:`radial-gradient(ellipse 600px 500px at 50% -100px,rgba(139,124,248,0.12) 0%,transparent 65%)`}}>
       <div style={{textAlign:"center",marginBottom:36}}>
         <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏠</div>
         <div style={{fontSize:30,fontWeight:900,letterSpacing:"-.5px"}}>Family OS</div>
@@ -1011,7 +635,6 @@ const AuthScreen = ({ onLogin }) => {
 function useTable(table, familyId, extra = {}) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const fetch_ = useCallback(async () => {
     if (!familyId) return;
     let q = supabase.from(table).select("*").eq("family_id", familyId);
@@ -1021,63 +644,67 @@ function useTable(table, familyId, extra = {}) {
     if (data) setRows(data);
     setLoading(false);
   }, [table, familyId]);
-
   useEffect(() => {
     fetch_();
     if (!familyId) return;
-    const sub = supabase.channel(`rt-${table}`)
+    const sub = supabase.channel(`rt-${table}-${Math.random()}`)
       .on("postgres_changes", { event: "*", schema: "public", table }, fetch_)
       .subscribe();
     return () => sub.unsubscribe();
   }, [fetch_]);
-
   const add = async (row) => {
     const { data, error } = await supabase.from(table).insert([{ ...row, family_id: familyId }]).select();
     if (data) setRows(prev => [data[0], ...prev]);
     return { data, error };
   };
-
   const update_ = async (id, patch) => {
     await supabase.from(table).update(patch).eq("id", id);
     setRows(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
   };
-
   const remove = async (id) => {
     await supabase.from(table).delete().eq("id", id);
     setRows(prev => prev.filter(r => r.id !== id));
   };
-
   return { rows, loading, add, update: update_, remove, refresh: fetch_ };
 }
 
+// ─── BELL BUTTON ──────────────────────────────────────────────────────────────
+const BellButton = ({ familyId }) => {
+  const { rows: notifs } = useTable("notifications", familyId, { order: "created_at", asc: false, limit: 50 });
+  const [open, setOpen] = useState(false);
+  const unread = notifs.filter(n => !n.read).length;
+  return (
+    <>
+      <div style={{width:38,height:38,borderRadius:11,background:"rgba(255,255,255,0.042)",border:"1px solid rgba(255,255,255,0.075)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}} onClick={()=>setOpen(true)}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(238,236,248,0.42)" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        {unread > 0 && <div className="notif-badge">{unread > 9 ? "9+" : unread}</div>}
+      </div>
+      {open && <NotificationsScreen familyId={familyId} onClose={()=>setOpen(false)}/>}
+    </>
+  );
+};
 
-// ─── INLINE BALANCE WIDGET (used inside HomeScreen) ──────────────
+// ─── INLINE BALANCE WIDGET ────────────────────────────────────────────────────
 const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
   const bal = calcBalance(txns);
   return (
     <div style={{padding:"12px 20px 0"}}>
-      <div style={{
-        background:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(139,124,248,0.10))",
-        border:`1px solid rgba(52,211,153,0.22)`,
-        borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer",
-      }} onClick={()=>navigate("finance")}>
+      <div style={{background:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(139,124,248,0.10))",border:`1px solid rgba(52,211,153,0.22)`,borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer"}} onClick={()=>navigate("finance")}>
         <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
         <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
           {bal.available<0?"-":""}₹{Math.abs(bal.available).toLocaleString("en-IN")}
         </div>
-        <div style={{fontSize:11,color:T.muted,marginTop:3}}>
-          {bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}
-        </div>
+        <div style={{fontSize:11,color:T.muted,marginTop:3}}>{bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12,paddingTop:12,borderTop:`1px solid ${T.border}`}}>
           {[
             {l:"🏥 Clinic",v:inr(bal.clinicIncome),c:T.green},
             {l:"👩 Simmi",v:inr(bal.simmiIncome),c:T.blue},
             {l:"💸 Spent",v:inr(bal.totalExpenses),c:T.red},
             {l:"✅ Tasks",v:`${pendingTasks.length} left`,c:T.accent},
-          ].map((s,i)=>(
+          ].map((s)=>(
             <div key={s.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px 10px"}}>
               <div style={{fontSize:10,color:T.muted,fontWeight:600}}>{s.l}</div>
-            <div style={{fontSize:14,fontWeight:700,color:s.c,marginTop:2}}>{s.v}</div>
+              <div style={{fontSize:14,fontWeight:700,color:s.c,marginTop:2}}>{s.v}</div>
             </div>
           ))}
         </div>
@@ -1086,31 +713,26 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
   );
 };
 
-// ─── ADD INCOME MODAL ─────────────────────────────────────────────
+// ─── ADD INCOME MODAL ─────────────────────────────────────────────────────────
 const AddIncomeModal = ({ onClose, familyId }) => {
   const [source, setSource] = useState("Clinic Income");
   const [f, setF] = useState({ amount:"", description:"", date: today() });
   const [loading, setLoading] = useState(false);
   const sources = {
-    "Clinic Income": { emoji:"🏥", color:T.green,  placeholder:"OPD, Procedures, Consultations" },
-    "Simmi Income":  { emoji:"👩", color:T.blue,   placeholder:"Salary, Freelance, Other" },
+    "Clinic Income": { emoji:"🏥", color:T.green, placeholder:"OPD, Procedures, Consultations" },
+    "Simmi Income":  { emoji:"👩", color:T.blue,  placeholder:"Salary, Freelance, Other" },
   };
   const save = async () => {
     if (!f.amount) return;
     setLoading(true);
     const allTxns = await supabase.from("transactions").select("amount").eq("family_id", familyId);
     const bal = calcBalance(allTxns.data || []);
-    const newBal = bal.available + Math.abs(Number(f.amount));
     await supabase.from("transactions").insert([{
-      description: f.description || source,
-      amount: Math.abs(Number(f.amount)),
-      category: source,
-      added_by: source==="Clinic Income"?"Mayank":"Simmi",
-      date: f.date,
-      emoji: sources[source].emoji,
-      family_id: familyId,
+      description: f.description || source, amount: Math.abs(Number(f.amount)),
+      category: source, added_by: source==="Clinic Income"?"Mayank":"Simmi",
+      date: f.date, emoji: sources[source].emoji, family_id: familyId,
     }]);
-    notifyIncomeAdded(familyId, { amount: f.amount, category: source, balance: newBal });
+    notifyIncomeAdded(familyId, { amount: f.amount, category: source, balance: bal.available + Math.abs(Number(f.amount)) });
     setLoading(false); onClose();
   };
   return (
@@ -1135,38 +757,18 @@ const AddIncomeModal = ({ onClose, familyId }) => {
   );
 };
 
-
-// ─── BELL BUTTON WITH UNREAD BADGE ───────────────────────────────
-const BellButton = ({ familyId }) => {
-  const { rows: notifs } = useTable("notifications", familyId, { order: "created_at", asc: false, limit: 50 });
-  const [open, setOpen] = useState(false);
-  const unread = notifs.filter(n => !n.read).length;
-  return (
-    <>
-      <div style={{width:38,height:38,borderRadius:11,background:"rgba(255,255,255,0.042)",border:"1px solid rgba(255,255,255,0.075)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}}
-        onClick={()=>setOpen(true)}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(238,236,248,0.42)" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-        {unread > 0 && <div className="notif-badge">{unread > 9 ? "9+" : unread}</div>}
-      </div>
-      {open && <NotificationsScreen familyId={familyId} onClose={()=>setOpen(false)}/>}
-    </>
-  );
-};
-
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 const HomeScreen = ({ navigate, openModal, familyId, user }) => {
   const { rows: tasks } = useTable("tasks", familyId, { order: "created_at" });
   const { rows: txns } = useTable("transactions", familyId, { order: "date", limit: 10 });
   const { rows: grocery } = useTable("grocery", familyId);
+  const { rows: pantry } = useTable("pantry", familyId);
   const { rows: bills } = useTable("bills", familyId, { order: "due_date", asc: true });
   const { rows: goals } = useTable("goals", familyId);
-
   const pendingTasks = tasks.filter(t => !t.done);
   const lowGrocery = grocery.filter(g => Number(g.quantity) <= Number(g.par_level));
+  const lowPantry = pantry.filter(p => Number(p.quantity) <= Number(p.par_level));
   const urgentBills = bills.filter(b => !b.paid && b.is_urgent);
-  const totalSpent = txns.filter(t => Number(t.amount) < 0).reduce((a, t) => a + Math.abs(Number(t.amount)), 0);
-  const totalIncome = txns.filter(t => Number(t.amount) > 0).reduce((a, t) => a + Number(t.amount), 0);
-  const userName = "Mayank & Simmi";
 
   return (
     <div className="screen">
@@ -1174,16 +776,14 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         <div className="row">
           <div>
             <div style={{fontSize:12,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em"}}>Good morning ☀️</div>
-            <div style={{fontSize:20,fontWeight:900,letterSpacing:"-.4px",marginTop:2}}>{userName}</div>
+            <div style={{fontSize:20,fontWeight:900,letterSpacing:"-.4px",marginTop:2}}>Mayank & Simmi</div>
             <div style={{fontSize:12,color:T.dim,marginTop:2}}>📍 Sector 48, Gurgaon</div>
           </div>
-          <div style={{display:"flex",gap:8}}>
-            <BellButton familyId={familyId}/>
-          </div>
+          <BellButton familyId={familyId}/>
         </div>
       </div>
 
-      {(urgentBills.length > 0 || lowGrocery.length > 0) && (
+      {(urgentBills.length > 0 || lowGrocery.length > 0 || lowPantry.length > 0) && (
         <div style={{padding:"12px 18px 0"}}>
           {urgentBills.length > 0 && (
             <div className="alert-bar" style={{background:T.redSoft,border:"1px solid rgba(248,113,113,0.2)"}}>
@@ -1195,27 +795,26 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
               <span onClick={()=>navigate("finance")} style={{fontSize:12,color:T.red,fontWeight:600,cursor:"pointer"}}>Pay →</span>
             </div>
           )}
-          {lowGrocery.length > 0 && (
+          {(lowGrocery.length > 0 || lowPantry.length > 0) && (
             <div className="alert-bar" style={{background:T.amberSoft,border:"1px solid rgba(251,191,36,0.2)"}}>
               <span style={{fontSize:15}}>🛒</span>
               <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:600,color:T.amber}}>{lowGrocery.length} items need restocking</div>
-                <div style={{fontSize:11.5,color:T.muted}}>{lowGrocery.slice(0,3).map(g=>g.name).join(", ")}</div>
+                <div style={{fontSize:13,fontWeight:600,color:T.amber}}>{lowGrocery.length + lowPantry.length} items need restocking</div>
+                <div style={{fontSize:11.5,color:T.muted}}>{[...lowGrocery,...lowPantry].slice(0,3).map(g=>g.name).join(", ")}</div>
               </div>
-              <span onClick={()=>navigate("household")} style={{fontSize:12,color:T.amber,fontWeight:600,cursor:"pointer"}}>View →</span>
+              <span onClick={()=>navigate("kitchen")} style={{fontSize:12,color:T.amber,fontWeight:600,cursor:"pointer"}}>Kitchen →</span>
             </div>
           )}
         </div>
       )}
 
-      {/* ── LIVE BALANCE WIDGET ── */}
       <InlineBalanceWidget txns={txns} navigate={navigate} pendingTasks={pendingTasks}/>
 
       <div className="quick-actions">
         {[
           {emoji:"🏥",label:"Income",color:T.green,action:()=>openModal("income")},
           {emoji:"💸",label:"Expense",color:T.accent,action:()=>openModal("expense")},
-          {emoji:"✅",label:"Task",color:T.teal,action:()=>openModal("task")},
+          {emoji:"🍽",label:"Kitchen",color:T.teal,action:()=>navigate("kitchen")},
           {emoji:"🤖",label:"Ask AI",color:T.pink,action:()=>navigate("ai")},
         ].map(q=>(
           <div key={q.label} className="quick-action" onClick={q.action}>
@@ -1308,7 +907,6 @@ const FinanceScreen = ({ familyId }) => {
   const { rows: budgets } = useTable("budgets", familyId);
   const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
   const spent = txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
-
   return (
     <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
@@ -1416,7 +1014,6 @@ const HouseholdScreen = ({ familyId }) => {
   const { rows: docs } = useTable("documents", familyId);
   const { rows: maint } = useTable("maintenance", familyId);
   const toggleTask = (id, done) => updTask(id, { done, done_at: done ? new Date().toISOString() : null });
-
   return (
     <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
@@ -1538,7 +1135,6 @@ const PlannerScreen = ({ familyId }) => {
   const { rows: events } = useTable("events", familyId, { order: "event_date", asc: true });
   const { rows: health } = useTable("health", familyId);
   const [sel, setSel] = useState(new Date().getDate());
-
   return (
     <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}><div className="pt">Planner</div><div className="ps">Goals · Health · Calendar</div></div>
@@ -1654,18 +1250,14 @@ const AIScreen = ({ familyId }) => {
   const { rows: txns } = useTable("transactions", familyId, { order: "date", limit: 20 });
   const { rows: tasks } = useTable("tasks", familyId, { order: "created_at" });
   const { rows: grocery } = useTable("grocery", familyId);
+  const { rows: pantry } = useTable("pantry", familyId);
   const { rows: goals } = useTable("goals", familyId);
   const { rows: bills } = useTable("bills", familyId);
-
-  const [msgs, setMsgs] = useState([{
-    role:"assistant",
-    text:"Namaste! 🙏 I'm your Family OS AI.\n\nAsk me about spending, tasks, grocery, bills or goals!",
-  }]);
+  const [msgs, setMsgs] = useState([{ role:"assistant", text:"Namaste! 🙏 I'm your Family OS AI.\n\nAsk me about spending, tasks, grocery, pantry, bills or goals!" }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
-
-  const suggestions = ["Summarise spending","Pending tasks?","Grocery restock?","Goals progress?","Bills due?"];
+  const suggestions = ["Summarise spending","Pending tasks?","Grocery restock?","Goals progress?","Bills due?","Pantry status?"];
 
   const send = useCallback(async (text) => {
     const q = (text || input).trim();
@@ -1679,21 +1271,32 @@ const AIScreen = ({ familyId }) => {
       const spent=txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
       const pending=tasks.filter(t=>t.done===false);
       const lowStock=grocery.filter(g=>Number(g.quantity)<=Number(g.par_level));
+      const lowPantryItems=pantry.filter(p=>Number(p.quantity)<=Number(p.par_level));
       const dueBills=bills.filter(b=>b.paid===false);
       let ans="";
-      if(ql.includes("hi")||ql.includes("hello")||ql.includes("namaste")){ans="Namaste Mayank and Simmi! 🙏\n\nSaved: ₹"+(income-spent).toLocaleString("en-IN")+" | Tasks: "+pending.length+" | Restock: "+lowStock.length+" | Bills: "+dueBills.length;}
-      else if(ql.includes("spend")||ql.includes("expense")||ql.includes("money")||ql.includes("financ")){ans="💰 This month:\n\nIncome: ₹"+income.toLocaleString("en-IN")+"\nSpent: ₹"+spent.toLocaleString("en-IN")+"\nSaved: ₹"+(income-spent).toLocaleString("en-IN");}
-      else if(ql.includes("task")||ql.includes("pending")||ql.includes("todo")){ans=pending.length===0?"🎉 All tasks done!":"📋 "+pending.length+" pending:\n\n"+pending.slice(0,5).map(t=>"• "+t.title+" ("+t.assignee+")").join("\n");}
-      else if(ql.includes("grocery")||ql.includes("restock")||ql.includes("shopping")){ans=lowStock.length===0?"🛒 All groceries stocked!":"🛒 Restock needed:\n\n"+lowStock.map(g=>"• "+g.name+" ("+g.quantity+" "+g.unit+")").join("\n");}
-      else if(ql.includes("bill")||ql.includes("pay")||ql.includes("due")){ans=dueBills.length===0?"✅ No pending bills!":"📋 Unpaid bills:\n\n"+dueBills.map(b=>"• "+b.name+": ₹"+Number(b.amount).toLocaleString("en-IN")+" due "+b.due_date).join("\n");}
-      else if(ql.includes("goal")){ans=goals.length===0?"🎯 No goals yet!":"🎯 Goals:\n\n"+goals.map(g=>"• "+g.title+": "+Math.round((g.saved_amount/g.target_amount)*100)+"%").join("\n");}
-      else{ans="I can help with:\n\n💰 Spending & finances\n✅ Tasks\n🛒 Grocery\n📋 Bills\n🎯 Goals\n\nJust ask!";}
+      if(ql.includes("hi")||ql.includes("hello")||ql.includes("namaste")){
+        ans="Namaste Mayank and Simmi! 🙏\n\nSaved: ₹"+(income-spent).toLocaleString("en-IN")+" | Tasks: "+pending.length+" | Restock: "+lowStock.length+" | Bills: "+dueBills.length;
+      } else if(ql.includes("spend")||ql.includes("expense")||ql.includes("money")||ql.includes("financ")){
+        ans="💰 This month:\n\nIncome: ₹"+income.toLocaleString("en-IN")+"\nSpent: ₹"+spent.toLocaleString("en-IN")+"\nSaved: ₹"+(income-spent).toLocaleString("en-IN");
+      } else if(ql.includes("task")||ql.includes("pending")||ql.includes("todo")){
+        ans=pending.length===0?"🎉 All tasks done!":"📋 "+pending.length+" pending:\n\n"+pending.slice(0,5).map(t=>"• "+t.title+" ("+t.assignee+")").join("\n");
+      } else if(ql.includes("grocery")||ql.includes("restock")||ql.includes("shopping")){
+        ans=lowStock.length===0?"🛒 All groceries stocked!":"🛒 Restock needed:\n\n"+lowStock.map(g=>"• "+g.name+" ("+g.quantity+" "+g.unit+")").join("\n");
+      } else if(ql.includes("pantry")){
+        ans=lowPantryItems.length===0?"🧺 Pantry fully stocked!":"🧺 Low pantry items:\n\n"+lowPantryItems.map(p=>"• "+p.name+" ("+p.quantity+" "+p.unit+")").join("\n");
+      } else if(ql.includes("bill")||ql.includes("pay")||ql.includes("due")){
+        ans=dueBills.length===0?"✅ No pending bills!":"📋 Unpaid bills:\n\n"+dueBills.map(b=>"• "+b.name+": ₹"+Number(b.amount).toLocaleString("en-IN")+" due "+b.due_date).join("\n");
+      } else if(ql.includes("goal")){
+        ans=goals.length===0?"🎯 No goals yet!":"🎯 Goals:\n\n"+goals.map(g=>"• "+g.title+": "+Math.round((g.saved_amount/g.target_amount)*100)+"%").join("\n");
+      } else {
+        ans="I can help with:\n\n💰 Spending & finances\n✅ Tasks\n🛒 Grocery\n🧺 Pantry\n📋 Bills\n🎯 Goals\n\nJust ask!";
+      }
       setMsgs(m=>[...m,{role:"assistant",text:ans}]);
     } catch(e) {
       setMsgs(m=>[...m,{role:"assistant",text:"Something went wrong. Try again."}]);
     }
     setLoading(false);
-  },[input,loading,txns,tasks,grocery,goals,bills]);
+  },[input,loading,txns,tasks,grocery,pantry,goals,bills]);
 
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,loading]);
 
@@ -1749,7 +1352,6 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
   const { rows: goals } = useTable("goals", familyId);
   const { rows: docs } = useTable("documents", familyId);
   const name = user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
-
   return (
     <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
@@ -1766,11 +1368,7 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
       </div>
       <div style={{padding:"14px 18px 0"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9,marginBottom:22}}>
-          {[
-            {emoji:"✅",val:tasks.filter(t=>t.done).length,lbl:"Done"},
-            {emoji:"🎯",val:goals.length,lbl:"Goals"},
-            {emoji:"📁",val:docs.length,lbl:"Docs"},
-          ].map(s=>(
+          {[{emoji:"✅",val:tasks.filter(t=>t.done).length,lbl:"Done"},{emoji:"🎯",val:goals.length,lbl:"Goals"},{emoji:"📁",val:docs.length,lbl:"Docs"}].map(s=>(
             <div key={s.lbl} className="card" style={{padding:"14px",textAlign:"center"}}>
               <div style={{fontSize:22,marginBottom:5}}>{s.emoji}</div>
               <div style={{fontSize:22,fontWeight:900}}>{s.val}</div>
@@ -1791,14 +1389,14 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
           <I n="logout" s={18} c={T.red}/> Sign Out
         </button>
         <div style={{textAlign:"center",padding:"20px 0",color:T.dim,fontSize:12}}>
-          Family OS v2.0 · Built for Mayank & Simmi 💙<br/>Powered by Claude + Supabase
+          Family OS v2.1 · Kitchen Module Active 🍽<br/>Powered by Claude + Supabase
         </div>
       </div>
     </div>
   );
 };
 
-// ─── LEGACY MODALS (kept for home screen quick actions) ───────────────────────
+// ─── LEGACY MODALS ────────────────────────────────────────────────────────────
 const AddExpenseModal = ({ onClose, familyId }) => {
   const [f, setF] = useState({ description:"", amount:"", category:"Groceries", added_by:"Mayank", emoji:"💸", date: today() });
   const [loading, setLoading] = useState(false);
@@ -1809,9 +1407,8 @@ const AddExpenseModal = ({ onClose, familyId }) => {
     setLoading(true);
     const allTxns2 = await supabase.from("transactions").select("amount").eq("family_id", familyId);
     const bal2 = calcBalance(allTxns2.data || []);
-    const newBal2 = bal2.available - Math.abs(Number(f.amount));
     await supabase.from("transactions").insert([{ ...f, amount: -Math.abs(Number(f.amount)), family_id: familyId, emoji: emojiMap[f.category]||"💸" }]);
-    notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: newBal2 });
+    notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal2.available - Math.abs(Number(f.amount)) });
     setLoading(false); onClose();
   };
   return (
@@ -1864,7 +1461,7 @@ const AddTaskModal = ({ onClose, familyId }) => {
           {["high","medium","low"].map(p=>(
             <div key={p} className="priority-btn" onClick={()=>setF(x=>({...x,priority:p}))}
               style={{border:`1px solid ${f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.border}`,background:f.priority===p?(p==="high"?T.redSoft:p==="medium"?T.amberSoft:T.greenSoft):"transparent",color:f.priority===p?(p==="high"?T.red:p==="medium"?T.amber:T.green):T.muted}}>
-              {p==="high"?"🔴":"p"==="medium"?"🟡":"🟢"} {p}
+              {p}
             </div>
           ))}
         </div>
@@ -1905,19 +1502,476 @@ const AddGroceryModal = ({ onClose, familyId }) => {
   );
 };
 
+// ════════════════════════════════════════════════════════════════════
+// ─── KITCHEN MODULE ──────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════
+
+const MEAL_TYPES = ["breakfast", "lunch", "snack", "dinner"];
+const MEAL_EMOJI = { breakfast:"🌅", lunch:"☀️", snack:"🍎", dinner:"🌙" };
+const PANTRY_CATS = ["Grains","Pulses","Dairy","Vegetables","Fruits","Spices","Oils","Snacks","Beverages","Other"];
+
+// ─── SEED RECIPES DATA ────────────────────────────────────────────────────────
+const SEED_RECIPES = [
+  { name:"Poha", meal_type:"breakfast", servings:2, prep_time_mins:15, tags:["vegetarian","quick"],
+    ingredients:[{name:"Poha",qty:200,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:20,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Green Chilli",qty:2,unit:"pcs"}]},
+  { name:"Upma", meal_type:"breakfast", servings:2, prep_time_mins:20, tags:["vegetarian","quick"],
+    ingredients:[{name:"Rava",qty:150,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:20,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Cashews",qty:20,unit:"g"}]},
+  { name:"Idli Sambar", meal_type:"breakfast", servings:4, prep_time_mins:30, tags:["vegetarian","child-friendly"],
+    ingredients:[{name:"Idli Batter",qty:400,unit:"g"},{name:"Toor Dal",qty:100,unit:"g"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:20,unit:"ml"}]},
+  { name:"Aloo Paratha", meal_type:"breakfast", servings:2, prep_time_mins:30, tags:["vegetarian","child-friendly"],
+    ingredients:[{name:"Wheat Flour",qty:200,unit:"g"},{name:"Potato",qty:300,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"},{name:"Butter",qty:20,unit:"g"}]},
+  { name:"Oats Porridge", meal_type:"breakfast", servings:2, prep_time_mins:10, tags:["vegetarian","quick","healthy"],
+    ingredients:[{name:"Oats",qty:150,unit:"g"},{name:"Milk",qty:400,unit:"ml"},{name:"Banana",qty:1,unit:"pcs"},{name:"Honey",qty:15,unit:"ml"}]},
+  { name:"Masala Dosa", meal_type:"breakfast", servings:3, prep_time_mins:30, tags:["vegetarian"],
+    ingredients:[{name:"Dosa Batter",qty:400,unit:"g"},{name:"Potato",qty:300,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"}]},
+  { name:"Rajma Chawal", meal_type:"lunch", servings:4, prep_time_mins:45, tags:["vegetarian","child-friendly"],
+    ingredients:[{name:"Rajma",qty:250,unit:"g"},{name:"Rice",qty:300,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
+  { name:"Dal Tadka with Rice", meal_type:"lunch", servings:4, prep_time_mins:30, tags:["vegetarian","quick"],
+    ingredients:[{name:"Toor Dal",qty:200,unit:"g"},{name:"Rice",qty:300,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Ghee",qty:20,unit:"ml"}]},
+  { name:"Chole Bhature", meal_type:"lunch", servings:4, prep_time_mins:60, tags:["vegetarian"],
+    ingredients:[{name:"Kabuli Chana",qty:250,unit:"g"},{name:"Wheat Flour",qty:200,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Oil",qty:50,unit:"ml"}]},
+  { name:"Paneer Sabzi with Roti", meal_type:"lunch", servings:3, prep_time_mins:30, tags:["vegetarian","child-friendly"],
+    ingredients:[{name:"Paneer",qty:200,unit:"g"},{name:"Wheat Flour",qty:200,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
+  { name:"Fruit Bowl", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","child-friendly","healthy"],
+    ingredients:[{name:"Banana",qty:2,unit:"pcs"},{name:"Apple",qty:1,unit:"pcs"},{name:"Pomegranate",qty:100,unit:"g"}]},
+  { name:"Banana Milkshake", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","child-friendly"],
+    ingredients:[{name:"Banana",qty:2,unit:"pcs"},{name:"Milk",qty:400,unit:"ml"},{name:"Sugar",qty:20,unit:"g"}]},
+  { name:"Namkeen & Biscuits", meal_type:"snack", servings:2, prep_time_mins:2, tags:["vegetarian","quick"],
+    ingredients:[{name:"Namkeen",qty:100,unit:"g"},{name:"Biscuits",qty:100,unit:"g"}]},
+  { name:"Sprouts Chaat", meal_type:"snack", servings:2, prep_time_mins:10, tags:["vegetarian","healthy"],
+    ingredients:[{name:"Moong Sprouts",qty:150,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Lemon",qty:1,unit:"pcs"}]},
+  { name:"Paneer Butter Masala", meal_type:"dinner", servings:4, prep_time_mins:40, tags:["vegetarian","child-friendly"],
+    ingredients:[{name:"Paneer",qty:250,unit:"g"},{name:"Tomato",qty:4,unit:"pcs"},{name:"Onion",qty:2,unit:"pcs"},{name:"Butter",qty:30,unit:"g"},{name:"Cream",qty:50,unit:"ml"}]},
+  { name:"Dal Makhani", meal_type:"dinner", servings:4, prep_time_mins:60, tags:["vegetarian"],
+    ingredients:[{name:"Urad Dal",qty:200,unit:"g"},{name:"Rajma",qty:50,unit:"g"},{name:"Butter",qty:40,unit:"g"},{name:"Cream",qty:50,unit:"ml"},{name:"Tomato",qty:3,unit:"pcs"}]},
+  { name:"Sabzi with Roti", meal_type:"dinner", servings:3, prep_time_mins:30, tags:["vegetarian","quick"],
+    ingredients:[{name:"Mixed Vegetables",qty:300,unit:"g"},{name:"Wheat Flour",qty:200,unit:"g"},{name:"Oil",qty:30,unit:"ml"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"}]},
+  { name:"Khichdi", meal_type:"dinner", servings:3, prep_time_mins:25, tags:["vegetarian","child-friendly","healthy"],
+    ingredients:[{name:"Rice",qty:150,unit:"g"},{name:"Moong Dal",qty:100,unit:"g"},{name:"Ghee",qty:20,unit:"ml"},{name:"Cumin Seeds",qty:5,unit:"g"},{name:"Turmeric",qty:3,unit:"g"}]},
+  { name:"Dahi Rice", meal_type:"dinner", servings:2, prep_time_mins:15, tags:["vegetarian","quick","child-friendly"],
+    ingredients:[{name:"Rice",qty:200,unit:"g"},{name:"Curd",qty:200,unit:"g"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Curry Leaves",qty:5,unit:"g"},{name:"Oil",qty:10,unit:"ml"}]},
+  { name:"Aloo Gobi", meal_type:"dinner", servings:4, prep_time_mins:30, tags:["vegetarian"],
+    ingredients:[{name:"Potato",qty:300,unit:"g"},{name:"Cauliflower",qty:400,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
+];
+
+const seedRecipes = async (familyId) => {
+  const { data: existing } = await supabase.from("recipes").select("id").eq("family_id", familyId).limit(1);
+  if (existing?.length) return;
+  for (const r of SEED_RECIPES) {
+    const { data: rec } = await supabase.from("recipes").insert([{
+      family_id: familyId, name: r.name, meal_type: r.meal_type,
+      servings: r.servings, prep_time_mins: r.prep_time_mins, tags: r.tags, instructions: "",
+    }]).select().single();
+    if (rec?.id) {
+      await supabase.from("recipe_ingredients").insert(
+        r.ingredients.map(i => ({ recipe_id: rec.id, pantry_item_name: i.name, quantity: i.qty, unit: i.unit }))
+      );
+    }
+  }
+};
+
+const markMealCooked = async (familyId, mealPlanRow, recipes, pantryRows) => {
+  const recipe = recipes.find(r => r.id === mealPlanRow.recipe_id);
+  if (!recipe) return { deducted: [] };
+  const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", recipe.id);
+  if (!ingredients?.length) return { deducted: [] };
+  const ratio = (mealPlanRow.servings_cooked || 2) / (recipe.servings || 2);
+  const deducted = [];
+  const lowStockItems = [];
+  for (const ing of ingredients) {
+    const needed = ing.quantity * ratio;
+    const pantryItem = pantryRows.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase());
+    if (pantryItem) {
+      const newQty = Math.max(0, Number(pantryItem.quantity) - needed);
+      await supabase.from("pantry").update({ quantity: newQty, updated_at: new Date().toISOString() }).eq("id", pantryItem.id);
+      await supabase.from("consumption_log").insert([{
+        family_id: familyId, meal_plan_id: mealPlanRow.id,
+        pantry_item_name: ing.pantry_item_name, quantity_used: needed, unit: ing.unit,
+        logged_at: new Date().toISOString(),
+      }]);
+      deducted.push({ name: ing.pantry_item_name, used: needed, unit: ing.unit, remaining: newQty });
+      if (newQty <= Number(pantryItem.par_level)) {
+        lowStockItems.push({ name: pantryItem.name, qty: newQty, unit: pantryItem.unit, category: pantryItem.category });
+      }
+    }
+  }
+  await supabase.from("meal_plan").update({ cooked: true, cooked_at: new Date().toISOString() }).eq("id", mealPlanRow.id);
+  for (const item of lowStockItems) {
+    const { data: existing } = await supabase.from("shopping_list").select("id").eq("family_id", familyId).eq("item_name", item.name).eq("purchased", false);
+    if (!existing?.length) {
+      await supabase.from("shopping_list").insert([{
+        family_id: familyId, item_name: item.name, quantity_needed: item.qty <= 0 ? 1 : item.qty,
+        unit: item.unit, category: item.category, purchased: false,
+      }]);
+    }
+  }
+  return { deducted, lowStockItems };
+};
+
+// ─── KITCHEN SCREEN ───────────────────────────────────────────────────────────
+const KitchenScreen = ({ familyId }) => {
+  const [tab, setTab] = useState("today");
+  const [seeded, setSeeded] = useState(false);
+  const [cooking, setCooking] = useState(null);
+  const [addMealModal, setAddMealModal] = useState(null);
+  const [showAddPantry, setShowAddPantry] = useState(false);
+  const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
+
+  const { rows: pantry, refresh: refreshPantry } = useTable("pantry", familyId, { order: "name", asc: true });
+  const { rows: recipes } = useTable("recipes", familyId, { order: "name", asc: true });
+  const { rows: mealPlan, refresh: refreshMeal } = useTable("meal_plan", familyId, { order: "plan_date", asc: true });
+  const { rows: shopping, update: updShopping, remove: removeShopping } = useTable("shopping_list", familyId, { order: "added_at" });
+
+  useEffect(() => {
+    if (!seeded && familyId) { seedRecipes(familyId).then(() => setSeeded(true)); }
+  }, [familyId, seeded]);
+
+  const todayStr = today();
+  const todayMeals = mealPlan.filter(m => m.plan_date === todayStr);
+  const lowStock = pantry.filter(p => Number(p.quantity) <= Number(p.par_level));
+
+  const handleMarkCooked = async (meal) => {
+    setCooking(meal.id);
+    try {
+      const { deducted, lowStockItems } = await markMealCooked(familyId, meal, recipes, pantry);
+      await refreshPantry();
+      await refreshMeal();
+      showToast({
+        title: "🍽 Meal Cooked!",
+        body: deducted.length
+          ? `${deducted.length} ingredients deducted.${lowStockItems?.length ? ` ${lowStockItems.length} added to shopping list.` : ""}`
+          : "Marked as cooked! (No pantry items matched)",
+        icon:"🍽", color:"#34D399"
+      });
+    } catch(e) { console.error(e); }
+    setCooking(null);
+  };
+
+  const assignRecipe = async (recipeId, date, mealType) => {
+    // Remove existing meal for this slot first
+    const existing = mealPlan.find(m => m.plan_date === date && m.meal_type === mealType);
+    if (existing) await supabase.from("meal_plan").delete().eq("id", existing.id);
+    await supabase.from("meal_plan").insert([{
+      family_id: familyId, plan_date: date, meal_type: mealType,
+      recipe_id: recipeId, cooked: false, servings_cooked: 2,
+    }]);
+    await refreshMeal();
+    setAddMealModal(null);
+  };
+
+  const savePantryItem = async () => {
+    if (!pf.name || !pf.quantity) return;
+    await supabase.from("pantry").insert([{
+      family_id: familyId, name: pf.name, category: pf.category,
+      quantity: Number(pf.quantity), unit: pf.unit, par_level: Number(pf.par_level) || 0,
+      updated_at: new Date().toISOString(),
+    }]);
+    await refreshPantry();
+    setPf({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
+    setShowAddPantry(false);
+  };
+
+  const getWeekDates = () => {
+    const d = new Date();
+    return Array.from({ length: 7 }, (_, i) => {
+      const dd = new Date(d); dd.setDate(d.getDate() + i);
+      return dd.toISOString().split("T")[0];
+    });
+  };
+  const weekDates = getWeekDates();
+
+  return (
+    <div className="screen">
+      <div style={{padding:"calc(44px + env(safe-area-inset-top,0px)) 18px 0"}}>
+        <div className="row">
+          <div>
+            <div style={{fontSize:22,fontWeight:900,letterSpacing:"-.4px"}}>🍽 Kitchen</div>
+            <div style={{fontSize:12,color:T.muted,marginTop:2}}>
+              {lowStock.length > 0
+                ? <span style={{color:T.amber}}>⚠️ {lowStock.length} items low · </span>
+                : <span style={{color:T.green}}>✅ Stock OK · </span>}
+              {recipes.length} recipes
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="scroll-x" style={{padding:"10px 18px",marginBottom:4}}>
+        {[
+          {id:"today", label:"📅 Today"},
+          {id:"week",  label:"🗓 Week"},
+          {id:"recipes",label:"🥘 Recipes"},
+          {id:"pantry", label:"🧺 Pantry"},
+          {id:"shop",   label:"🛒 Shop"},
+        ].map(t => (
+          <div key={t.id} className={`chip ${tab===t.id?"on":""}`} onClick={()=>setTab(t.id)}>{t.label}</div>
+        ))}
+      </div>
+
+      <div style={{padding:"0 18px"}}>
+
+        {/* TODAY */}
+        {tab==="today" && (
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {MEAL_TYPES.map(mealType => {
+              const meal = todayMeals.find(m => m.meal_type === mealType);
+              const recipe = meal ? recipes.find(r => r.id === meal.recipe_id) : null;
+              return (
+                <div key={mealType} className="card" style={{padding:"14px 16px",borderColor:meal?.cooked?"rgba(52,211,153,0.3)":T.border}}>
+                  <div className="row" style={{marginBottom:recipe?10:0}}>
+                    <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                      <span style={{fontSize:22}}>{MEAL_EMOJI[mealType]}</span>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,textTransform:"capitalize",color:T.muted}}>{mealType}</div>
+                        <div style={{fontSize:15,fontWeight:600,color:recipe?T.text:T.dim}}>{recipe ? recipe.name : "Not planned"}</div>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                      {meal && !meal.cooked && (
+                        <button onClick={()=>handleMarkCooked(meal)} disabled={cooking===meal.id}
+                          style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(52,211,153,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅ Cooked"}
+                        </button>
+                      )}
+                      {meal?.cooked && <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>}
+                      <div onClick={()=>setAddMealModal({date:todayStr,meal_type:mealType})}
+                        style={{width:32,height:32,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                        <I n="edit" s={14} c={T.accent}/>
+                      </div>
+                    </div>
+                  </div>
+                  {recipe && (
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      <span className="tag" style={{background:T.accentSoft,color:T.accent}}>⏱ {recipe.prep_time_mins}min</span>
+                      <span className="tag" style={{background:T.accentSoft,color:T.accent}}>👥 {recipe.servings}</span>
+                      {(recipe.tags||[]).slice(0,2).map(tag=>(
+                        <span key={tag} className="tag" style={{background:"rgba(255,255,255,0.06)",color:T.muted}}>{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* WEEK */}
+        {tab==="week" && (
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {weekDates.map(date => {
+              const dayMeals = mealPlan.filter(m => m.plan_date === date);
+              const d = new Date(date);
+              const dayName = d.toLocaleDateString("en-IN",{weekday:"short"});
+              const dayNum = d.getDate();
+              const isToday = date === todayStr;
+              return (
+                <div key={date} className="card" style={{padding:"12px 14px",borderColor:isToday?"rgba(139,124,248,0.3)":T.border}}>
+                  <div className="row" style={{marginBottom:8}}>
+                    <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                      <div style={{width:36,height:36,borderRadius:10,background:isToday?T.accent:"rgba(255,255,255,0.06)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                        <span style={{fontSize:9,fontWeight:700,color:isToday?"white":T.muted,textTransform:"uppercase"}}>{dayName}</span>
+                        <span style={{fontSize:14,fontWeight:800,color:isToday?"white":T.text}}>{dayNum}</span>
+                      </div>
+                      {isToday && <span style={{fontSize:13,fontWeight:700,color:T.accent}}>Today</span>}
+                    </div>
+                    <span style={{fontSize:11,color:T.dim}}>{dayMeals.filter(m=>m.cooked).length}/{MEAL_TYPES.length} cooked</span>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                    {MEAL_TYPES.map(mt => {
+                      const m = dayMeals.find(x => x.meal_type === mt);
+                      const rec = m ? recipes.find(r => r.id === m.recipe_id) : null;
+                      return (
+                        <div key={mt} onClick={()=>setAddMealModal({date,meal_type:mt})}
+                          style={{padding:"7px 9px",borderRadius:9,cursor:"pointer",background:m?.cooked?"rgba(52,211,153,0.08)":rec?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.02)",border:`1px solid ${m?.cooked?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.07)"}`,transition:"all .15s"}}>
+                          <div style={{fontSize:10,color:T.dim,fontWeight:600,textTransform:"capitalize"}}>{MEAL_EMOJI[mt]} {mt}</div>
+                          <div style={{fontSize:11.5,fontWeight:500,color:rec?T.text:T.dim,marginTop:2}}>{rec ? rec.name : "+ Add"}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* RECIPES */}
+        {tab==="recipes" && (
+          <>
+            {recipes.length === 0
+              ? <div className="empty"><div className="empty-icon">🥘</div><div className="empty-text">Loading recipes...</div></div>
+              : <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {recipes.map(r => (
+                    <div key={r.id} className="card" style={{padding:"14px 16px"}}>
+                      <div style={{fontSize:15,fontWeight:700}}>{r.name}</div>
+                      <div style={{fontSize:12,color:T.muted,marginTop:3}}>
+                        {MEAL_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min · 👥 {r.servings}
+                      </div>
+                      <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>
+                        {(r.tags||[]).map(tag=>(
+                          <span key={tag} className="tag" style={{background:"rgba(255,255,255,0.06)",color:T.muted,fontSize:10}}>{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            }
+          </>
+        )}
+
+        {/* PANTRY */}
+        {tab==="pantry" && (
+          <>
+            <button onClick={()=>setShowAddPantry(true)} className="btn-primary" style={{marginBottom:14,height:44,fontSize:14}}>
+              + Add Pantry Item
+            </button>
+            {lowStock.length > 0 && (
+              <div style={{padding:"10px 14px",background:T.amberSoft,border:"1px solid rgba(251,191,36,0.22)",borderRadius:12,marginBottom:12}}>
+                <div style={{fontSize:13,fontWeight:700,color:T.amber}}>🛒 {lowStock.length} item{lowStock.length>1?"s":""} running low</div>
+                <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>{lowStock.map(i=>i.name).join(", ")}</div>
+              </div>
+            )}
+            {pantry.length === 0
+              ? <div className="empty"><div className="empty-icon">🧺</div><div className="empty-text">Pantry is empty.<br/>Add items to start tracking.</div></div>
+              : <div className="card" style={{padding:"2px 14px"}}>
+                  {pantry.map(item => {
+                    const isLow = Number(item.quantity) <= Number(item.par_level);
+                    const pct_ = item.par_level > 0 ? Math.min(100, Math.round((item.quantity / (item.par_level * 3)) * 100)) : 100;
+                    return (
+                      <div key={item.id} className="list-row">
+                        <div style={{width:8,height:8,borderRadius:"50%",background:isLow?T.red:T.green,flexShrink:0}}/>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:14,fontWeight:500}}>{item.name}</div>
+                          <div style={{fontSize:11.5,color:T.muted}}>{item.category}</div>
+                          <div className="progress" style={{marginTop:5,height:3}}>
+                            <div className="progress-fill" style={{width:`${pct_}%`,background:isLow?T.red:pct_<50?T.amber:T.green}}/>
+                          </div>
+                        </div>
+                        <div style={{textAlign:"right",minWidth:70}}>
+                          <div style={{fontSize:14,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
+                          {isLow && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock!</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+            }
+          </>
+        )}
+
+        {/* SHOP */}
+        {tab==="shop" && (
+          <>
+            {shopping.filter(s=>!s.purchased).length === 0
+              ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">Shopping list is empty!<br/>Mark meals as cooked to auto-populate.</div></div>
+              : <>
+                  <div style={{fontSize:13,fontWeight:700,color:T.muted,marginBottom:8}}>TO BUY ({shopping.filter(s=>!s.purchased).length})</div>
+                  <div className="card" style={{padding:"2px 14px",marginBottom:14}}>
+                    {shopping.filter(s=>!s.purchased).map(item=>(
+                      <div key={item.id} className="list-row">
+                        <div onClick={()=>updShopping(item.id,{purchased:true})}
+                          style={{width:22,height:22,borderRadius:7,border:`2px solid ${T.green}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}/>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:14,fontWeight:500}}>{item.item_name}</div>
+                          <div style={{fontSize:11.5,color:T.muted}}>{item.category}{item.quantity_needed ? ` · ${item.quantity_needed} ${item.unit}` : ""}</div>
+                        </div>
+                        <div onClick={()=>removeShopping(item.id)} style={{cursor:"pointer",opacity:0.35,marginLeft:4}}><I n="trash" s={14} c={T.red}/></div>
+                      </div>
+                    ))}
+                  </div>
+                  {shopping.filter(s=>s.purchased).length > 0 && (
+                    <>
+                      <div style={{fontSize:13,fontWeight:700,color:T.muted,marginBottom:8}}>DONE ({shopping.filter(s=>s.purchased).length})</div>
+                      <div className="card" style={{padding:"2px 14px",opacity:0.55}}>
+                        {shopping.filter(s=>s.purchased).map(item=>(
+                          <div key={item.id} className="list-row">
+                            <div style={{width:22,height:22,borderRadius:7,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                              <I n="check" s={12} c="white" w={2.5}/>
+                            </div>
+                            <div style={{flex:1,textDecoration:"line-through"}}>
+                              <div style={{fontSize:14}}>{item.item_name}</div>
+                            </div>
+                            <div onClick={()=>removeShopping(item.id)} style={{cursor:"pointer",opacity:0.35}}><I n="trash" s={14} c={T.red}/></div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+            }
+          </>
+        )}
+      </div>
+
+      {/* ASSIGN RECIPE MODAL */}
+      {addMealModal && (
+        <div className="modal-bg" onClick={()=>setAddMealModal(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"80vh",overflowY:"auto"}}>
+            <div className="modal-handle"/>
+            <div className="row" style={{marginBottom:14}}>
+              <span style={{fontSize:18,fontWeight:700}}>
+                {MEAL_EMOJI[addMealModal.meal_type]} {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)}
+              </span>
+              <div onClick={()=>setAddMealModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <I n="x" s={15} c={T.muted}/>
+              </div>
+            </div>
+            <div style={{fontSize:12,color:T.muted,marginBottom:12}}>{addMealModal.date}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {recipes.filter(r => r.meal_type === addMealModal.meal_type).map(r => (
+                <div key={r.id} onClick={()=>assignRecipe(r.id, addMealModal.date, addMealModal.meal_type)}
+                  className="card card-tap" style={{padding:"12px 14px"}}>
+                  <div style={{fontSize:15,fontWeight:600}}>{r.name}</div>
+                  <div style={{fontSize:11.5,color:T.muted,marginTop:3}}>⏱ {r.prep_time_mins}min · 👥 {r.servings}</div>
+                </div>
+              ))}
+              {recipes.filter(r=>r.meal_type===addMealModal.meal_type).length===0 && (
+                <div style={{textAlign:"center",color:T.muted,padding:"20px 0",fontSize:14}}>No recipes for this meal type yet.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD PANTRY MODAL */}
+      {showAddPantry && (
+        <Modal title="Add Pantry Item" onClose={()=>setShowAddPantry(false)}>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <input className="input" placeholder="Item name (e.g. Basmati Rice)" value={pf.name} onChange={e=>setPf(x=>({...x,name:e.target.value}))} autoFocus/>
+            <select className="input" value={pf.category} onChange={e=>setPf(x=>({...x,category:e.target.value}))}>
+              {PANTRY_CATS.map(c=><option key={c}>{c}</option>)}
+            </select>
+            <div style={{display:"flex",gap:8}}>
+              <input className="input" type="number" placeholder="Qty" value={pf.quantity} onChange={e=>setPf(x=>({...x,quantity:e.target.value}))} style={{flex:1}}/>
+              <select className="input" value={pf.unit} onChange={e=>setPf(x=>({...x,unit:e.target.value}))} style={{flex:1}}>
+                {["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}
+              </select>
+            </div>
+            <input className="input" type="number" placeholder="Reorder level (alert when below this)" value={pf.par_level} onChange={e=>setPf(x=>({...x,par_level:e.target.value}))}/>
+            <button className="btn-primary" onClick={savePantryItem}>Save Item</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+// ════════════════════════════════════════════════════════════════════
 // ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════
 const Nav = ({ active, go }) => (
   <nav className="bottom-nav">
     {[
-      {id:"home",icon:"home",lbl:"Home"},
-      {id:"finance",icon:"finance",lbl:"Wallet"},
-      {id:"household",icon:"house",lbl:"Home"},
-      {id:"planner",icon:"plan",lbl:"Plan"},
-      {id:"ai",icon:"ai",lbl:"AI"},
-      {id:"profile",icon:"profile",lbl:"You"},
+      {id:"home",    icon:"home",    lbl:"Home"},
+      {id:"finance", icon:"finance", lbl:"Wallet"},
+      {id:"household",icon:"house",  lbl:"House"},
+      {id:"kitchen", icon:"kitchen", lbl:"Kitchen"},
+      {id:"planner", icon:"plan",    lbl:"Plan"},
+      {id:"ai",      icon:"ai",      lbl:"AI"},
+      {id:"profile", icon:"profile", lbl:"You"},
     ].map(it=>(
       <div key={it.id} className={`nav-btn ${active===it.id?"on":""}`} onClick={()=>go(it.id)}>
-        <I n={it.icon} s={21} c={active===it.id?T.accent:T.muted}/>
+        <I n={it.icon} s={19} c={active===it.id?T.accent:T.muted}/>
         <span className="nav-lbl" style={{color:active===it.id?T.accent:T.muted}}>{it.lbl}</span>
       </div>
     ))}
@@ -1930,7 +1984,6 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [screen, setScreen] = useState("home");
   const [modal, setModal] = useState(null);
-
   const FAMILY_ID = "gupta-family-001";
 
   useEffect(()=>{
@@ -1938,9 +1991,7 @@ export default function App() {
       setUser(session?.user??null);
       setAuthLoading(false);
     });
-    const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{
-      setUser(session?.user??null);
-    });
+    const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{ setUser(session?.user??null); });
     return ()=>subscription.unsubscribe();
   },[]);
 
@@ -1960,6 +2011,7 @@ export default function App() {
     home:      <HomeScreen navigate={setScreen} openModal={setModal} familyId={FAMILY_ID} user={user}/>,
     finance:   <FinanceScreen familyId={FAMILY_ID}/>,
     household: <HouseholdScreen familyId={FAMILY_ID}/>,
+    kitchen:   <KitchenScreen familyId={FAMILY_ID}/>,
     planner:   <PlannerScreen familyId={FAMILY_ID}/>,
     ai:        <AIScreen familyId={FAMILY_ID}/>,
     profile:   <ProfileScreen user={user} onSignOut={signOut} familyId={FAMILY_ID}/>,
@@ -1970,14 +2022,8 @@ export default function App() {
       <Styles/>
       {screens[screen]||screens.home}
       <Nav active={screen} go={setScreen}/>
-
-      {/* ── TOAST NOTIFICATIONS ── */}
       <ToastRenderer/>
-
-      {/* ── GLOBAL FAB — available on every screen ── */}
       <GlobalFAB screen={screen} familyId={FAMILY_ID}/>
-
-      {/* Legacy modals from home screen quick actions */}
       {modal==="income"  && <AddIncomeModal  onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="expense" && <AddExpenseModal onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="task"    && <AddTaskModal    onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
