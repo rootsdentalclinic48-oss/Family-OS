@@ -1640,7 +1640,7 @@ const KitchenScreen = ({ familyId }) => {
         title: "🍽 Meal Cooked!",
         body: deducted.length
           ? `${deducted.length} ingredients deducted.${lowStockItems?.length ? ` ${lowStockItems.length} added to shopping list.` : ""}`
-          : "Marked as "🍽 Mark Eaten"! (No pantry items matched)",
+          : "Marked as cooked! (No pantry items matched)",
         icon:"🍽", color:"#34D399"
       });
     } catch(e) { console.error(e); }
