@@ -1618,12 +1618,13 @@ const KitchenScreen = ({ familyId }) => {
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
 
   const { rows: pantry, refresh: refreshPantry } = useTable("pantry", familyId, { order: "name", asc: true });
-  const { rows: recipes } = useTable("recipes", familyId, { order: "name", asc: true });
+  const { rows: recipes } = useTable("recipes", familyId, { order: "meal_type", asc: true });
   const { rows: mealPlan, refresh: refreshMeal } = useTable("meal_plan", familyId, { order: "plan_date", asc: true });
   const { rows: shopping, update: updShopping, remove: removeShopping } = useTable("shopping_list", familyId, { order: "added_at" });
 
   useEffect(() => {
-    if (!seeded && familyId) { seedRecipes(familyId).then(() => setSeeded(true)); }
+  if (familyId) { seedRecipes(familyId).then(() => setSeeded(true)); }
+}, [familyId]);
   }, [familyId, seeded]);
 
   const todayStr = today();
