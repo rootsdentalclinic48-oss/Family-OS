@@ -1506,8 +1506,8 @@ const AddGroceryModal = ({ onClose, familyId }) => {
 // ─── KITCHEN MODULE ──────────────────────────────────────────────────────────
 // ════════════════════════════════════════════════════════════════════
 
-const MEAL_TYPES = ["breakfast", "lunch", "snack", "dinner"];
-const MEAL_EMOJI = { breakfast:"🌅", lunch:"☀️", snack:"🍎", dinner:"🌙" };
+const MEAL_TYPES = ["breakfast", "snack", "lunch", "evening_snack", "dinner"];
+const MEAL_EMOJI = { breakfast:"🌅", snack:"🍎", lunch:"☀️", evening_snack:"🌆", dinner:"🌙" };
 const PANTRY_CATS = ["Grains","Pulses","Dairy","Vegetables","Fruits","Spices","Oils","Snacks","Beverages","Other"];
 
 // ─── SEED RECIPES DATA ────────────────────────────────────────────────────────
