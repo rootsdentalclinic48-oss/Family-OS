@@ -1641,7 +1641,7 @@ const KitchenScreen = ({ familyId }) => {
         title: "🍽 Meal Cooked!",
         body: deducted.length
           ? `${deducted.length} ingredients deducted.${lowStockItems?.length ? ` ${lowStockItems.length} added to shopping list.` : ""}`
-          : "Marked as cooked! (No pantry items matched)",
+          : "Marked as "🍽 Mark Eaten"! (No pantry items matched)",
         icon:"🍽", color:"#34D399"
       });
     } catch(e) { console.error(e); }
@@ -1731,7 +1731,7 @@ const KitchenScreen = ({ familyId }) => {
                       {meal && !meal.cooked && (
                         <button onClick={()=>handleMarkCooked(meal)} disabled={cooking===meal.id}
                           style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(52,211,153,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅ Cooked"}
+                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "🍽 Mark Eaten"}
                         </button>
                       )}
                       {meal?.cooked && <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>}
