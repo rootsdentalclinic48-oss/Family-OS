@@ -1688,6 +1688,9 @@ const KitchenScreen = ({ familyId }) => {
   const [cooking, setCooking] = useState(null);
   const [addMealModal, setAddMealModal] = useState(null);
   const [showAddPantry, setShowAddPantry] = useState(false);
+  const [editPantryItem, setEditPantryItem] = useState(null);
+  const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
+  const [editShopItem, setEditShopItem] = useState(null);
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
 
   const { rows: pantry, refresh: refreshPantry } = useTable("pantry", familyId, { order: "name", asc: true });
@@ -1924,7 +1927,7 @@ const KitchenScreen = ({ familyId }) => {
                     const isLow = Number(item.quantity) <= Number(item.par_level);
                     const pct_ = item.par_level > 0 ? Math.min(100, Math.round((item.quantity / (item.par_level * 3)) * 100)) : 100;
                     return (
-                      <div key={item.id} className="list-row">
+                      <div key={item.id} className="list-row" onClick={()=>{setEf({name:item.name,category:item.category,quantity:String(item.quantity),unit:item.unit,par_level:String(item.par_level)});setEditPantryItem(item);}}>
                         <div style={{width:8,height:8,borderRadius:"50%",background:isLow?T.red:T.green,flexShrink:0}}/>
                         <div style={{flex:1}}>
                           <div style={{fontSize:14,fontWeight:500}}>{item.name}</div>
@@ -1933,9 +1936,12 @@ const KitchenScreen = ({ familyId }) => {
                             <div className="progress-fill" style={{width:`${pct_}%`,background:isLow?T.red:pct_<50?T.amber:T.green}}/>
                           </div>
                         </div>
-                        <div style={{textAlign:"right",minWidth:70}}>
-                          <div style={{fontSize:14,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
-                          {isLow && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock!</div>}
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{textAlign:"right",minWidth:55}}>
+                            <div style={{fontSize:13,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
+                            {isLow && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock!</div>}
+                          </div>
+                          <div style={{opacity:0.4}}><I n="edit" s={13} c={T.accent}/></div>
                         </div>
                       </div>
                     );
@@ -1947,6 +1953,8 @@ const KitchenScreen = ({ familyId }) => {
 
         {/* SHOP */}
         {tab==="shop" && (
+          <>
+          <button onClick={()=>setEditShopItem({isNew:true,item_name:"",quantity_needed:"",unit:"kg",category:"Vegetables"})} className="btn-primary" style={{marginBottom:14,height:44,fontSize:14}}>+ Add Item</button>
           <>
             {shopping.filter(s=>!s.purchased).length === 0
               ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">Shopping list is empty!<br/>Mark meals as cooked to auto-populate.</div></div>
@@ -1961,7 +1969,10 @@ const KitchenScreen = ({ familyId }) => {
                           <div style={{fontSize:14,fontWeight:500}}>{item.item_name}</div>
                           <div style={{fontSize:11.5,color:T.muted}}>{item.category}{item.quantity_needed ? ` · ${item.quantity_needed} ${item.unit}` : ""}</div>
                         </div>
-                        <div onClick={()=>removeShopping(item.id)} style={{cursor:"pointer",opacity:0.35,marginLeft:4}}><I n="trash" s={14} c={T.red}/></div>
+                        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                          <div onClick={(e)=>{e.stopPropagation();setEditShopItem({...item,isNew:false});}} style={{opacity:0.4,cursor:"pointer"}}><I n="edit" s={13} c={T.accent}/></div>
+                          <div onClick={()=>removeShopping(item.id)} style={{cursor:"pointer",opacity:0.35}}><I n="trash" s={13} c={T.red}/></div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1989,6 +2000,42 @@ const KitchenScreen = ({ familyId }) => {
         )}
       </div>
 
+            {editShopItem && (
+        <Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <input className="input" placeholder="Item name" autoFocus
+              value={editShopItem.item_name||""} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/>
+            <div style={{display:"flex",gap:8}}>
+              <input className="input" type="number" placeholder="Qty"
+                value={editShopItem.quantity_needed||""} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/>
+              <select className="input" value={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>
+                {["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}
+              </select>
+            </div>
+            <select className="input" value={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>
+              {["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}
+            </select>
+            <button className="btn-primary" onClick={async()=>{
+              if(editShopItem.item_name){
+                if(editShopItem.isNew){
+                  await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);
+                } else {
+                  await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);
+                }
+                setEditShopItem(null);
+              }
+            }}>{editShopItem.isNew ? "Add to List" : "Save Changes"}</button>
+            {editShopItem.isNew === false && (
+              <button onClick={async()=>{
+                await supabase.from("shopping_list").delete().eq("id",editShopItem.id);
+                setEditShopItem(null);
+              }} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                Delete Item
+              </button>
+            )}
+          </div>
+        </Modal>
+      )}
       {/* ASSIGN RECIPE MODAL */}
       {addMealModal && (
         <div className="modal-bg" onClick={()=>setAddMealModal(null)}>
@@ -2019,6 +2066,37 @@ const KitchenScreen = ({ familyId }) => {
         </div>
       )}
 
+            {editPantryItem && (
+        <Modal title="Edit Pantry Item" onClose={()=>setEditPantryItem(null)}>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <input className="input" placeholder="Item name" value={ef.name} onChange={e=>setEf(x=>({...x,name:e.target.value}))} autoFocus/>
+            <select className="input" value={ef.category} onChange={e=>setEf(x=>({...x,category:e.target.value}))}>
+              {PANTRY_CATS.map(c=><option key={c}>{c}</option>)}
+            </select>
+            <div style={{display:"flex",gap:8}}>
+              <input className="input" type="number" placeholder="Qty" value={ef.quantity} onChange={e=>setEf(x=>({...x,quantity:e.target.value}))} style={{flex:1}}/>
+              <select className="input" value={ef.unit} onChange={e=>setEf(x=>({...x,unit:e.target.value}))} style={{flex:1}}>
+                {["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}
+              </select>
+            </div>
+            <input className="input" type="number" placeholder="Reorder level" value={ef.par_level} onChange={e=>setEf(x=>({...x,par_level:e.target.value}))}/>
+            <button className="btn-primary" onClick={async()=>{
+              if(ef.name && ef.quantity){
+                await supabase.from("pantry").update({name:ef.name,category:ef.category,quantity:Number(ef.quantity),unit:ef.unit,par_level:Number(ef.par_level)||0,updated_at:new Date().toISOString()}).eq("id",editPantryItem.id);
+                await refreshPantry();
+                setEditPantryItem(null);
+              }
+            }}>Save Changes</button>
+            <button onClick={async()=>{
+              await supabase.from("pantry").delete().eq("id",editPantryItem.id);
+              await refreshPantry();
+              setEditPantryItem(null);
+            }} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+              Delete Item
+            </button>
+          </div>
+        </Modal>
+      )}
       {/* ADD PANTRY MODAL */}
       {showAddPantry && (
         <Modal title="Add Pantry Item" onClose={()=>setShowAddPantry(false)}>
