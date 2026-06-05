@@ -1,22 +1,37 @@
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+  },
+};
+
 export default async function handler(req, res) {
+  // Allow GET for testing
+  if (req.method === "GET") return res.status(200).json({ status: "Family OS Alexa Handler is live!" });
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
   const body = req.body;
   const requestType = body?.request?.type;
   const intentName = body?.request?.intent?.name;
   const slots = body?.request?.intent?.slots;
+
   const speak = (text) => res.status(200).json({version:"1.0",response:{outputSpeech:{type:"PlainText",text},shouldEndSession:true}});
   const askMore = (text) => res.status(200).json({version:"1.0",response:{outputSpeech:{type:"PlainText",text},shouldEndSession:false}});
+
   const FAMILY_ID = "gupta-family-001";
   const SUPABASE_URL = "https://ihuuxhvxsbmzydclmbtx.supabase.co";
   const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
-  const db = async (table, method="GET", body=null, query="") => {
+
+  const db = async (table, method="GET", dbBody=null, query="") => {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
       method,
       headers: {"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json","Prefer":method==="POST"?"return=representation":""},
-      body: body ? JSON.stringify(body) : null,
+      body: dbBody ? JSON.stringify(dbBody) : null,
     });
     return r.json();
   };
+
   try {
     if (requestType === "LaunchRequest") {
       const txns = await db("transactions","GET",null,`?family_id=eq.${FAMILY_ID}&select=amount`);
@@ -35,6 +50,7 @@ export default async function handler(req, res) {
       }
       return askMore(`Welcome to Family OS! Balance is ${balance.toLocaleString("en-IN")} rupees. ${tasks.length} pending tasks. ${lowStock.length} pantry items low. Tonight's dinner is ${dinnerName}. What would you like to do?`);
     }
+
     if (requestType === "IntentRequest") {
       if (intentName === "GetBalanceIntent") {
         const txns = await db("transactions","GET",null,`?family_id=eq.${FAMILY_ID}&select=amount`);
