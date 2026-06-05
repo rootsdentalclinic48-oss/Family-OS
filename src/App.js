@@ -671,7 +671,7 @@ const AuthScreen = ({ onLogin }) => {
     <div style={{flex:1,display:"flex",flexDirection:"column",padding:"60px 24px 40px",background:T.bg,minHeight:"100vh",backgroundImage:`radial-gradient(ellipse 600px 500px at 50% -100px,rgba(139,124,248,0.12) 0%,transparent 65%)`}}>
       <div style={{textAlign:"center",marginBottom:36}}>
         <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏠</div>
-        <div style={{fontSize:30,fontWeight:900,letterSpacing:"-.5px"}}>Family OS</div>
+        <div style={{fontSize:24,fontWeight:900,letterSpacing:"-.5px"}}>Family OS</div>
         <div style={{fontSize:14,color:T.muted,marginTop:6}}>Gupta Family · Sector 48, Gurgaon</div>
       </div>
       <div style={{marginBottom:20}}>
@@ -1233,7 +1233,7 @@ const PlannerScreen = ({ familyId }) => {
                             <div style={{fontSize:11.5,color:T.muted}}>By {g.target_date||"—"} · +{inr(g.monthly_contribution)}/mo</div>
                           </div>
                         </div>
-                        <div style={{fontSize:26,fontWeight:900,color:g.color||T.accent}}>{p}%</div>
+                        <div style={{fontSize:22,fontWeight:900,color:g.color||T.accent}}>{p}%</div>
                       </div>
                       <div className="progress" style={{height:7}}>
                         <div className="progress-fill" style={{width:`${p}%`,background:g.color||T.accent}}/>
