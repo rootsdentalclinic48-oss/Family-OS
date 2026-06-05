@@ -66,6 +66,18 @@ let _toastFn = null;
 const registerToast = fn => { _toastFn = fn; };
 const showToast = (notif) => { if (_toastFn) _toastFn(notif); };
 
+// ─── EMAIL SENDER ─────────────────────────────────────────────────────────────
+const sendEmail = async (event_type, data, recipients = "both") => {
+  try {
+    await fetch("/api/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event_type, data, recipients }),
+    });
+  } catch(e) { console.error("Email send failed", e); }
+};
+
+// ─── NOTIFICATION HELPERS (in-app toast + DB + email) ────────────────────────
 const notifyIncomeAdded = (familyId, { amount, category, balance }) => {
   const n = {
     title: `${category === "Clinic Income" ? "🏥" : "👩"} ${category} Added`,
@@ -74,26 +86,40 @@ const notifyIncomeAdded = (familyId, { amount, category, balance }) => {
     color: "#34D399", type: "income",
   };
   showToast(n); saveNotif(familyId, n);
+  sendEmail("income", {
+    category,
+    amount: Number(amount).toLocaleString("en-IN"),
+    balance: Number(balance).toLocaleString("en-IN"),
+    date: new Date().toLocaleDateString("en-IN"),
+  });
 };
-const notifyExpenseAdded = (familyId, { amount, category, balance }) => {
+const notifyExpenseAdded = (familyId, { amount, category, balance, added_by }) => {
   const n = {
     title: "💸 Expense Recorded",
     body: `₹${Math.abs(Number(amount)).toLocaleString("en-IN")} on ${category}. Balance: ₹${Number(balance).toLocaleString("en-IN")}`,
     icon: "💸", color: "#F87171", type: "expense",
   };
   showToast(n); saveNotif(familyId, n);
+  sendEmail("expense", {
+    category,
+    amount: Math.abs(Number(amount)).toLocaleString("en-IN"),
+    balance: Number(balance).toLocaleString("en-IN"),
+    added_by: added_by || "Family",
+  });
 };
-const notifyTaskAdded = (familyId, { title }) => {
+const notifyTaskAdded = (familyId, { title, assignee, priority, due_date }) => {
   const n = { title: "✅ New Task Added", body: title, icon: "✅", color: "#34D399", type: "task" };
   showToast(n); saveNotif(familyId, n);
+  sendEmail("task", { title, assignee: assignee || "Unassigned", priority: priority || "medium", due_date });
 };
-const notifyEventAdded = (familyId, { title, date }) => {
+const notifyEventAdded = (familyId, { title, date, type }) => {
   const n = {
     title: "📅 Event Scheduled",
     body: `${title}${date ? " on " + date : ""}`,
     icon: "📅", color: "#60A5FA", type: "event",
   };
   showToast(n); saveNotif(familyId, n);
+  sendEmail("event", { title, event_date: date, type: type || "personal" });
 };
 const notifyGroceryAdded = (familyId, { name }) => {
   const n = { title: "🛒 Shopping Item Added", body: `${name} added to shopping list.`, icon: "🛒", color: "#FBBF24", type: "grocery" };
@@ -103,13 +129,19 @@ const notifyNoteAdded = (familyId) => {
   const n = { title: "📝 Note Saved", body: "Note saved successfully.", icon: "📝", color: "#60A5FA", type: "note" };
   showToast(n); saveNotif(familyId, n);
 };
-const notifyReminderAdded = (familyId, { content }) => {
+const notifyReminderAdded = (familyId, { content, due_date }) => {
   const n = { title: "⏰ Reminder Set", body: content, icon: "⏰", color: "#F472B6", type: "reminder" };
   showToast(n); saveNotif(familyId, n);
+  sendEmail("reminder", { content, due_date: due_date || "Today" });
 };
 const notifyGoalAdded = (familyId, { title }) => {
   const n = { title: "🎯 Goal Created", body: title, icon: "🎯", color: "#A78BFA", type: "goal" };
   showToast(n); saveNotif(familyId, n);
+};
+const notifyPantryLow = (familyId, { name, quantity, unit }) => {
+  const n = { title: "📦 Pantry Low", body: `${name}: ${quantity} ${unit} remaining`, icon: "📦", color: "#FBBF24", type: "pantry" };
+  showToast(n); saveNotif(familyId, n);
+  sendEmail("pantry_low", { name, quantity, unit });
 };
 
 // ─── TOAST RENDERER ───────────────────────────────────────────────────────────
@@ -1506,8 +1538,8 @@ const AddGroceryModal = ({ onClose, familyId }) => {
 // ─── KITCHEN MODULE ──────────────────────────────────────────────────────────
 // ════════════════════════════════════════════════════════════════════
 
-const MEAL_TYPES = ["breakfast", "snack", "lunch", "evening_snack", "dinner"];
-const MEAL_EMOJI = { breakfast:"🌅", snack:"🍎", lunch:"☀️", evening_snack:"🌆", dinner:"🌙" };
+const MEAL_TYPES = ["breakfast", "lunch", "snack", "dinner"];
+const MEAL_EMOJI = { breakfast:"🌅", lunch:"☀️", snack:"🍎", dinner:"🌙" };
 const PANTRY_CATS = ["Grains","Pulses","Dairy","Vegetables","Fruits","Spices","Oils","Snacks","Beverages","Other"];
 
 // ─── SEED RECIPES DATA ────────────────────────────────────────────────────────
@@ -1618,12 +1650,12 @@ const KitchenScreen = ({ familyId }) => {
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
 
   const { rows: pantry, refresh: refreshPantry } = useTable("pantry", familyId, { order: "name", asc: true });
-  const { rows: recipes } = useTable("recipes", familyId, { order: "meal_type", asc: true });
+  const { rows: recipes } = useTable("recipes", familyId, { order: "name", asc: true });
   const { rows: mealPlan, refresh: refreshMeal } = useTable("meal_plan", familyId, { order: "plan_date", asc: true });
   const { rows: shopping, update: updShopping, remove: removeShopping } = useTable("shopping_list", familyId, { order: "added_at" });
 
   useEffect(() => {
-  if (familyId) { seedRecipes(familyId).then(() => setSeeded(true)); }
+    if (!seeded && familyId) { seedRecipes(familyId).then(() => setSeeded(true)); }
   }, [familyId, seeded]);
 
   const todayStr = today();
@@ -1636,6 +1668,7 @@ const KitchenScreen = ({ familyId }) => {
       const { deducted, lowStockItems } = await markMealCooked(familyId, meal, recipes, pantry);
       await refreshPantry();
       await refreshMeal();
+      const recipe = recipes.find(r => r.id === meal.recipe_id);
       showToast({
         title: "🍽 Meal Cooked!",
         body: deducted.length
@@ -1643,6 +1676,18 @@ const KitchenScreen = ({ familyId }) => {
           : "Marked as cooked! (No pantry items matched)",
         icon:"🍽", color:"#34D399"
       });
+      sendEmail("meal_cooked", {
+        meal_type: meal.meal_type,
+        recipe_name: recipe?.name || "Unknown",
+        deducted_count: deducted.length,
+        low_stock_count: lowStockItems?.length || 0,
+      });
+      // Email pantry low alerts
+      if (lowStockItems?.length) {
+        for (const item of lowStockItems) {
+          notifyPantryLow(familyId, { name: item.name, quantity: item.qty, unit: item.unit });
+        }
+      }
     } catch(e) { console.error(e); }
     setCooking(null);
   };
@@ -1730,7 +1775,7 @@ const KitchenScreen = ({ familyId }) => {
                       {meal && !meal.cooked && (
                         <button onClick={()=>handleMarkCooked(meal)} disabled={cooking===meal.id}
                           style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(52,211,153,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "🍽 Mark Eaten"}
+                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅ Cooked"}
                         </button>
                       )}
                       {meal?.cooked && <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>}
