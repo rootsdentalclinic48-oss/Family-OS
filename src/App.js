@@ -434,7 +434,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
         const allTxns3 = await supabase.from("transactions").select("amount").eq("family_id", familyId);
         const bal3 = calcBalance(allTxns3.data || []);
         await supabase.from("transactions").insert([{ description:f.description, amount:-Math.abs(Number(f.amount)), category:f.category, added_by:f.added_by, date:f.date, emoji:emojiMap[f.category]||"💸", family_id:familyId }]);
-        notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal3.available - Math.abs(Number(f.amount)) });
+        notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal3.available - Math.abs(Number(f.amount)), added_by: f.added_by });
       } else if (type === "task") {
         if (!f.title) { setLoading(false); return; }
         await supabase.from("tasks").insert([{ title:f.title, assignee:f.assignee, priority:f.priority, category:f.taskCategory, due_date:f.due_date, done:false, family_id:familyId }]);
@@ -1440,7 +1440,7 @@ const AddExpenseModal = ({ onClose, familyId }) => {
     const allTxns2 = await supabase.from("transactions").select("amount").eq("family_id", familyId);
     const bal2 = calcBalance(allTxns2.data || []);
     await supabase.from("transactions").insert([{ ...f, amount: -Math.abs(Number(f.amount)), family_id: familyId, emoji: emojiMap[f.category]||"💸" }]);
-    notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal2.available - Math.abs(Number(f.amount)) });
+    notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal2.available - Math.abs(Number(f.amount)), added_by: f.added_by });
     setLoading(false); onClose();
   };
   return (
