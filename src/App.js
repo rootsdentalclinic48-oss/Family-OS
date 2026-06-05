@@ -261,7 +261,7 @@ const Styles = () => (
     ::-webkit-scrollbar{display:none;}
     *{scrollbar-width:none;}
     .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};background-image:radial-gradient(ellipse 600px 400px at 20% -100px,rgba(139,124,248,0.08) 0%,transparent 60%),radial-gradient(ellipse 300px 300px at 85% 30%,rgba(96,165,250,0.04) 0%,transparent 55%);position:relative;}
-    .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
+    .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));padding-top:calc(env(safe-area-inset-top,0px) + 32px);overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
     .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;}
     .card-tap{cursor:pointer;}
@@ -413,17 +413,19 @@ const LiveClock = () => {
     <div style={{
       position:'fixed',top:0,left:'50%',transform:'translateX(-50%)',
       width:'100%',maxWidth:430,
-      background:'rgba(8,8,16,0.92)',
+      background:'rgba(8,8,16,0.95)',
       backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
       borderBottom:'1px solid rgba(255,255,255,0.07)',
-      padding:'calc(env(safe-area-inset-top,0px) + 6px) 18px 6px',
+      paddingTop:'calc(env(safe-area-inset-top,0px) + 4px)',
+      paddingBottom:4,paddingLeft:18,paddingRight:18,
       zIndex:99,
       display:'flex',justifyContent:'space-between',alignItems:'center',
+      height:'calc(env(safe-area-inset-top,0px) + 32px)',
     }}>
-      <div style={{fontSize:11.5,color:'rgba(238,236,248,0.5)',fontWeight:600}}>
-        {day}, {date} {month} {year}
+      <div style={{fontSize:11,color:'rgba(238,236,248,0.5)',fontWeight:600,whiteSpace:'nowrap'}}>
+        {day.slice(0,3)}, {date} {month} {year}
       </div>
-      <div style={{fontSize:12,color:'rgba(238,236,248,0.7)',fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>
+      <div style={{fontSize:12,color:'rgba(238,236,248,0.8)',fontWeight:700,fontFamily:"'JetBrains Mono',monospace",whiteSpace:'nowrap'}}>
         {h12}:{mins} {ampm}
       </div>
     </div>
@@ -1807,7 +1809,7 @@ const KitchenScreen = ({ familyId }) => {
                       <span style={{fontSize:22}}>{MEAL_EMOJI[mealType]}</span>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,textTransform:"capitalize",color:T.muted}}>{mealType}</div>
-                        <div style={{fontSize:15,fontWeight:600,color:recipe?T.text:T.dim}}>{recipe ? recipe.name : "Not planned"}</div>
+                        <div style={{fontSize:13,fontWeight:600,color:recipe?T.text:T.dim,lineHeight:1.3}}>{recipe ? recipe.name : "Not planned"}</div>
                       </div>
                     </div>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
