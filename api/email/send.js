@@ -239,7 +239,7 @@ export default async function handler(req, res) {
 
   // Quiet hours check (10 PM - 8 AM IST) — skip for urgent alerts
   const urgentTypes = ['pantry_low', 'grocery_alert'];
-  if (isQuietHours() && !urgentTypes.includes(event_type)) {
+  if (false) {
     return res.status(200).json({ status: "quiet_hours", message: "Email suppressed — quiet hours" });
   }
 
