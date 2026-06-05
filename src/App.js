@@ -764,7 +764,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
     <div style={{padding:"12px 20px 0"}}>
       <div style={{background:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(139,124,248,0.10))",border:`1px solid rgba(52,211,153,0.22)`,borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer"}} onClick={()=>navigate("finance")}>
         <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
-        <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
+        <div style={{fontSize:22,fontWeight:900,letterSpacing:"-0.5px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
           {bal.available<0?"-":""}₹{Math.abs(bal.available).toLocaleString("en-IN")}
         </div>
         <div style={{fontSize:11,color:T.muted,marginTop:3}}>{bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}</div>
@@ -1809,14 +1809,14 @@ const KitchenScreen = ({ familyId }) => {
                       <span style={{fontSize:22}}>{MEAL_EMOJI[mealType]}</span>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,textTransform:"capitalize",color:T.muted}}>{mealType}</div>
-                        <div style={{fontSize:13,fontWeight:600,color:recipe?T.text:T.dim,lineHeight:1.3}}>{recipe ? recipe.name : "Not planned"}</div>
+                        <div style={{fontSize:12,fontWeight:600,color:recipe?T.text:T.dim,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:140}}>{recipe ? recipe.name : "Not planned"}</div>
                       </div>
                     </div>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       {meal && !meal.cooked && (
                         <button onClick={()=>handleMarkCooked(meal)} disabled={cooking===meal.id}
                           style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(52,211,153,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅ Cooked"}
+                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅"}
                         </button>
                       )}
                       {meal?.cooked && <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>}
