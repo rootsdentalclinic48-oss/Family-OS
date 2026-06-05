@@ -1,13 +1,6 @@
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-  },
-};
+export const config = { api: { bodyParser: { sizeLimit: '1mb' } } };
 
 export default async function handler(req, res) {
-  // Allow GET for testing
   if (req.method === "GET") return res.status(200).json({ status: "Family OS Alexa Handler is live!" });
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -34,10 +27,6 @@ export default async function handler(req, res) {
 
   try {
     if (requestType === "LaunchRequest") {
-      const txns = await db("transactions","GET",null,`?family_id=eq.${FAMILY_ID}&select=amount`);
-      const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
-      const spent = txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
-      const balance = income - spent;
       const tasks = await db("tasks","GET",null,`?family_id=eq.${FAMILY_ID}&done=eq.false&select=id`);
       const pantry = await db("pantry","GET",null,`?family_id=eq.${FAMILY_ID}&select=name,quantity,par_level`);
       const lowStock = pantry.filter(p=>Number(p.quantity)<=Number(p.par_level));
@@ -48,35 +37,38 @@ export default async function handler(req, res) {
         const recipe = await db("recipes","GET",null,`?id=eq.${dinner[0].recipe_id}&select=name`);
         if (recipe?.[0]?.name) dinnerName = recipe[0].name;
       }
-      return askMore(`Welcome to Family OS! Balance is ${balance.toLocaleString("en-IN")} rupees. ${tasks.length} pending tasks. ${lowStock.length} pantry items low. Tonight's dinner is ${dinnerName}. What would you like to do?`);
+      return askMore(
+        `Welcome to Family OS! ` +
+        `You have ${tasks.length} pending tasks. ` +
+        `${lowStock.length > 0 ? `${lowStock.length} pantry items are running low. ` : `Pantry is fully stocked. `}` +
+        `Tonight's dinner is ${dinnerName}. ` +
+        `What would you like to do?`
+      );
     }
 
     if (requestType === "IntentRequest") {
+
       if (intentName === "GetBalanceIntent") {
-        const txns = await db("transactions","GET",null,`?family_id=eq.${FAMILY_ID}&select=amount`);
-        const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
-        const spent = txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
-        return speak(`Your balance is ${(income-spent).toLocaleString("en-IN")} rupees. Income ${income.toLocaleString("en-IN")}, expenses ${spent.toLocaleString("en-IN")} rupees.`);
+        return speak("For privacy, balance information is only available in the Family OS app.");
       }
+
       if (intentName === "AddExpenseIntent") {
         const amount = slots?.amount?.value;
         const category = slots?.category?.value || "General";
         if (!amount) return speak("I did not catch the amount. Please try again.");
         const today = new Date().toISOString().split("T")[0];
         await db("transactions","POST",{family_id:FAMILY_ID,description:`${category} expense`,amount:-Math.abs(Number(amount)),category:"Other",added_by:"Alexa",date:today,emoji:"💸"});
-        const txns = await db("transactions","GET",null,`?family_id=eq.${FAMILY_ID}&select=amount`);
-        const bal = txns.reduce((a,t)=>a+Number(t.amount),0);
-        return speak(`Done! ${amount} rupees recorded for ${category}. New balance is ${bal.toLocaleString("en-IN")} rupees.`);
+        return speak(`Done! Expense of ${amount} rupees recorded for ${category}.`);
       }
+
       if (intentName === "AddIncomeIntent") {
         const amount = slots?.amount?.value;
         if (!amount) return speak("I did not catch the amount. Please try again.");
         const today = new Date().toISOString().split("T")[0];
         await db("transactions","POST",{family_id:FAMILY_ID,description:"Clinic Income",amount:Math.abs(Number(amount)),category:"Clinic Income",added_by:"Alexa",date:today,emoji:"🏥"});
-        const txns = await db("transactions","GET",null,`?family_id=eq.${FAMILY_ID}&select=amount`);
-        const bal = txns.reduce((a,t)=>a+Number(t.amount),0);
-        return speak(`Clinic income of ${amount} rupees recorded. New balance is ${bal.toLocaleString("en-IN")} rupees.`);
+        return speak(`Clinic income of ${amount} rupees recorded successfully.`);
       }
+
       if (intentName === "GetMealPlanIntent") {
         const today = new Date().toISOString().split("T")[0];
         const meals = await db("meal_plan","GET",null,`?family_id=eq.${FAMILY_ID}&plan_date=eq.${today}&select=meal_type,recipe_id`);
@@ -90,6 +82,7 @@ export default async function handler(req, res) {
         }
         return speak(`Today's meals: ${mealTexts.join(". ")}.`);
       }
+
       if (intentName === "GetLowStockIntent") {
         const pantry = await db("pantry","GET",null,`?family_id=eq.${FAMILY_ID}&select=name,quantity,unit,par_level`);
         const lowStock = pantry.filter(p=>Number(p.quantity)<=Number(p.par_level));
@@ -97,6 +90,7 @@ export default async function handler(req, res) {
         const items = lowStock.slice(0,5).map(p=>`${p.name}`).join(", ");
         return speak(`${lowStock.length} items running low: ${items}.`);
       }
+
       if (intentName === "AddTaskIntent") {
         const task = slots?.task?.value;
         if (!task) return speak("I did not catch the task. Please try again.");
@@ -104,20 +98,30 @@ export default async function handler(req, res) {
         await db("tasks","POST",{family_id:FAMILY_ID,title:task,assignee:"Mayank",priority:"medium",category:"General",due_date:today,done:false});
         return speak(`Task added: ${task}.`);
       }
+
       if (intentName === "DailyBriefingIntent") {
-        const txns = await db("transactions","GET",null,`?family_id=eq.${FAMILY_ID}&select=amount`);
-        const bal = txns.reduce((a,t)=>a+Number(t.amount),0);
         const tasks = await db("tasks","GET",null,`?family_id=eq.${FAMILY_ID}&done=eq.false&select=id`);
         const pantry = await db("pantry","GET",null,`?family_id=eq.${FAMILY_ID}&select=quantity,par_level`);
         const lowStock = pantry.filter(p=>Number(p.quantity)<=Number(p.par_level));
-        return speak(`Daily briefing. Balance: ${bal.toLocaleString("en-IN")} rupees. Tasks: ${tasks.length}. Low stock: ${lowStock.length}. Have a great day!`);
+        const today = new Date().toISOString().split("T")[0];
+        const dinner = await db("meal_plan","GET",null,`?family_id=eq.${FAMILY_ID}&plan_date=eq.${today}&meal_type=eq.dinner&select=recipe_id`);
+        let dinnerName = "not planned";
+        if (dinner?.[0]?.recipe_id) {
+          const recipe = await db("recipes","GET",null,`?id=eq.${dinner[0].recipe_id}&select=name`);
+          if (recipe?.[0]?.name) dinnerName = recipe[0].name;
+        }
+        return speak(`Daily briefing. ${tasks.length} pending tasks. ${lowStock.length} items low in pantry. Tonight's dinner is ${dinnerName}. Have a great day!`);
       }
+
       if (intentName === "AMAZON.StopIntent" || intentName === "AMAZON.CancelIntent") {
         return speak("Goodbye! Family OS is here whenever you need it.");
       }
-      return speak("I did not understand. Ask me about balance, meals, pantry, or add expenses and tasks.");
+
+      return speak("I did not understand. You can ask about meals, pantry, tasks, add expenses or income.");
     }
+
     return speak("Welcome to Family OS!");
+
   } catch(err) {
     console.error("Alexa error:", err);
     return speak("Sorry, I had trouble connecting. Please try again.");
