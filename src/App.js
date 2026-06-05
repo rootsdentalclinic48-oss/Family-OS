@@ -391,6 +391,45 @@ const I = ({ n, s = 20, c = "currentColor", w = 1.8 }) => {
   );
 };
 
+
+// ─── LIVE CLOCK ───────────────────────────────────────────────────────────────
+const LiveClock = () => {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = days[now.getDay()];
+  const date = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  const hours = now.getHours();
+  const mins = String(now.getMinutes()).padStart(2,'0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const h12 = hours % 12 || 12;
+  return (
+    <div style={{
+      position:'fixed',top:0,left:'50%',transform:'translateX(-50%)',
+      width:'100%',maxWidth:430,
+      background:'rgba(8,8,16,0.92)',
+      backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
+      borderBottom:'1px solid rgba(255,255,255,0.07)',
+      padding:'calc(env(safe-area-inset-top,0px) + 6px) 18px 6px',
+      zIndex:99,
+      display:'flex',justifyContent:'space-between',alignItems:'center',
+    }}>
+      <div style={{fontSize:11.5,color:'rgba(238,236,248,0.5)',fontWeight:600}}>
+        {day}, {date} {month} {year}
+      </div>
+      <div style={{fontSize:12,color:'rgba(238,236,248,0.7)',fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>
+        {h12}:{mins} {ampm}
+      </div>
+    </div>
+  );
+};
+
 // ─── MODAL WRAPPER ────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children }) => (
   <div className="modal-bg" onClick={onClose}>
@@ -803,7 +842,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
   const urgentBills = bills.filter(b => !b.paid && b.is_urgent);
 
   return (
-    <div className="screen">
+    <div className="screen"><LiveClock/>
       <div style={{padding:"calc(44px + env(safe-area-inset-top,0px)) 18px 0"}}>
         <div className="row">
           <div>
@@ -940,7 +979,7 @@ const FinanceScreen = ({ familyId }) => {
   const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
   const spent = txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
   return (
-    <div className="screen">
+    <div className="screen"><LiveClock/>
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div className="row">
           <div><div className="pt">Finance</div><div className="ps">Live data · Supabase ✓</div></div>
@@ -1047,7 +1086,7 @@ const HouseholdScreen = ({ familyId }) => {
   const { rows: maint } = useTable("maintenance", familyId);
   const toggleTask = (id, done) => updTask(id, { done, done_at: done ? new Date().toISOString() : null });
   return (
-    <div className="screen">
+    <div className="screen"><LiveClock/>
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div className="pt">Household</div>
         <div className="ps">{tasks.filter(t=>!t.done).length} tasks pending · {grocery.filter(g=>Number(g.quantity)<=Number(g.par_level)).length} grocery alerts</div>
@@ -1168,7 +1207,7 @@ const PlannerScreen = ({ familyId }) => {
   const { rows: health } = useTable("health", familyId);
   const [sel, setSel] = useState(new Date().getDate());
   return (
-    <div className="screen">
+    <div className="screen"><LiveClock/>
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}><div className="pt">Planner</div><div className="ps">Goals · Health · Calendar</div></div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
         {["goals","calendar","health"].map(t=>(
@@ -1385,7 +1424,7 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
   const { rows: docs } = useTable("documents", familyId);
   const name = user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
   return (
-    <div className="screen">
+    <div className="screen"><LiveClock/>
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div style={{display:"flex",gap:15,alignItems:"center"}}>
           <div style={{width:68,height:68,borderRadius:22,background:"linear-gradient(135deg,rgba(139,124,248,0.25),rgba(96,165,250,0.15))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,border:"2px solid rgba(139,124,248,0.3)"}}>
@@ -1726,7 +1765,7 @@ const KitchenScreen = ({ familyId }) => {
   const weekDates = getWeekDates();
 
   return (
-    <div className="screen">
+    <div className="screen"><LiveClock/>
       <div style={{padding:"calc(44px + env(safe-area-inset-top,0px)) 18px 0"}}>
         <div className="row">
           <div>
