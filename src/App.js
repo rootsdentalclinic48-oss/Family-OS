@@ -1535,6 +1535,85 @@ const AddGroceryModal = ({ onClose, familyId }) => {
 };
 
 // ════════════════════════════════════════════════════════════════════
+
+// ─── ALEXA COMMAND CENTER ─────────────────────────────────────────────────────
+const AlexaCommandCenter = ({ onClose }) => {
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const commands = [
+    {cat:"finance",icon:"💰",en:"Add clinic income of 15000 rupees",hi:"Clinic ki income 15000 rupaye add karo",hinglish:"Aaj clinic mein 15000 rupees aaye"},
+    {cat:"finance",icon:"💰",en:"Add Simmi income of 50000 rupees",hi:"Simmi ki income 50000 rupaye darj karo",hinglish:"Simmi ki salary 50000 add karo"},
+    {cat:"finance",icon:"💸",en:"I spent 500 rupees on groceries",hi:"Maine kirane par 500 rupaye kharch kiye",hinglish:"Maine groceries par 500 rupees spend kiye"},
+    {cat:"finance",icon:"💸",en:"Add expense 2000 for transport",hi:"Transport ke liye 2000 rupaye ka kharcha darj karo",hinglish:"Transport par 2000 rupees kharch hue"},
+    {cat:"finance",icon:"💸",en:"Spent 800 on fuel",hi:"Petrol par 800 rupaye kharch kiye",hinglish:"Maine aaj 800 rupaye petrol par kharch kiye"},
+    {cat:"meals",icon:"🍽",en:"What is for dinner today",hi:"Aaj dinner mein kya hai",hinglish:"Aaj raat kya banega"},
+    {cat:"meals",icon:"🍽",en:"What is for breakfast",hi:"Subah naashte mein kya hai",hinglish:"Breakfast mein kya hai aaj"},
+    {cat:"meals",icon:"🍽",en:"What is for lunch",hi:"Dopahar ke khaane mein kya hai",hinglish:"Lunch mein kya hai aaj"},
+    {cat:"pantry",icon:"📦",en:"What items are running low",hi:"Kya khatam hone wala hai",hinglish:"Is week kya restock karna hai"},
+    {cat:"pantry",icon:"📦",en:"Check pantry status",hi:"Pantry ki halat batao",hinglish:"Pantry mein kya kya kam hai"},
+    {cat:"tasks",icon:"✅",en:"Add task call the lab tomorrow",hi:"Kal lab ko call karne ka kaam add karo",hinglish:"Kal lab call karna yaad dilana"},
+    {cat:"tasks",icon:"✅",en:"Remind me to pay electricity bill",hi:"Bijli ka bill bharne ki yaad dilao",hinglish:"Electricity bill pay karna reminder lagao"},
+    {cat:"briefing",icon:"☀️",en:"Daily briefing",hi:"Aaj ki report do",hinglish:"Aaj ka update kya hai"},
+    {cat:"briefing",icon:"☀️",en:"Good morning",hi:"Subah ki jaankari do",hinglish:"Morning update do"},
+    {cat:"briefing",icon:"☀️",en:"Family update",hi:"Family ki poori update do",hinglish:"Sab kuch batao aaj ka"},
+  ];
+  const categories = [
+    {id:"all",label:"All"},{id:"finance",label:"💰 Finance"},
+    {id:"meals",label:"🍽 Meals"},{id:"pantry",label:"📦 Pantry"},
+    {id:"tasks",label:"✅ Tasks"},{id:"briefing",label:"☀️ Briefing"},
+  ];
+  const filtered = commands.filter(c => {
+    const matchCat = activeCategory === "all" || c.cat === activeCategory;
+    const matchSearch = !search || c.en.toLowerCase().includes(search.toLowerCase()) || c.hinglish.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"90vh",overflowY:"auto"}}>
+        <div className="modal-handle"/>
+        <div className="row" style={{marginBottom:14}}>
+          <div>
+            <div style={{fontSize:19,fontWeight:800}}>🎤 Munshi Jee Commands</div>
+            <div style={{fontSize:12,color:T.muted,marginTop:2}}>Say "Alexa, open munshi jee" first</div>
+          </div>
+          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            <I n="x" s={15} c={T.muted}/>
+          </div>
+        </div>
+        <div style={{padding:"10px 14px",background:"rgba(139,124,248,0.1)",border:"1px solid rgba(139,124,248,0.3)",borderRadius:12,marginBottom:14}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.accent}}>How to start:</div>
+          <div style={{fontSize:13,color:T.text,marginTop:4}}>"Alexa, open munshi jee"</div>
+          <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>"Alexa, munshi jee kholo"</div>
+        </div>
+        <input className="input" placeholder="Search commands..." value={search} onChange={e=>setSearch(e.target.value)} style={{marginBottom:12,height:44}}/>
+        <div className="scroll-x" style={{marginBottom:14}}>
+          {categories.map(c=>(
+            <div key={c.id} className={"chip "+(activeCategory===c.id?"on":"")} onClick={()=>setActiveCategory(c.id)} style={{fontSize:12}}>{c.label}</div>
+          ))}
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {filtered.map((cmd,i)=>(
+            <div key={i} className="card" style={{padding:"14px 16px"}}>
+              <div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:8}}>{cmd.icon} {cmd.en}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                <div style={{display:"flex",gap:8}}>
+                  <span style={{fontSize:10,fontWeight:700,color:T.accent,minWidth:55}}>HINDI</span>
+                  <span style={{fontSize:12,color:T.muted,flex:1}}>{cmd.hi}</span>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <span style={{fontSize:10,fontWeight:700,color:T.teal,minWidth:55}}>HINGLISH</span>
+                  <span style={{fontSize:12,color:T.muted,flex:1}}>{cmd.hinglish}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+          {filtered.length===0 && <div className="empty"><div className="empty-icon">🔍</div><div className="empty-text">No commands found.</div></div>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── KITCHEN MODULE ──────────────────────────────────────────────────────────
 // ════════════════════════════════════════════════════════════════════
 
@@ -1649,6 +1728,10 @@ const KitchenScreen = ({ familyId }) => {
   const [showAddPantry, setShowAddPantry] = useState(false);
   const [editPantryItem, setEditPantryItem] = useState(null);
   const [editShopItem, setEditShopItem] = useState(null);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [showAlexaCommands, setShowAlexaCommands] = useState(false);
+  const [recipeIngredients, setRecipeIngredients] = useState([]);
+  const [showAlexaCommands, setShowAlexaCommands] = useState(false);
   const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
 
@@ -1742,7 +1825,12 @@ const KitchenScreen = ({ familyId }) => {
             </div>
           </div>
         </div>
+        <div onClick={()=>setShowAlexaCommands(true)} style={{padding:"8px 12px",background:"rgba(139,124,248,0.12)",border:"1px solid rgba(139,124,248,0.3)",borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontSize:15}}>🎤</span>
+          <span style={{fontSize:11,fontWeight:700,color:T.accent}}>Commands</span>
+        </div>
       </div>
+      {showAlexaCommands && <AlexaCommandCenter onClose={()=>setShowAlexaCommands(false)}/>}
 
       <div className="scroll-x" style={{padding:"10px 18px",marginBottom:4}}>
         {[
@@ -1850,7 +1938,7 @@ const KitchenScreen = ({ familyId }) => {
               ? <div className="empty"><div className="empty-icon">🥘</div><div className="empty-text">Loading recipes...</div></div>
               : <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {recipes.map(r => (
-                    <div key={r.id} className="card" style={{padding:"14px 16px"}}>
+                    <div key={r.id} className="card card-tap" style={{padding:"14px 16px"}} onClick={async()=>{ setSelectedRecipe(r); const {data} = await supabase.from("recipe_ingredients").select("*").eq("recipe_id",r.id); setRecipeIngredients(data||[]); }}>
                       <div style={{fontSize:15,fontWeight:700}}>{r.name}</div>
                       <div style={{fontSize:12,color:T.muted,marginTop:3}}>
                         {MEAL_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min · 👥 {r.servings}
@@ -1959,6 +2047,62 @@ const KitchenScreen = ({ familyId }) => {
       </div>
 
       {/* SHOP EDIT MODAL */}{editShopItem && (<Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}><div style={{display:"flex",flexDirection:"column",gap:10}}><input className="input" placeholder="Item name" autoFocus defaultValue={editShopItem.item_name} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/><div style={{display:"flex",gap:8}}><input className="input" type="number" placeholder="Qty" defaultValue={editShopItem.quantity_needed} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/><select className="input" defaultValue={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>{["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}</select></div><select className="input" defaultValue={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>{["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}</select><button className="btn-primary" onClick={async()=>{if(!editShopItem.item_name) return;if(editShopItem.isNew){await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);}else{await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);}setEditShopItem(null);}}>{editShopItem.isNew?"Add to List":"Save Changes"}</button>{!editShopItem.isNew&&(<button onClick={async()=>{await supabase.from("shopping_list").delete().eq("id",editShopItem.id);setEditShopItem(null);}} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Delete Item</button>)}</div></Modal>)}
+            {/* RECIPE DETAIL MODAL */}
+      {selectedRecipe && (
+        <div className="modal-bg" onClick={()=>setSelectedRecipe(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto"}}>
+            <div className="modal-handle"/>
+            <div className="row" style={{marginBottom:16}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:19,fontWeight:800}}>{selectedRecipe.name}</div>
+                <div style={{fontSize:12,color:T.muted,marginTop:3}}>
+                  {MEAL_EMOJI[selectedRecipe.meal_type]} {selectedRecipe.meal_type} · ⏱ {selectedRecipe.prep_time_mins}min · 👥 {selectedRecipe.servings} servings
+                </div>
+              </div>
+              <div onClick={()=>setSelectedRecipe(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                <I n="x" s={15} c={T.muted}/>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
+              {(selectedRecipe.tags||[]).map(tag=>(
+                <span key={tag} className="tag" style={{background:T.accentSoft,color:T.accent,fontSize:11}}>{tag}</span>
+              ))}
+            </div>
+            <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Ingredients</div>
+            {recipeIngredients.length === 0
+              ? <div style={{fontSize:13,color:T.muted,padding:"10px 0"}}>Loading ingredients...</div>
+              : <div className="card" style={{padding:"2px 14px",marginBottom:16}}>
+                  {recipeIngredients.map((ing,i) => {
+                    const pantryItem = pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase());
+                    const hasEnough = pantryItem && Number(pantryItem.quantity) >= Number(ing.quantity);
+                    return (
+                      <div key={i} className="list-row" style={{cursor:"default"}}>
+                        <span style={{fontSize:16}}>{hasEnough ? "✅" : pantryItem ? "⚠️" : "❌"}</span>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:14,fontWeight:500}}>{ing.pantry_item_name}</div>
+                          <div style={{fontSize:11.5,color:T.muted}}>Need: {ing.quantity} {ing.unit}</div>
+                        </div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontSize:12,color:hasEnough?T.green:pantryItem?T.amber:T.red,fontWeight:600}}>
+                            {pantryItem ? pantryItem.quantity+" "+pantryItem.unit : "Not in pantry"}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+            }
+            {recipeIngredients.filter(ing=>!pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase())).length > 0 && (
+              <div style={{padding:"12px 14px",background:T.amberSoft,border:"1px solid rgba(251,191,36,0.22)",borderRadius:12}}>
+                <div style={{fontSize:13,fontWeight:700,color:T.amber}}>🛒 Need to buy:</div>
+                <div style={{fontSize:12,color:T.muted,marginTop:4}}>
+                  {recipeIngredients.filter(ing=>!pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase())).map(i=>i.pantry_item_name).join(", ")}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* ASSIGN RECIPE MODAL */}
       {addMealModal && (
         <div className="modal-bg" onClick={()=>setAddMealModal(null)}>
