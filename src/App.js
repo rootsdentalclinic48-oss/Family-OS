@@ -978,7 +978,7 @@ const FinanceScreen = ({ familyId }) => {
         </div>
       </div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
-        {["transactions","bills","budgets"].map(t=>(
+        {["transactions","bills","budgets","gmail"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
