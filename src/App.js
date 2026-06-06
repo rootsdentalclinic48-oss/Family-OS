@@ -1954,7 +1954,7 @@ const KitchenScreen = ({ familyId }) => {
         {/* SHOP */}
         {tab==="shop" && (
           <>
-          <button onClick={()=>setEditShopItem({isNew:true,item_name:"",quantity_needed:"",unit:"kg",category:"Vegetables"})} className="btn-primary" style={{marginBottom:14,height:44,fontSize:14}}>+ Add Item</button>
+            <button onClick={()=>setEditShopItem({isNew:true,item_name:"",quantity_needed:"",unit:"kg",category:"Vegetables"})} className="btn-primary" style={{marginBottom:14,height:44,fontSize:14}}>+ Add Item</button>
             {shopping.filter(s=>!s.purchased).length === 0
               ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">Shopping list is empty!<br/>Mark meals as cooked to auto-populate.</div></div>
               : <>
