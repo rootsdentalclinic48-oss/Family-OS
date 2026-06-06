@@ -2059,6 +2059,7 @@ const KitchenScreen = ({ familyId }) => {
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
                           <div style={{textAlign:"right",minWidth:60}}>
                             <div style={{fontSize:14,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
+                            {(()=>{ const d=calcDaysRemaining(item.quantity,item.unit,item.name); return d!==null ? <div style={{fontSize:10,color:d<=3?"#F87171":d<=7?"#FBBF24":"#34D399",fontWeight:600}}>{d}d left</div> : null; })()}
                             {isLow && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock!</div>}
                           </div>
                           <div style={{opacity:0.4}}><I n="edit" s={14} c={T.accent}/></div>
