@@ -978,7 +978,7 @@ const FinanceScreen = ({ familyId }) => {
         </div>
       </div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
-        {["transactions","bills","budgets","gmail"].map(t=>(
+        {["transactions","bills","budgets","gmail","advisor"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
@@ -1026,6 +1026,7 @@ const FinanceScreen = ({ familyId }) => {
           </Modal>
         )}
         {tab==="gmail" && <GmailSyncScreen familyId={familyId}/>}
+        {tab==="advisor" && <FinanceAdvisorScreen familyId={familyId}/>}
         {tab==="bills" && (
           bills.length===0
             ? <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">No bills added yet</div></div>
@@ -2197,6 +2198,249 @@ const ServiceReminders = ({ familyId }) => {
           </div>
         </>
       )}
+    </div>
+  );
+};
+
+
+// ─── FINANCE ADVISOR SCREEN ───────────────────────────────────────────────────
+const FinanceAdvisorScreen = ({ familyId }) => {
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [txns, setTxns] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  useEffect(() => { fetchData(); }, [month, year]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const startDate = `${year}-${String(month+1).padStart(2,"0")}-01`;
+    const endDate = new Date(year, month+1, 0).toISOString().split("T")[0];
+    const { data } = await supabase.from("transactions")
+      .select("*").eq("family_id", familyId)
+      .gte("date", startDate).lte("date", endDate)
+      .order("date", {ascending: false});
+    setTxns(data || []);
+    setLoading(false);
+  };
+
+  const income = txns.filter(t => Number(t.amount) > 0).reduce((a,t) => a + Number(t.amount), 0);
+  const expenses = txns.filter(t => Number(t.amount) < 0).reduce((a,t) => a + Math.abs(Number(t.amount)), 0);
+  const net = income - expenses;
+  const savingsRate = income > 0 ? Math.round((net/income)*100) : 0;
+
+  // Category breakdown
+  const catMap = {};
+  txns.filter(t => Number(t.amount) < 0).forEach(t => {
+    const cat = t.category || "Other";
+    catMap[cat] = (catMap[cat] || 0) + Math.abs(Number(t.amount));
+  });
+  const catBreakdown = Object.entries(catMap).sort((a,b) => b[1]-a[1]);
+
+  // Top merchants
+  const merchantMap = {};
+  txns.filter(t => Number(t.amount) < 0).forEach(t => {
+    const m = t.description || "Other";
+    merchantMap[m] = (merchantMap[m] || 0) + Math.abs(Number(t.amount));
+  });
+  const topMerchants = Object.entries(merchantMap).sort((a,b) => b[1]-a[1]).slice(0,5);
+
+  // AI Insights
+  const getInsights = () => {
+    const insights = [];
+    if (savingsRate < 20) insights.push({icon:"⚠️", text:`Savings rate is only ${savingsRate}%. Aim for at least 20%.`, color:T.red});
+    else if (savingsRate >= 40) insights.push({icon:"🌟", text:`Excellent! ${savingsRate}% savings rate this month.`, color:T.green});
+    else insights.push({icon:"✅", text:`Good savings rate of ${savingsRate}% this month.`, color:T.green});
+
+    if (catBreakdown[0]) {
+      const topCat = catBreakdown[0];
+      const pct = Math.round((topCat[1]/expenses)*100);
+      if (pct > 40) insights.push({icon:"💡", text:`${topCat[0]} is your biggest expense at ${pct}% (₹${topCat[1].toLocaleString("en-IN")}). Consider if this can be reduced.`, color:T.amber});
+    }
+
+    const diningExp = catMap["Dining & Food"] || 0;
+    if (diningExp > 5000) insights.push({icon:"🍽️", text:`Dining & Food spending ₹${diningExp.toLocaleString("en-IN")} — cooking at home can save significantly.`, color:T.amber});
+
+    const shoppingExp = catMap["Shopping"] || 0;
+    if (shoppingExp > 10000) insights.push({icon:"🛍️", text:`Shopping expense ₹${shoppingExp.toLocaleString("en-IN")} — review if all purchases were necessary.`, color:T.amber});
+
+    if (income === 0) insights.push({icon:"❗", text:"No income recorded this month. Add your salary and clinic income.", color:T.red});
+
+    return insights;
+  };
+
+  const generatePDF = async () => {
+    setGenerating(true);
+    try {
+      // Build HTML content for PDF
+      const rows = catBreakdown.map(([cat,amt]) =>
+        `<tr><td style="padding:8px;border-bottom:1px solid #eee">${cat}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₹${amt.toLocaleString("en-IN")}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${Math.round((amt/expenses)*100)}%</td></tr>`
+      ).join("");
+
+      const txnRows = txns.slice(0,20).map(t =>
+        `<tr><td style="padding:6px;border-bottom:1px solid #eee;font-size:12px">${t.date}</td><td style="padding:6px;border-bottom:1px solid #eee;font-size:12px">${t.description||""}</td><td style="padding:6px;border-bottom:1px solid #eee;font-size:12px">${t.category||""}</td><td style="padding:6px;border-bottom:1px solid #eee;text-align:right;font-size:12px;color:${Number(t.amount)>0?"#16a34a":"#dc2626"}">₹${Math.abs(Number(t.amount)).toLocaleString("en-IN")}</td></tr>`
+      ).join("");
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"/><style>
+  body{font-family:Arial,sans-serif;margin:30px;color:#1a1a2e;}
+  h1{color:#6B7CF8;border-bottom:3px solid #6B7CF8;padding-bottom:10px;}
+  h2{color:#2DD4BF;margin-top:24px;}
+  .summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:20px 0;}
+  .card{background:#f8f9ff;border-radius:12px;padding:16px;text-align:center;}
+  .card-label{font-size:12px;color:#666;font-weight:600;}
+  .card-value{font-size:22px;font-weight:800;margin-top:4px;}
+  .insight{padding:10px 14px;border-radius:8px;margin-bottom:8px;font-size:13px;}
+  table{width:100%;border-collapse:collapse;margin-top:10px;}
+  th{background:#6B7CF8;color:white;padding:10px;text-align:left;}
+  .footer{margin-top:40px;text-align:center;color:#999;font-size:11px;}
+</style></head>
+<body>
+  <h1>🏠 Family OS — Finance Report</h1>
+  <p style="color:#666;margin-top:-10px">Gupta Family · Sector 48, Gurgaon · ${MONTHS[month]} ${year}</p>
+
+  <div class="summary">
+    <div class="card"><div class="card-label">Total Income</div><div class="card-value" style="color:#16a34a">₹${income.toLocaleString("en-IN")}</div></div>
+    <div class="card"><div class="card-label">Total Expenses</div><div class="card-value" style="color:#dc2626">₹${expenses.toLocaleString("en-IN")}</div></div>
+    <div class="card"><div class="card-label">Net Savings</div><div class="card-value" style="color:${net>=0?"#16a34a":"#dc2626"}">₹${Math.abs(net).toLocaleString("en-IN")}</div></div>
+  </div>
+  <p style="background:#f0fdf4;padding:10px;border-radius:8px;font-weight:600;">Savings Rate: ${savingsRate}% ${savingsRate>=20?"✅ Good!":"⚠️ Below target"}</p>
+
+  <h2>📊 Expenses by Category</h2>
+  <table><tr><th>Category</th><th style="text-align:right">Amount</th><th style="text-align:right">% of Total</th></tr>${rows}</table>
+
+  <h2>📋 Transaction Details (Top 20)</h2>
+  <table><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th></tr>${txnRows}</table>
+
+  <div class="footer">Generated by Family OS · ${new Date().toLocaleDateString("en-IN")} · Confidential</div>
+</body>
+</html>`;
+
+      // Open in new window and print
+      const win = window.open("", "_blank");
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); }, 500);
+    } catch(e) {
+      showToast({title:"Error",body:e.message,icon:"❌",color:T.red});
+    }
+    setGenerating(false);
+  };
+
+  return (
+    <div className="screen">
+      <LiveClock/>
+      <div style={{padding:"calc(env(safe-area-inset-top,0px) + 52px) 18px 100px"}}>
+
+        {/* Header */}
+        <div className="row" style={{marginBottom:16}}>
+          <div>
+            <div style={{fontSize:22,fontWeight:900}}>📊 Finance Advisor</div>
+            <div style={{fontSize:12,color:T.muted,marginTop:2}}>Monthly analysis & PDF report</div>
+          </div>
+          <button onClick={generatePDF} disabled={generating} style={{padding:"10px 16px",background:"rgba(139,124,248,0.15)",border:"1px solid rgba(139,124,248,0.4)",borderRadius:12,color:T.accent,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+            {generating ? "⏳" : "📄 PDF"}
+          </button>
+        </div>
+
+        {/* Month Selector */}
+        <div style={{display:"flex",gap:8,marginBottom:16}}>
+          <select className="input" value={month} onChange={e=>setMonth(Number(e.target.value))} style={{flex:2}}>
+            {MONTHS.map((m,i)=><option key={i} value={i}>{m}</option>)}
+          </select>
+          <select className="input" value={year} onChange={e=>setYear(Number(e.target.value))} style={{flex:1}}>
+            {[2024,2025,2026,2027].map(y=><option key={y}>{y}</option>)}
+          </select>
+        </div>
+
+        {loading ? (
+          <div style={{textAlign:"center",padding:40}}><div className="spinner" style={{width:32,height:32,margin:"0 auto 12px"}}/><div style={{color:T.muted,fontSize:13}}>Loading data...</div></div>
+        ) : (
+          <>
+            {/* Summary Cards */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+              {[
+                {label:"Income",value:income,color:T.green,icon:"💰"},
+                {label:"Expenses",value:expenses,color:T.red,icon:"💸"},
+                {label:"Net Savings",value:net,color:net>=0?T.green:T.red,icon:"🏦"},
+                {label:"Savings Rate",value:`${savingsRate}%`,color:savingsRate>=20?T.green:T.amber,icon:"📈",raw:true},
+              ].map((c,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px"}}>
+                  <div style={{fontSize:11,color:T.muted,fontWeight:700}}>{c.icon} {c.label}</div>
+                  <div style={{fontSize:18,fontWeight:800,color:c.color,marginTop:4}}>
+                    {c.raw ? c.value : `₹${Math.abs(c.value).toLocaleString("en-IN")}`}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* AI Insights */}
+            {getInsights().length > 0 && (
+              <>
+                <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>💡 Insights</div>
+                {getInsights().map((ins,i)=>(
+                  <div key={i} style={{padding:"12px 14px",background:`${ins.color}12`,border:`1px solid ${ins.color}30`,borderRadius:12,marginBottom:8,display:"flex",gap:10,alignItems:"flex-start"}}>
+                    <span style={{fontSize:18,flexShrink:0}}>{ins.icon}</span>
+                    <span style={{fontSize:13,color:T.text,lineHeight:1.5}}>{ins.text}</span>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Category Breakdown */}
+            {catBreakdown.length > 0 && (
+              <>
+                <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10,marginTop:16}}>📊 By Category</div>
+                <div className="card" style={{padding:"2px 14px",marginBottom:16}}>
+                  {catBreakdown.map(([cat,amt],i)=>{
+                    const pct = expenses > 0 ? Math.round((amt/expenses)*100) : 0;
+                    return (
+                      <div key={cat} className="list-row" style={{cursor:"default"}}>
+                        <div style={{width:28,height:28,borderRadius:8,background:"rgba(139,124,248,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:T.accent}}>{i+1}</div>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:13,fontWeight:600}}>{cat}</div>
+                          <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginTop:5}}>
+                            <div style={{height:4,background:T.accent,borderRadius:2,width:`${pct}%`}}/>
+                          </div>
+                        </div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontSize:13,fontWeight:700,color:T.red}}>₹{amt.toLocaleString("en-IN")}</div>
+                          <div style={{fontSize:11,color:T.muted}}>{pct}%</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Top Merchants */}
+            {topMerchants.length > 0 && (
+              <>
+                <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>🏪 Top Merchants</div>
+                <div className="card" style={{padding:"2px 14px",marginBottom:16}}>
+                  {topMerchants.map(([name,amt])=>(
+                    <div key={name} className="list-row" style={{cursor:"default"}}>
+                      <div style={{flex:1,fontSize:13}}>{name.slice(0,35)}</div>
+                      <div style={{fontSize:13,fontWeight:700,color:T.red}}>₹{amt.toLocaleString("en-IN")}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {txns.length === 0 && (
+              <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No transactions found for {MONTHS[month]} {year}</div></div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
