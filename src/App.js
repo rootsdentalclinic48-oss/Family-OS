@@ -2014,7 +2014,6 @@ const GmailSyncScreen = ({ familyId }) => {
           </>
         )}
       </div>
-    </div>
   );
 };
 
