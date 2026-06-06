@@ -1998,8 +1998,6 @@ const KitchenScreen = ({ familyId }) => {
             }
           </>
         )}
-      </div>
-
             {editShopItem && (
         <Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
