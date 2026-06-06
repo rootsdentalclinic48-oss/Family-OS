@@ -951,7 +951,8 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
 // ─── FINANCE SCREEN ───────────────────────────────────────────────────────────
 const FinanceScreen = ({ familyId }) => {
   const [tab, setTab] = useState("transactions");
-  const { rows: txns, loading, remove } = useTable("transactions", familyId, { order: "date", limit: 50 });
+  const { rows: txns, loading, remove, update: updTx } = useTable("transactions", familyId, { order: "date", limit: 50 });
+  const [editTx, setEditTx] = useState(null);
   const { rows: bills } = useTable("bills", familyId, { order: "due_date", asc: true });
   const { rows: budgets } = useTable("budgets", familyId);
   const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
@@ -988,7 +989,7 @@ const FinanceScreen = ({ familyId }) => {
             ? <div className="empty"><div className="empty-icon">💸</div><div className="empty-text">No transactions yet.</div></div>
             : <div className="card" style={{padding:"2px 14px"}}>
                 {txns.map(tx=>(
-                  <div key={tx.id} className="list-row">
+                  <div key={tx.id} className="list-row" onClick={()=>setEditTx({...tx})}>
                     <div style={{width:38,height:38,borderRadius:11,background:Number(tx.amount)>0?T.greenSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{tx.emoji||"💸"}</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:14,fontWeight:500}}>{tx.description}</div>
@@ -998,11 +999,31 @@ const FinanceScreen = ({ familyId }) => {
                       <div style={{fontSize:14,fontWeight:700,color:Number(tx.amount)>0?T.green:T.text}} className="mono">
                         {Number(tx.amount)>0?"+":""}{inr(tx.amount)}
                       </div>
-                      <div onClick={()=>remove(tx.id)} style={{cursor:"pointer",opacity:0.4}}><I n="trash" s={14} c={T.red}/></div>
+                      <div onClick={e=>{e.stopPropagation();remove(tx.id);}} style={{cursor:"pointer",opacity:0.4}}><I n="trash" s={14} c={T.red}/></div>
                     </div>
                   </div>
                 ))}
               </div>
+        )}
+                {/* EDIT TRANSACTION MODAL */}
+        {editTx && (
+          <Modal title="Edit Transaction" onClose={()=>setEditTx(null)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="Description" value={editTx.description||""} onChange={e=>setEditTx(x=>({...x,description:e.target.value}))} autoFocus/>
+              <input className="input" type="number" placeholder="Amount" value={Math.abs(editTx.amount)||""} onChange={e=>setEditTx(x=>({...x,amount:Number(x.amount)<0?-Math.abs(Number(e.target.value)):Math.abs(Number(e.target.value))}))}/>
+              <select className="input" value={editTx.category||""} onChange={e=>setEditTx(x=>({...x,category:e.target.value}))}>
+                {["Clinic Income","Simmi Income","Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Home Loan EMI","Other"].map(c=><option key={c}>{c}</option>)}
+              </select>
+              <input className="input" type="date" value={editTx.date||""} onChange={e=>setEditTx(x=>({...x,date:e.target.value}))}/>
+              <button className="btn-primary" onClick={async()=>{
+                await updTx(editTx.id,{description:editTx.description,amount:editTx.amount,category:editTx.category,date:editTx.date});
+                setEditTx(null);
+              }}>Save Changes</button>
+              <button onClick={async()=>{await remove(editTx.id);setEditTx(null);}} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                Delete Transaction
+              </button>
+            </div>
+          </Modal>
         )}
         {tab==="bills" && (
           bills.length===0
