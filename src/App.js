@@ -1885,7 +1885,7 @@ const GmailSyncScreen = ({ familyId }) => {
 
     // Load sync history from Supabase
     supabase.from("gmail_sync_history").select("*").eq("family_id", familyId).order("synced_at", {ascending: false}).limit(10)
-      .then(({data}) => { if(data) setSyncHistory(data); });
+      .then(({data, error}) => { if(data && !error) setSyncHistory(data); }).catch(()=>{});
   }, []);
 
   const connectGmail = () => {
