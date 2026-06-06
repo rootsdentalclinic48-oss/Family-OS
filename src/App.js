@@ -1852,66 +1852,49 @@ const VoiceCommandButton = ({ familyId }) => {
 // ─── GMAIL SYNC SCREEN ────────────────────────────────────────────────────────
 const GmailSyncScreen = ({ familyId }) => {
   const [connected, setConnected] = useState(false);
-  const [accessToken, setAccessToken] = useState(null);
-  const [refreshToken, setRefreshToken] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [selected, setSelected] = useState(new Set());
-  const [imported, setImported] = useState([]);
+  const [step, setStep] = useState("connect");
   const [syncHistory, setSyncHistory] = useState([]);
-  const [step, setStep] = useState("connect"); // connect, review, done
 
   useEffect(() => {
-    // Check URL params for OAuth callback
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("gmail_connected") === "true") {
-      const at = params.get("gmail_access_token");
-      const rt = params.get("gmail_refresh_token");
-      if (at) {
-        setAccessToken(at);
-        setRefreshToken(rt);
-        setConnected(true);
-        localStorage.setItem("gmail_access_token", at);
-        if (rt) localStorage.setItem("gmail_refresh_token", rt);
-        window.history.replaceState({}, "", "/");
-        showToast({title:"Gmail Connected!",body:"Ready to sync emails",icon:"📧",color:"#34D399"});
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("gmail_connected") === "true") {
+        const at = params.get("gmail_access_token");
+        if (at) {
+          sessionStorage.setItem("gat", at);
+          const rt = params.get("gmail_refresh_token") || "";
+          sessionStorage.setItem("grt", rt);
+          setConnected(true);
+          window.history.replaceState({}, "", "/");
+        }
       }
-    }
-    // Check localStorage
-    const savedToken = localStorage.getItem("gmail_access_token");
-    if (savedToken) { setAccessToken(savedToken); setConnected(true); }
-    const savedRefresh = localStorage.getItem("gmail_refresh_token");
-    if (savedRefresh) setRefreshToken(savedRefresh);
+      const saved = sessionStorage.getItem("gat");
+      if (saved) setConnected(true);
+    } catch(e) {}
 
-    // Load sync history from Supabase
-    supabase.from("gmail_sync_history").select("*").eq("family_id", familyId).order("synced_at", {ascending: false}).limit(10)
-      .then(({data, error}) => { if(data && !error) setSyncHistory(data); }).catch(()=>{});
+    supabase.from("gmail_sync_history").select("*").eq("family_id", familyId)
+      .order("synced_at", {ascending: false}).limit(20)
+      .then(({data}) => { if(data) setSyncHistory(data); })
+      .catch(() => {});
   }, []);
 
-  const connectGmail = () => {
-    window.location.href = "/api/gmail/auth";
-  };
+  const connectGmail = () => { window.location.href = "/api/gmail/auth"; };
 
   const syncEmails = async () => {
     setSyncing(true);
-    setStep("connect");
     try {
+      const at = sessionStorage.getItem("gat") || "";
+      const rt = sessionStorage.getItem("grt") || "";
       const r = await fetch("/api/gmail/sync", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({access_token: accessToken, refresh_token: refreshToken}),
+        body: JSON.stringify({access_token: at, refresh_token: rt}),
       });
       const data = await r.json();
-      if (data.error) {
-        showToast({title:"Sync Error",body:data.error,icon:"❌",color:"#F87171"});
-        if (data.error.includes("token")) { setConnected(false); localStorage.removeItem("gmail_access_token"); }
-        return;
-      }
-      if (data.token && data.token !== accessToken) {
-        setAccessToken(data.token);
-        localStorage.setItem("gmail_access_token", data.token);
-      }
-      // Filter out already imported
+      if (data.error) { showToast({title:"Error",body:data.error,icon:"❌",color:"#F87171"}); return; }
       const existingIds = syncHistory.map(h => h.gmail_id);
       const newTxns = (data.transactions || []).filter(t => !existingIds.includes(t.gmail_id));
       setTransactions(newTxns);
@@ -1919,39 +1902,27 @@ const GmailSyncScreen = ({ familyId }) => {
       setStep("review");
     } catch(err) {
       showToast({title:"Error",body:err.message,icon:"❌",color:"#F87171"});
-    } finally {
-      setSyncing(false);
-    }
+    } finally { setSyncing(false); }
   };
 
   const importSelected = async () => {
     const toImport = transactions.filter((_, i) => selected.has(i));
-    const today = new Date().toISOString().split("T")[0];
-    let count = 0;
     for (const tx of toImport) {
       await supabase.from("transactions").insert([{
-        family_id: familyId,
-        description: tx.description,
-        amount: -Math.abs(tx.amount),
-        category: tx.category,
-        emoji: tx.emoji,
-        date: tx.date,
-        added_by: `Gmail (${tx.source})`,
+        family_id: familyId, description: tx.description,
+        amount: -Math.abs(tx.amount), category: tx.category,
+        emoji: tx.emoji, date: tx.date, added_by: `Gmail (${tx.source})`,
       }]);
       await supabase.from("gmail_sync_history").insert([{
-        family_id: familyId,
-        gmail_id: tx.gmail_id,
-        description: tx.description,
-        amount: tx.amount,
-        category: tx.category,
-        source: tx.source,
+        family_id: familyId, gmail_id: tx.gmail_id,
+        description: tx.description, amount: tx.amount,
+        category: tx.category, source: tx.source,
         synced_at: new Date().toISOString(),
-      }]);
-      count++;
+      }]).catch(()=>{});
     }
-    setImported(toImport);
-    setStep("done");
-    showToast({title:`${count} transactions imported!`,body:"Check Finance screen",icon:"✅",color:"#34D399"});
+    showToast({title:`${toImport.length} imported!`,body:"Check Finance screen",icon:"✅",color:"#34D399"});
+    setStep("connect");
+    setTransactions([]);
   };
 
   const toggleSelect = (i) => {
@@ -1960,70 +1931,45 @@ const GmailSyncScreen = ({ familyId }) => {
     setSelected(s);
   };
 
-  const catColor = (cat) => {
-    const colors = {"Groceries":"#34D399","Dining & Food":"#F97316","Medical":"#60A5FA","House Interiors":"#A78BFA","Veda":"#F472B6","Shopping":"#FBBF24","Other":"#94A3B8"};
-    return colors[cat] || "#94A3B8";
-  };
-
   return (
     <div className="screen">
       <LiveClock/>
-      <div style={{padding:"calc(env(safe-area-inset-top,0px) + 44px) 18px 0"}}>
-        <div className="row" style={{marginBottom:4}}>
-          <div>
-            <div style={{fontSize:22,fontWeight:900}}>📧 Gmail Sync</div>
-            <div style={{fontSize:12,color:T.muted,marginTop:2}}>
-              {connected ? "✅ Connected · drmayankgupta.mds@gmail.com" : "Connect Gmail to import transactions"}
-            </div>
-          </div>
-          {connected && <div onClick={()=>{localStorage.removeItem("gmail_access_token");localStorage.removeItem("gmail_refresh_token");setConnected(false);setAccessToken(null);}} style={{fontSize:11,color:T.red,cursor:"pointer",fontWeight:600}}>Disconnect</div>}
+      <div style={{padding:"calc(env(safe-area-inset-top,0px) + 52px) 18px 100px"}}>
+        <div style={{fontSize:22,fontWeight:900,marginBottom:4}}>📧 Gmail Sync</div>
+        <div style={{fontSize:12,color:T.muted,marginBottom:20}}>
+          {connected ? "✅ Gmail connected" : "Import transactions from Gmail"}
         </div>
-      </div>
 
-      <div style={{padding:"12px 18px",paddingBottom:100}}>
-
-        {/* STEP 1: CONNECT */}
         {!connected && (
-          <div style={{textAlign:"center",padding:"40px 20px"}}>
-            <div style={{fontSize:60,marginBottom:16}}>📧</div>
-            <div style={{fontSize:18,fontWeight:700,color:T.text,marginBottom:8}}>Connect Gmail</div>
-            <div style={{fontSize:13,color:T.muted,marginBottom:24,lineHeight:1.6}}>
-              We will scan your Gmail for Flipkart, Amazon, Swiggy, Zomato, Zepto orders and bank alerts from this month only.
+          <div style={{textAlign:"center",padding:"20px 0"}}>
+            <div style={{fontSize:50,marginBottom:12}}>📧</div>
+            <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>Connect Gmail</div>
+            <div style={{fontSize:13,color:T.muted,marginBottom:20,lineHeight:1.6}}>
+              Scan Flipkart, Amazon, Swiggy, Zomato, Zepto orders and bank alerts from this month.
             </div>
-            <div style={{padding:"12px 16px",background:"rgba(139,124,248,0.08)",border:"1px solid rgba(139,124,248,0.2)",borderRadius:12,marginBottom:24,textAlign:"left"}}>
-              <div style={{fontSize:12,fontWeight:700,color:T.accent,marginBottom:8}}>We only read:</div>
-              {["📦 Flipkart order confirmations","📦 Amazon order confirmations","🍔 Swiggy/Zomato receipts","🛒 Zepto grocery orders","🏦 Bank debit/credit alerts"].map(item=>(
-                <div key={item} style={{fontSize:12,color:T.muted,marginBottom:4}}>{item}</div>
-              ))}
-            </div>
-            <button className="btn-primary" onClick={connectGmail} style={{width:"100%",height:52,fontSize:15}}>
+            <button className="btn-primary" onClick={connectGmail} style={{width:"100%",height:50}}>
               🔗 Connect Gmail Account
             </button>
           </div>
         )}
 
-        {/* CONNECTED - SYNC BUTTON */}
         {connected && step === "connect" && (
           <>
-            <button className="btn-primary" onClick={syncEmails} disabled={syncing} style={{width:"100%",height:52,fontSize:15,marginBottom:16}}>
-              {syncing ? "🔄 Scanning emails..." : "🔍 Scan This Month's Emails"}
+            <button className="btn-primary" onClick={syncEmails} disabled={syncing} style={{width:"100%",height:50,marginBottom:16}}>
+              {syncing ? "🔄 Scanning..." : "🔍 Scan This Month"}
             </button>
-            {syncing && (
-              <div style={{textAlign:"center",padding:"20px",color:T.muted,fontSize:13}}>
-                <div className="spinner" style={{width:32,height:32,margin:"0 auto 12px"}}/>
-                Scanning Flipkart, Amazon, Swiggy, Zomato, Zepto and bank alerts...
-              </div>
-            )}
-            {/* Sync History */}
+            <button onClick={()=>{try{sessionStorage.removeItem("gat");sessionStorage.removeItem("grt");}catch(e){}setConnected(false);}} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif",marginBottom:20}}>
+              Disconnect Gmail
+            </button>
             {syncHistory.length > 0 && (
               <>
-                <div style={{fontSize:13,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10,marginTop:8}}>Recent Imports</div>
+                <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",marginBottom:10}}>Recently Imported</div>
                 <div className="card" style={{padding:"2px 14px"}}>
-                  {syncHistory.slice(0,10).map((h,i)=>(
+                  {syncHistory.map((h,i)=>(
                     <div key={i} className="list-row" style={{cursor:"default"}}>
-                      <div style={{fontSize:20}}>{h.source==="Flipkart"?"🛒":h.source==="Amazon"?"📦":h.source==="Swiggy"?"🍔":h.source==="Zomato"?"🍕":h.source==="Zepto"?"🛒":"🏦"}</div>
+                      <div style={{fontSize:18}}>{h.source==="Flipkart"?"🛒":h.source==="Amazon"?"📦":h.source==="Swiggy"?"🍔":"🏦"}</div>
                       <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:500}}>{h.description?.slice(0,35)}</div>
+                        <div style={{fontSize:12}}>{h.description?.slice(0,35)}</div>
                         <div style={{fontSize:11,color:T.muted}}>{h.source} · {h.synced_at?.split("T")[0]}</div>
                       </div>
                       <div style={{fontSize:13,fontWeight:700,color:T.red}}>-₹{h.amount}</div>
@@ -2035,77 +1981,45 @@ const GmailSyncScreen = ({ familyId }) => {
           </>
         )}
 
-        {/* STEP 2: REVIEW */}
         {step === "review" && (
           <>
             <div style={{padding:"12px 14px",background:"rgba(139,124,248,0.08)",border:"1px solid rgba(139,124,248,0.2)",borderRadius:12,marginBottom:14}}>
               <div style={{fontSize:13,fontWeight:700,color:T.accent}}>Found {transactions.length} new transactions</div>
-              <div style={{fontSize:12,color:T.muted,marginTop:2}}>{selected.size} selected · Tap to deselect any you dont want</div>
+              <div style={{fontSize:12,color:T.muted}}>{selected.size} selected</div>
             </div>
-
-            {transactions.length === 0 ? (
-              <div className="empty"><div className="empty-icon">🔍</div><div className="empty-text">No new transactions found this month.</div></div>
-            ) : (
-              <>
-                <div style={{display:"flex",gap:8,marginBottom:12}}>
-                  <button onClick={()=>setSelected(new Set(transactions.map((_,i)=>i)))} style={{flex:1,padding:"10px",background:"rgba(52,211,153,0.1)",border:"1px solid rgba(52,211,153,0.3)",borderRadius:10,color:"#34D399",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Select All</button>
-                  <button onClick={()=>setSelected(new Set())} style={{flex:1,padding:"10px",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(248,113,113,0.3)",borderRadius:10,color:"#F87171",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Deselect All</button>
-                </div>
-                <div className="card" style={{padding:"2px 14px",marginBottom:14}}>
-                  {transactions.map((tx,i)=>(
-                    <div key={i} className="list-row" onClick={()=>toggleSelect(i)} style={{opacity:selected.has(i)?1:0.4}}>
-                      <div style={{width:32,height:32,borderRadius:10,background:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{tx.emoji}</div>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:500}}>{tx.description?.slice(0,40)}</div>
-                        <div style={{display:"flex",gap:6,marginTop:3,alignItems:"center"}}>
-                          <span style={{fontSize:10,fontWeight:700,color:catColor(tx.category),background:`${catColor(tx.category)}22`,padding:"2px 7px",borderRadius:6}}>{tx.category}</span>
-                          <span style={{fontSize:10,color:T.muted}}>{tx.date}</span>
+            {transactions.length === 0
+              ? <div className="empty"><div className="empty-icon">🔍</div><div className="empty-text">No new transactions found.</div></div>
+              : <>
+                  <div className="card" style={{padding:"2px 14px",marginBottom:14}}>
+                    {transactions.map((tx,i)=>(
+                      <div key={i} className="list-row" onClick={()=>toggleSelect(i)} style={{opacity:selected.has(i)?1:0.4}}>
+                        <div style={{fontSize:22}}>{tx.emoji}</div>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:13}}>{tx.description?.slice(0,35)}</div>
+                          <div style={{fontSize:11,color:T.muted}}>{tx.category} · {tx.date}</div>
+                        </div>
+                        <div style={{fontSize:13,fontWeight:700,color:T.red,marginRight:8}}>-₹{tx.amount}</div>
+                        <div style={{width:20,height:20,borderRadius:6,background:selected.has(i)?"#34D399":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                          {selected.has(i) && <I n="check" s={11} c="white" w={3}/>}
                         </div>
                       </div>
-                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                        <div style={{fontSize:14,fontWeight:700,color:T.red}}>-₹{tx.amount}</div>
-                        <div style={{width:22,height:22,borderRadius:7,background:selected.has(i)?"#34D399":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                          {selected.has(i) && <I n="check" s={12} c="white" w={3}/>}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button className="btn-primary" onClick={importSelected} disabled={selected.size===0} style={{width:"100%",height:52,fontSize:15}}>
-                  ✅ Import {selected.size} Transactions
-                </button>
-                <button onClick={()=>setStep("connect")} style={{width:"100%",marginTop:10,padding:"14px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,color:T.muted,fontSize:14,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
-                  Cancel
-                </button>
-              </>
-            )}
+                    ))}
+                  </div>
+                  <button className="btn-primary" onClick={importSelected} disabled={selected.size===0} style={{width:"100%",height:50,marginBottom:10}}>
+                    ✅ Import {selected.size} Transactions
+                  </button>
+                  <button onClick={()=>setStep("connect")} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                    Cancel
+                  </button>
+                </>
+            }
           </>
-        )}
-
-        {/* STEP 3: DONE */}
-        {step === "done" && (
-          <div style={{textAlign:"center",padding:"40px 20px"}}>
-            <div style={{fontSize:60,marginBottom:16}}>🎉</div>
-            <div style={{fontSize:20,fontWeight:800,color:T.text,marginBottom:8}}>{imported.length} Transactions Imported!</div>
-            <div style={{fontSize:13,color:T.muted,marginBottom:24}}>All selected transactions have been added to your Finance screen.</div>
-            <div className="card" style={{padding:"2px 14px",marginBottom:24,textAlign:"left"}}>
-              {imported.map((tx,i)=>(
-                <div key={i} className="list-row" style={{cursor:"default"}}>
-                  <div style={{fontSize:18}}>{tx.emoji}</div>
-                  <div style={{flex:1}}><div style={{fontSize:13}}>{tx.description?.slice(0,35)}</div></div>
-                  <div style={{fontSize:13,fontWeight:700,color:T.red}}>-₹{tx.amount}</div>
-                </div>
-              ))}
-            </div>
-            <button className="btn-primary" onClick={()=>{setStep("connect");setTransactions([]);setSelected(new Set());}} style={{width:"100%",height:52,fontSize:15}}>
-              🔍 Sync Again
-            </button>
-          </div>
         )}
       </div>
     </div>
   );
 };
+
 // ─── ALEXA COMMAND CENTER ─────────────────────────────────────────────────────
 const AlexaCommandCenter = ({ onClose }) => {
   const [search, setSearch] = useState("");
