@@ -625,7 +625,8 @@ const AuthScreen = ({ onLogin }) => {
   const [error, setError] = useState("");
   const prefill = who => {
     const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" };
-    setForm({ name: who, email: emails[who], password: "Mayank@123" });
+    const passwords = { Mayank: "Mayank@123", Simmi: "Sim@1234" };
+    setForm({ name: who, email: emails[who], password: passwords[who] });
   };
   const handle = async () => {
     if (!form.email || !form.password) { setError("Please fill all fields"); return; }
