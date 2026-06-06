@@ -261,7 +261,7 @@ const Styles = () => (
     ::-webkit-scrollbar{display:none;}
     *{scrollbar-width:none;}
     .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};background-image:radial-gradient(ellipse 600px 400px at 20% -100px,rgba(139,124,248,0.08) 0%,transparent 60%),radial-gradient(ellipse 300px 300px at 85% 30%,rgba(96,165,250,0.04) 0%,transparent 55%);position:relative;}
-    .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));padding-top:calc(env(safe-area-inset-top,0px) + 32px);overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
+    .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
     .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;}
     .card-tap{cursor:pointer;}
@@ -388,47 +388,6 @@ const I = ({ n, s = 20, c = "currentColor", w = 1.8 }) => {
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
       {d.split(/(?=M)/).filter(Boolean).map((p,i) => <path key={i} d={p}/>)}
     </svg>
-  );
-};
-
-
-// ─── LIVE CLOCK ───────────────────────────────────────────────────────────────
-const LiveClock = () => {
-  const [now, setNow] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const day = days[now.getDay()];
-  const date = now.getDate();
-  const month = months[now.getMonth()];
-  const year = now.getFullYear();
-  const hours = now.getHours();
-  const mins = String(now.getMinutes()).padStart(2,'0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const h12 = hours % 12 || 12;
-  return (
-    <div style={{
-      position:'fixed',top:0,left:'50%',transform:'translateX(-50%)',
-      width:'100%',maxWidth:430,
-      background:'rgba(8,8,16,0.95)',
-      backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
-      borderBottom:'1px solid rgba(255,255,255,0.07)',
-      paddingTop:'calc(env(safe-area-inset-top,0px) + 4px)',
-      paddingBottom:4,paddingLeft:18,paddingRight:18,
-      zIndex:99,
-      display:'flex',justifyContent:'space-between',alignItems:'center',
-      height:'calc(env(safe-area-inset-top,0px) + 32px)',
-    }}>
-      <div style={{fontSize:11,color:'rgba(238,236,248,0.5)',fontWeight:600,whiteSpace:'nowrap'}}>
-        {day.slice(0,3)}, {date} {month} {year}
-      </div>
-      <div style={{fontSize:12,color:'rgba(238,236,248,0.8)',fontWeight:700,fontFamily:"'JetBrains Mono',monospace",whiteSpace:'nowrap'}}>
-        {h12}:{mins} {ampm}
-      </div>
-    </div>
   );
 };
 
@@ -650,7 +609,7 @@ const AuthScreen = ({ onLogin }) => {
   const [error, setError] = useState("");
   const prefill = who => {
     const emails = { Mayank: "drmayankgupta.mds@gmail.com", Simmi: "aggarwal.simmi09@gmail.com" };
-    setForm({ name: who, email: emails[who], password: "FamilyOS2026!" });
+    setForm({ name: who, email: emails[who], password: "Mayank@123" });
   };
   const handle = async () => {
     if (!form.email || !form.password) { setError("Please fill all fields"); return; }
@@ -671,7 +630,7 @@ const AuthScreen = ({ onLogin }) => {
     <div style={{flex:1,display:"flex",flexDirection:"column",padding:"60px 24px 40px",background:T.bg,minHeight:"100vh",backgroundImage:`radial-gradient(ellipse 600px 500px at 50% -100px,rgba(139,124,248,0.12) 0%,transparent 65%)`}}>
       <div style={{textAlign:"center",marginBottom:36}}>
         <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏠</div>
-        <div style={{fontSize:24,fontWeight:900,letterSpacing:"-.5px"}}>Family OS</div>
+        <div style={{fontSize:30,fontWeight:900,letterSpacing:"-.5px"}}>Family OS</div>
         <div style={{fontSize:14,color:T.muted,marginTop:6}}>Gupta Family · Sector 48, Gurgaon</div>
       </div>
       <div style={{marginBottom:20}}>
@@ -764,7 +723,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
     <div style={{padding:"12px 20px 0"}}>
       <div style={{background:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(139,124,248,0.10))",border:`1px solid rgba(52,211,153,0.22)`,borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer"}} onClick={()=>navigate("finance")}>
         <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
-        <div style={{fontSize:22,fontWeight:900,letterSpacing:"-0.5px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
+        <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
           {bal.available<0?"-":""}₹{Math.abs(bal.available).toLocaleString("en-IN")}
         </div>
         <div style={{fontSize:11,color:T.muted,marginTop:3}}>{bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}</div>
@@ -844,7 +803,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
   const urgentBills = bills.filter(b => !b.paid && b.is_urgent);
 
   return (
-    <div className="screen"><LiveClock/>
+    <div className="screen">
       <div style={{padding:"calc(44px + env(safe-area-inset-top,0px)) 18px 0"}}>
         <div className="row">
           <div>
@@ -981,7 +940,7 @@ const FinanceScreen = ({ familyId }) => {
   const income = txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
   const spent = txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
   return (
-    <div className="screen"><LiveClock/>
+    <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div className="row">
           <div><div className="pt">Finance</div><div className="ps">Live data · Supabase ✓</div></div>
@@ -1088,7 +1047,7 @@ const HouseholdScreen = ({ familyId }) => {
   const { rows: maint } = useTable("maintenance", familyId);
   const toggleTask = (id, done) => updTask(id, { done, done_at: done ? new Date().toISOString() : null });
   return (
-    <div className="screen"><LiveClock/>
+    <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div className="pt">Household</div>
         <div className="ps">{tasks.filter(t=>!t.done).length} tasks pending · {grocery.filter(g=>Number(g.quantity)<=Number(g.par_level)).length} grocery alerts</div>
@@ -1209,7 +1168,7 @@ const PlannerScreen = ({ familyId }) => {
   const { rows: health } = useTable("health", familyId);
   const [sel, setSel] = useState(new Date().getDate());
   return (
-    <div className="screen"><LiveClock/>
+    <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}><div className="pt">Planner</div><div className="ps">Goals · Health · Calendar</div></div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
         {["goals","calendar","health"].map(t=>(
@@ -1233,7 +1192,7 @@ const PlannerScreen = ({ familyId }) => {
                             <div style={{fontSize:11.5,color:T.muted}}>By {g.target_date||"—"} · +{inr(g.monthly_contribution)}/mo</div>
                           </div>
                         </div>
-                        <div style={{fontSize:22,fontWeight:900,color:g.color||T.accent}}>{p}%</div>
+                        <div style={{fontSize:26,fontWeight:900,color:g.color||T.accent}}>{p}%</div>
                       </div>
                       <div className="progress" style={{height:7}}>
                         <div className="progress-fill" style={{width:`${p}%`,background:g.color||T.accent}}/>
@@ -1426,7 +1385,7 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
   const { rows: docs } = useTable("documents", familyId);
   const name = user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
   return (
-    <div className="screen"><LiveClock/>
+    <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div style={{display:"flex",gap:15,alignItems:"center"}}>
           <div style={{width:68,height:68,borderRadius:22,background:"linear-gradient(135deg,rgba(139,124,248,0.25),rgba(96,165,250,0.15))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,border:"2px solid rgba(139,124,248,0.3)"}}>
@@ -1689,8 +1648,8 @@ const KitchenScreen = ({ familyId }) => {
   const [addMealModal, setAddMealModal] = useState(null);
   const [showAddPantry, setShowAddPantry] = useState(false);
   const [editPantryItem, setEditPantryItem] = useState(null);
-  const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
   const [editShopItem, setEditShopItem] = useState(null);
+  const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
 
   const { rows: pantry, refresh: refreshPantry } = useTable("pantry", familyId, { order: "name", asc: true });
@@ -1770,7 +1729,7 @@ const KitchenScreen = ({ familyId }) => {
   const weekDates = getWeekDates();
 
   return (
-    <div className="screen"><LiveClock/>
+    <div className="screen">
       <div style={{padding:"calc(44px + env(safe-area-inset-top,0px)) 18px 0"}}>
         <div className="row">
           <div>
@@ -1812,14 +1771,14 @@ const KitchenScreen = ({ familyId }) => {
                       <span style={{fontSize:22}}>{MEAL_EMOJI[mealType]}</span>
                       <div>
                         <div style={{fontSize:13,fontWeight:700,textTransform:"capitalize",color:T.muted}}>{mealType}</div>
-                        <div style={{fontSize:12,fontWeight:600,color:recipe?T.text:T.dim,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:140}}>{recipe ? recipe.name : "Not planned"}</div>
+                        <div style={{fontSize:15,fontWeight:600,color:recipe?T.text:T.dim}}>{recipe ? recipe.name : "Not planned"}</div>
                       </div>
                     </div>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       {meal && !meal.cooked && (
                         <button onClick={()=>handleMarkCooked(meal)} disabled={cooking===meal.id}
                           style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(52,211,153,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅"}
+                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅ Cooked"}
                         </button>
                       )}
                       {meal?.cooked && <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>}
@@ -1936,12 +1895,12 @@ const KitchenScreen = ({ familyId }) => {
                             <div className="progress-fill" style={{width:`${pct_}%`,background:isLow?T.red:pct_<50?T.amber:T.green}}/>
                           </div>
                         </div>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <div style={{textAlign:"right",minWidth:55}}>
-                            <div style={{fontSize:13,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{textAlign:"right",minWidth:60}}>
+                            <div style={{fontSize:14,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
                             {isLow && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock!</div>}
                           </div>
-                          <div style={{opacity:0.4}}><I n="edit" s={13} c={T.accent}/></div>
+                          <div style={{opacity:0.4}}><I n="edit" s={14} c={T.accent}/></div>
                         </div>
                       </div>
                     );
@@ -1969,8 +1928,8 @@ const KitchenScreen = ({ familyId }) => {
                           <div style={{fontSize:11.5,color:T.muted}}>{item.category}{item.quantity_needed ? ` · ${item.quantity_needed} ${item.unit}` : ""}</div>
                         </div>
                         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                          <div onClick={(e)=>{e.stopPropagation();setEditShopItem({...item,isNew:false});}} style={{opacity:0.4,cursor:"pointer"}}><I n="edit" s={13} c={T.accent}/></div>
-                          <div onClick={()=>removeShopping(item.id)} style={{cursor:"pointer",opacity:0.35}}><I n="trash" s={13} c={T.red}/></div>
+                          <div onClick={(e)=>{e.stopPropagation();setEditShopItem({...item,isNew:false});}} style={{opacity:0.4,cursor:"pointer"}}><I n="edit" s={14} c={T.accent}/></div>
+                          <div onClick={()=>removeShopping(item.id)} style={{cursor:"pointer",opacity:0.35}}><I n="trash" s={14} c={T.red}/></div>
                         </div>
                       </div>
                     ))}
@@ -1997,42 +1956,9 @@ const KitchenScreen = ({ familyId }) => {
             }
           </>
         )}
-            {editShopItem && (
-        <Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}>
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            <input className="input" placeholder="Item name" autoFocus
-              value={editShopItem.item_name||""} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/>
-            <div style={{display:"flex",gap:8}}>
-              <input className="input" type="number" placeholder="Qty"
-                value={editShopItem.quantity_needed||""} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/>
-              <select className="input" value={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>
-                {["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}
-              </select>
-            </div>
-            <select className="input" value={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>
-              {["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}
-            </select>
-            <button className="btn-primary" onClick={async()=>{
-              if(editShopItem.item_name){
-                if(editShopItem.isNew){
-                  await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);
-                } else {
-                  await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);
-                }
-                setEditShopItem(null);
-              }
-            }}>{editShopItem.isNew ? "Add to List" : "Save Changes"}</button>
-            {editShopItem.isNew === false && (
-              <button onClick={async()=>{
-                await supabase.from("shopping_list").delete().eq("id",editShopItem.id);
-                setEditShopItem(null);
-              }} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
-                Delete Item
-              </button>
-            )}
-          </div>
-        </Modal>
-      )}
+      </div>
+
+      {/* SHOP EDIT MODAL */}{editShopItem && (<Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}><div style={{display:"flex",flexDirection:"column",gap:10}}><input className="input" placeholder="Item name" autoFocus defaultValue={editShopItem.item_name} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/><div style={{display:"flex",gap:8}}><input className="input" type="number" placeholder="Qty" defaultValue={editShopItem.quantity_needed} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/><select className="input" defaultValue={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>{["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}</select></div><select className="input" defaultValue={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>{["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}</select><button className="btn-primary" onClick={async()=>{if(!editShopItem.item_name) return;if(editShopItem.isNew){await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);}else{await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);}setEditShopItem(null);}}>{editShopItem.isNew?"Add to List":"Save Changes"}</button>{!editShopItem.isNew&&(<button onClick={async()=>{await supabase.from("shopping_list").delete().eq("id",editShopItem.id);setEditShopItem(null);}} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Delete Item</button>)}</div></Modal>)}
       {/* ASSIGN RECIPE MODAL */}
       {addMealModal && (
         <div className="modal-bg" onClick={()=>setAddMealModal(null)}>
@@ -2063,7 +1989,9 @@ const KitchenScreen = ({ familyId }) => {
         </div>
       )}
 
-            {editPantryItem && (
+      
+      {/* EDIT PANTRY MODAL */}
+      {editPantryItem && (
         <Modal title="Edit Pantry Item" onClose={()=>setEditPantryItem(null)}>
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
             <input className="input" placeholder="Item name" value={ef.name} onChange={e=>setEf(x=>({...x,name:e.target.value}))} autoFocus/>
@@ -2078,22 +2006,22 @@ const KitchenScreen = ({ familyId }) => {
             </div>
             <input className="input" type="number" placeholder="Reorder level" value={ef.par_level} onChange={e=>setEf(x=>({...x,par_level:e.target.value}))}/>
             <button className="btn-primary" onClick={async()=>{
-              if(ef.name && ef.quantity){
-                await supabase.from("pantry").update({name:ef.name,category:ef.category,quantity:Number(ef.quantity),unit:ef.unit,par_level:Number(ef.par_level)||0,updated_at:new Date().toISOString()}).eq("id",editPantryItem.id);
-                await refreshPantry();
-                setEditPantryItem(null);
-              }
+              if(!ef.name||!ef.quantity) return;
+              await supabase.from("pantry").update({name:ef.name,category:ef.category,quantity:Number(ef.quantity),unit:ef.unit,par_level:Number(ef.par_level)||0,updated_at:new Date().toISOString()}).eq("id",editPantryItem.id);
+              await refreshPantry();
+              setEditPantryItem(null);
             }}>Save Changes</button>
             <button onClick={async()=>{
               await supabase.from("pantry").delete().eq("id",editPantryItem.id);
               await refreshPantry();
               setEditPantryItem(null);
-            }} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
-              Delete Item
+            }} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+              🗑 Delete Item
             </button>
           </div>
         </Modal>
       )}
+
       {/* ADD PANTRY MODAL */}
       {showAddPantry && (
         <Modal title="Add Pantry Item" onClose={()=>setShowAddPantry(false)}>
