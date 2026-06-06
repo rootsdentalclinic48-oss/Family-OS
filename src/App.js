@@ -1975,7 +1975,7 @@ const markMealCooked = async (familyId, mealPlanRow, recipes, pantryRows) => {
   if (!recipe) return { deducted: [] };
   const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", recipe.id);
   if (!ingredients?.length) return { deducted: [] };
-  const ratio = (mealPlanRow.servings_cooked || 2) / (recipe.servings || 2);
+  const ratio = (mealPlanRow.servings_cooked || 3) / (recipe.servings || 3);
   const deducted = [];
   const lowStockItems = [];
   for (const ing of ingredients) {
@@ -2072,7 +2072,7 @@ const KitchenScreen = ({ familyId }) => {
     if (existing) await supabase.from("meal_plan").delete().eq("id", existing.id);
     await supabase.from("meal_plan").insert([{
       family_id: familyId, plan_date: date, meal_type: mealType,
-      recipe_id: recipeId, cooked: false, servings_cooked: 2,
+      recipe_id: recipeId, cooked: false, servings_cooked: 3,
     }]);
     await refreshMeal();
     setAddMealModal(null);
