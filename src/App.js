@@ -1080,6 +1080,14 @@ const FinanceScreen = ({ familyId }) => {
 // ─── HOUSEHOLD SCREEN ─────────────────────────────────────────────────────────
 const HouseholdScreen = ({ familyId }) => {
   const [tab, setTab] = useState("chores");
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [showAddGrocery, setShowAddGrocery] = useState(false);
+  const [showAddMaint, setShowAddMaint] = useState(false);
+  const [showAddDoc, setShowAddDoc] = useState(false);
+  const [taskForm, setTaskForm] = useState({title:"",assignee:"Mayank",priority:"medium",category:"General",due_date:""});
+  const [grocForm, setGrocForm] = useState({name:"",category:"Vegetables",quantity:"1",unit:"kg",par_level:"1"});
+  const [maintForm, setMaintForm] = useState({name:"",last_done:"",next_due:"",notes:""});
+  const [docForm, setDocForm] = useState({name:"",category:"Personal",date:"",emoji:"📄"});
   const { rows: tasks, update: updTask, remove: removeTask } = useTable("tasks", familyId, { order: "created_at" });
   const { rows: grocery } = useTable("grocery", familyId, { order: "name", asc: true });
   const { rows: docs } = useTable("documents", familyId);
@@ -1097,6 +1105,98 @@ const HouseholdScreen = ({ familyId }) => {
         ))}
       </div>
       <div style={{padding:"0 18px"}}>
+        {/* ADD TASK MODAL */}
+        {showAddTask && (
+          <Modal title="Add Task" onClose={()=>setShowAddTask(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="Task title" autoFocus value={taskForm.title} onChange={e=>setTaskForm(x=>({...x,title:e.target.value}))}/>
+              <select className="input" value={taskForm.assignee} onChange={e=>setTaskForm(x=>({...x,assignee:e.target.value}))}>
+                <option>Mayank</option><option>Simmi</option>
+              </select>
+              <select className="input" value={taskForm.priority} onChange={e=>setTaskForm(x=>({...x,priority:e.target.value}))}>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+              <input className="input" type="date" value={taskForm.due_date} onChange={e=>setTaskForm(x=>({...x,due_date:e.target.value}))}/>
+              <button className="btn-primary" onClick={async()=>{
+                if(!taskForm.title) return;
+                await supabase.from("tasks").insert([{family_id:familyId,...taskForm,done:false,created_at:new Date().toISOString()}]);
+                setTaskForm({title:"",assignee:"Mayank",priority:"medium",category:"General",due_date:""});
+                setShowAddTask(false);
+              }}>Add Task</button>
+            </div>
+          </Modal>
+        )}
+        {/* ADD GROCERY MODAL */}
+        {showAddGrocery && (
+          <Modal title="Add Grocery Item" onClose={()=>setShowAddGrocery(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="Item name" autoFocus value={grocForm.name} onChange={e=>setGrocForm(x=>({...x,name:e.target.value}))}/>
+              <select className="input" value={grocForm.category} onChange={e=>setGrocForm(x=>({...x,category:e.target.value}))}>
+                {["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Cleaning","Other"].map(c=><option key={c}>{c}</option>)}
+              </select>
+              <div style={{display:"flex",gap:8}}>
+                <input className="input" type="number" placeholder="Qty" value={grocForm.quantity} onChange={e=>setGrocForm(x=>({...x,quantity:e.target.value}))} style={{flex:1}}/>
+                <select className="input" value={grocForm.unit} onChange={e=>setGrocForm(x=>({...x,unit:e.target.value}))} style={{flex:1}}>
+                  {["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}
+                </select>
+              </div>
+              <input className="input" type="number" placeholder="Reorder level" value={grocForm.par_level} onChange={e=>setGrocForm(x=>({...x,par_level:e.target.value}))}/>
+              <button className="btn-primary" onClick={async()=>{
+                if(!grocForm.name) return;
+                await supabase.from("grocery").insert([{family_id:familyId,name:grocForm.name,category:grocForm.category,quantity:Number(grocForm.quantity),unit:grocForm.unit,par_level:Number(grocForm.par_level)}]);
+                setGrocForm({name:"",category:"Vegetables",quantity:"1",unit:"kg",par_level:"1"});
+                setShowAddGrocery(false);
+              }}>Add Item</button>
+            </div>
+          </Modal>
+        )}
+        {/* ADD MAINTENANCE MODAL */}
+        {showAddMaint && (
+          <Modal title="Add Maintenance" onClose={()=>setShowAddMaint(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="e.g. Water Filter Change" autoFocus value={maintForm.name} onChange={e=>setMaintForm(x=>({...x,name:e.target.value}))}/>
+              <input className="input" type="date" placeholder="Last done" value={maintForm.last_done} onChange={e=>setMaintForm(x=>({...x,last_done:e.target.value}))}/>
+              <input className="input" type="date" placeholder="Next due" value={maintForm.next_due} onChange={e=>setMaintForm(x=>({...x,next_due:e.target.value}))}/>
+              <input className="input" placeholder="Notes (optional)" value={maintForm.notes} onChange={e=>setMaintForm(x=>({...x,notes:e.target.value}))}/>
+              <button className="btn-primary" onClick={async()=>{
+                if(!maintForm.name) return;
+                await supabase.from("maintenance").insert([{family_id:familyId,...maintForm}]);
+                setMaintForm({name:"",last_done:"",next_due:"",notes:""});
+                setShowAddMaint(false);
+              }}>Add</button>
+            </div>
+          </Modal>
+        )}
+        {/* ADD DOCUMENT MODAL */}
+        {showAddDoc && (
+          <Modal title="Add Document" onClose={()=>setShowAddDoc(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="Document name" autoFocus value={docForm.name} onChange={e=>setDocForm(x=>({...x,name:e.target.value}))}/>
+              <select className="input" value={docForm.category} onChange={e=>setDocForm(x=>({...x,category:e.target.value}))}>
+                {["Personal","Medical","Financial","Legal","Property","Vehicle","Insurance","Education","Other"].map(c=><option key={c}>{c}</option>)}
+              </select>
+              <input className="input" type="date" value={docForm.date} onChange={e=>setDocForm(x=>({...x,date:e.target.value}))}/>
+              <input className="input" placeholder="Emoji (optional)" value={docForm.emoji} onChange={e=>setDocForm(x=>({...x,emoji:e.target.value}))}/>
+              <button className="btn-primary" onClick={async()=>{
+                if(!docForm.name) return;
+                await supabase.from("documents").insert([{family_id:familyId,...docForm}]);
+                setDocForm({name:"",category:"Personal",date:"",emoji:"📄"});
+                setShowAddDoc(false);
+              }}>Add Document</button>
+            </div>
+          </Modal>
+        )}
+        {/* ADD BUTTON */}
+        <button className="btn-primary" onClick={()=>{
+          if(tab==="chores") setShowAddTask(true);
+          else if(tab==="grocery") setShowAddGrocery(true);
+          else if(tab==="maintenance") setShowAddMaint(true);
+          else if(tab==="documents") setShowAddDoc(true);
+        }} style={{width:"100%",height:44,fontSize:14,marginBottom:14}}>
+          + Add {tab==="chores"?"Task":tab==="grocery"?"Grocery Item":tab==="maintenance"?"Maintenance":tab==="documents"?"Document":"Item"}
+        </button>
         {tab==="chores" && (
           <>
             {["Mayank","Simmi"].map(person=>{
