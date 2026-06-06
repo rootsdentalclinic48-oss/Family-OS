@@ -1932,10 +1932,8 @@ const GmailSyncScreen = ({ familyId }) => {
   };
 
   return (
-    <div className="screen">
-      <LiveClock/>
-      <div style={{padding:"calc(env(safe-area-inset-top,0px) + 52px) 18px 100px"}}>
-        <div style={{fontSize:22,fontWeight:900,marginBottom:4}}>📧 Gmail Sync</div>
+    <div style={{paddingBottom:20}}>
+      <div style={{fontSize:22,fontWeight:900,marginBottom:4}}>📧 Gmail Sync</div>
         <div style={{fontSize:12,color:T.muted,marginBottom:20}}>
           {connected ? "✅ Gmail connected" : "Import transactions from Gmail"}
         </div>
