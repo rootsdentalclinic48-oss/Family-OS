@@ -32,6 +32,22 @@ const T = {
 const inr = n => "₹" + Math.abs(Number(n) || 0).toLocaleString("en-IN");
 const pct = (a, b) => b ? Math.min(100, Math.round((a / b) * 100)) : 0;
 const today = () => new Date().toISOString().split("T")[0];
+const calcDaysRemaining = (quantity, unit, itemName) => {
+  const dailyUsage = {
+    'rice':{g:300,kg:0.3},'wheat flour':{g:200,kg:0.2},'oats':{g:150,kg:0.15},
+    'poha':{g:150,kg:0.15},'toor dal':{g:150,kg:0.15},'moong dal':{g:100,kg:0.1},
+    'rajma':{g:200,kg:0.2},'milk':{ml:500,l:0.5},'paneer':{g:200,kg:0.2},
+    'curd':{g:200,kg:0.2},'butter':{g:25,kg:0.025},'onion':{g:100,kg:0.1},
+    'tomato':{g:150,kg:0.15},'potato':{g:200,kg:0.2},'oil':{ml:30,l:0.03},
+    'ghee':{ml:20,l:0.02},'banana':{pcs:2},'apple':{pcs:1},
+  };
+  const key = itemName.toLowerCase();
+  const usage = dailyUsage[key];
+  if (!usage) return null;
+  const dailyAmt = usage[unit.toLowerCase()];
+  if (!dailyAmt) return null;
+  return Math.floor(Number(quantity) / dailyAmt);
+};
 
 // ─── BALANCE CALCULATOR ───────────────────────────────────────────────────────
 const calcBalance = (transactions) => {
@@ -1536,6 +1552,64 @@ const AddGroceryModal = ({ onClose, familyId }) => {
 
 // ════════════════════════════════════════════════════════════════════
 
+
+// ─── MEAL TIME REMINDER ───────────────────────────────────────────────────────
+const MealTimeReminder = ({ familyId }) => {
+  const [reminder, setReminder] = useState(null);
+  const { rows: mealPlan, refresh } = useTable("meal_plan", familyId, { order: "plan_date", asc: true });
+  const { rows: recipes } = useTable("recipes", familyId, { order: "name", asc: true });
+  useEffect(() => {
+    const checkMealTime = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      const min = now.getMinutes();
+      const todayStr = now.toISOString().split("T")[0];
+      const mealSchedule = [
+        {hour:8,meal_type:"breakfast",label:"Breakfast"},
+        {hour:13,meal_type:"lunch",label:"Lunch"},
+        {hour:17,meal_type:"evening_snack",label:"Evening Snack"},
+        {hour:20,meal_type:"dinner",label:"Dinner"},
+      ];
+      for (const schedule of mealSchedule) {
+        if (hour === schedule.hour && min <= 30) {
+          const meal = mealPlan.find(m => m.plan_date === todayStr && m.meal_type === schedule.meal_type);
+          if (meal && !meal.cooked) {
+            const recipe = recipes.find(r => r.id === meal.recipe_id);
+            if (recipe) { setReminder({meal,recipe,label:schedule.label}); return; }
+          }
+        }
+      }
+      setReminder(null);
+    };
+    checkMealTime();
+    const interval = setInterval(checkMealTime, 60000);
+    return () => clearInterval(interval);
+  }, [mealPlan, recipes]);
+  if (!reminder) return null;
+  return (
+    <div style={{position:"fixed",bottom:"calc(80px + env(safe-area-inset-bottom,0px))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:398,background:"#13131F",border:"1px solid rgba(139,124,248,0.4)",borderRadius:16,padding:"14px 16px",zIndex:145,boxShadow:"0 8px 32px rgba(0,0,0,0.6)",animation:"slideUp .3s cubic-bezier(.16,1,.3,1)"}}>
+      <div style={{display:"flex",gap:12,alignItems:"center"}}>
+        <div style={{width:40,height:40,borderRadius:12,background:"rgba(139,124,248,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🍽</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#EEECf8"}}>{reminder.label} Time!</div>
+          <div style={{fontSize:12,color:"rgba(238,236,248,0.6)",marginTop:2}}>{reminder.recipe.name}</div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={async()=>{
+            await supabase.from("meal_plan").update({cooked:true,cooked_at:new Date().toISOString()}).eq("id",reminder.meal.id);
+            showToast({title:"Marked as eaten!",body:reminder.recipe.name,icon:"🍽",color:"#34D399"});
+            setReminder(null); refresh();
+          }} style={{padding:"8px 12px",background:"rgba(52,211,153,0.15)",border:"1px solid rgba(52,211,153,0.3)",borderRadius:10,color:"#34D399",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+            Ate it
+          </button>
+          <button onClick={()=>setReminder(null)} style={{padding:"8px 12px",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(248,113,113,0.2)",borderRadius:10,color:"#F87171",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+            Skip
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 // ─── ALEXA COMMAND CENTER ─────────────────────────────────────────────────────
 const AlexaCommandCenter = ({ onClose }) => {
   const [search, setSearch] = useState("");
@@ -2255,6 +2329,7 @@ export default function App() {
       {screens[screen]||screens.home}
       <Nav active={screen} go={setScreen}/>
       <ToastRenderer/>
+      <MealTimeReminder familyId={FAMILY_ID}/>
       <GlobalFAB screen={screen} familyId={FAMILY_ID}/>
       {modal==="income"  && <AddIncomeModal  onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="expense" && <AddExpenseModal onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}

@@ -90,6 +90,23 @@ export default async function handler(req, res) {
         }
         return speak(`Subah ki report! ${tasks.length} kaam pending. ${lowStock.length} cheezein pantry mein kam. Aaj raat ${dinnerName}. Aapka din shubh ho!`);
       }
+      if (intentName === "InventoryDaysIntent") {
+        const pantry = await db("pantry","GET",null,`?family_id=eq.${FAMILY_ID}&select=name,quantity,unit,par_level`);
+        const dailyUsage = {"rice":0.3,"milk":0.5,"paneer":0.2,"onion":0.1,"tomato":0.15,"oil":0.03,"wheat flour":0.2,"toor dal":0.15,"rajma":0.2};
+        const predictions = pantry.map(p => {
+          const usage = dailyUsage[p.name.toLowerCase()];
+          if (!usage) return null;
+          const days = Math.floor(Number(p.quantity) / usage);
+          return {name: p.name, days};
+        }).filter(Boolean).sort((a,b) => a.days - b.days);
+        const critical = predictions.filter(p => p.days <= 3);
+        const low = predictions.filter(p => p.days > 3 && p.days <= 7);
+        let response = "";
+        if (critical.length) response += `${critical.length} cheezein 3 din mein khatam ho jayengi: ${critical.map(p=>p.name+" "+p.days+" din").join(", ")}. `;
+        if (low.length) response += `${low.length} cheezein ek hafte mein khatam hongi: ${low.map(p=>p.name).join(", ")}. `;
+        if (!response) response = "Sab cheezein ek hafte se zyada chalenge ji!";
+        return speak(response);
+      }
       if (intentName === "AMAZON.StopIntent" || intentName === "AMAZON.CancelIntent") return speak("Khuda hafiz! Munshi Jee hamesha hazir hai.");
       return speak("Maafi ji, samajh nahi aaya. Khaana, pantry, kaam, ya kharcha ke baare mein poochh sakte hain.");
     }
@@ -99,3 +116,4 @@ export default async function handler(req, res) {
     return speak("Maafi ji, connection mein takleef ho rahi hai. Thodi der baad try karein.");
   }
 }
+// Extended commands added via append - see main handler
