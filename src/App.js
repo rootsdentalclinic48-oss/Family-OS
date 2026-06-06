@@ -809,7 +809,7 @@ const AddIncomeModal = ({ onClose, familyId }) => {
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 const HomeScreen = ({ navigate, openModal, familyId, user }) => {
   const { rows: tasks } = useTable("tasks", familyId, { order: "created_at" });
-  const { rows: txns } = useTable("transactions", familyId, { order: "date", limit: 10 });
+  const { rows: txns } = useTable("transactions", familyId, { order: "date", limit: 500 });
   const { rows: grocery } = useTable("grocery", familyId);
   const { rows: pantry } = useTable("pantry", familyId);
   const { rows: bills } = useTable("bills", familyId, { order: "due_date", asc: true });
