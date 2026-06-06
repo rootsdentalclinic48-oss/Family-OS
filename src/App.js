@@ -439,8 +439,8 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
     goalTitle:"", targetAmount:"", savedAmount:"0",
   });
   const set = (k,v) => setF(x=>({...x,[k]:v}));
-  const expenseCats = ["Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Home Loan EMI","Other"];
-  const emojiMap = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Home Loan EMI":"🏠","Other":"💸"};
+  const expenseCats = ["Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Clinic","Subscriptions","HRA","Home Loan","Investments","Housekeeping","House Interiors","Maintenance","Travel","Staff Salary","Veda","Gifts","Loan Back","Other"];
+  const emojiMap = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Clinic":"🏥","Subscriptions":"📱","HRA":"🏠","Home Loan":"🏦","Investments":"📈","Housekeeping":"🧹","House Interiors":"🛋️","Maintenance":"🔧","Travel":"✈️","Staff Salary":"👷","Veda":"👶","Gifts":"🎁","Loan Back":"💳","Other":"💸"};
 
   const save = async () => {
     setLoading(true);
@@ -1470,8 +1470,8 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
 const AddExpenseModal = ({ onClose, familyId }) => {
   const [f, setF] = useState({ description:"", amount:"", category:"Groceries", added_by:"Mayank", emoji:"💸", date: today() });
   const [loading, setLoading] = useState(false);
-  const cats = ["Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Home Loan EMI","Other"];
-  const emojiMap = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Home Loan EMI":"🏠","Other":"💸"};
+  const cats = ["Groceries","Utilities","Dining & Food","Transport","Medical","Entertainment","Education","Shopping","Clinic","Subscriptions","HRA","Home Loan","Investments","Housekeeping","House Interiors","Maintenance","Travel","Staff Salary","Veda","Gifts","Loan Back","Other"];
+  const emojiMap = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Clinic":"🏥","Subscriptions":"📱","HRA":"🏠","Home Loan":"🏦","Investments":"📈","Housekeeping":"🧹","House Interiors":"🛋️","Maintenance":"🔧","Travel":"✈️","Staff Salary":"👷","Veda":"👶","Gifts":"🎁","Loan Back":"💳","Other":"💸"};
   const save = async () => {
     if (!f.description || !f.amount) return;
     setLoading(true);
