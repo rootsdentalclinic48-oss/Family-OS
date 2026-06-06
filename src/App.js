@@ -2003,7 +2003,7 @@ const GmailSyncScreen = ({ familyId }) => {
                       </div>
                     ))}
                   </div>
-                  <button className="btn-primary" onClick={importSelected} disabled={selected.size===0} style={{width:"100%",height:50,marginBottom:10}}>
+                  <button className="btn-primary" onClick={importSelected} style={{width:"100%",height:50,marginBottom:10}}>
                     ✅ Import {selected.size} Transactions
                   </button>
                   <button onClick={()=>setStep("connect")} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
