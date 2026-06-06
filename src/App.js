@@ -1731,7 +1731,6 @@ const KitchenScreen = ({ familyId }) => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [showAlexaCommands, setShowAlexaCommands] = useState(false);
   const [recipeIngredients, setRecipeIngredients] = useState([]);
-  const [showAlexaCommands, setShowAlexaCommands] = useState(false);
   const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
 
