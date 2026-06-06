@@ -290,7 +290,7 @@ const Styles = () => (
     .input:focus{border-color:${T.accent};background:rgba(139,124,248,0.06);}
     .input::placeholder{color:${T.dim};}
     textarea.input{height:auto;padding:14px 16px;resize:none;line-height:1.5;}
-    select.input{appearance:none;-webkit-appearance:none;}
+    select.input{appearance:none;-webkit-appearance:none;} select.input option{background:#13131F;color:#EEECf8;}
     .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:8px 2px calc(8px + env(safe-area-inset-bottom, 0px));background:rgba(8,8,16,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid ${T.border};display:flex;justify-content:space-around;align-items:center;z-index:100;}
     .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 8px;border-radius:12px;transition:all .18s;flex:1;min-height:44px;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .nav-btn.on{background:rgba(139,124,248,0.12);}
