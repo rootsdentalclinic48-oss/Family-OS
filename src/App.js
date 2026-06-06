@@ -1610,6 +1610,221 @@ const MealTimeReminder = ({ familyId }) => {
     </div>
   );
 };
+
+// ─── VOICE COMMAND ENGINE ─────────────────────────────────────────────────────
+const VoiceCommandButton = ({ familyId }) => {
+  const [listening, setListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [result, setResult] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const FAMILY_ID = familyId;
+
+  const processCommand = async (text) => {
+    setProcessing(true);
+    const t = text.toLowerCase().trim();
+    let response = "";
+
+    try {
+      const today = new Date().toISOString().split("T")[0];
+
+      // ── EXPENSE ──────────────────────────────────────────────
+      const expenseMatch = t.match(/(?:spent|spend|kharcha|kharch|expense|add expense)[^0-9]*([0-9]+)[^a-z]*(?:on|for|par|ke liye|mein)?\s*(.+)?/);
+      if (expenseMatch) {
+        const amount = expenseMatch[1];
+        const category = expenseMatch[2] || "General";
+        await supabase.from("transactions").insert([{
+          family_id: FAMILY_ID,
+          description: `${category} expense`,
+          amount: -Math.abs(Number(amount)),
+          category: "Other",
+          added_by: "Voice",
+          date: today,
+          emoji: "💸",
+        }]);
+        response = `✅ ₹${amount} expense recorded for ${category}`;
+        showToast({title:"💸 Expense Added",body:`₹${amount} on ${category}`,icon:"💸",color:"#F87171"});
+      }
+
+      // ── INCOME ───────────────────────────────────────────────
+      else if (t.match(/(?:income|clinic|aamdani|kamai|earned|aaye)/)) {
+        const amountMatch = t.match(/([0-9]+)/);
+        if (amountMatch) {
+          const amount = amountMatch[1];
+          const isClinic = t.includes("clinic");
+          await supabase.from("transactions").insert([{
+            family_id: FAMILY_ID,
+            description: isClinic ? "Clinic Income" : "Income",
+            amount: Math.abs(Number(amount)),
+            category: isClinic ? "Clinic Income" : "Simmi Income",
+            added_by: "Voice",
+            date: today,
+            emoji: isClinic ? "🏥" : "👩",
+          }]);
+          response = `✅ ₹${amount} income recorded`;
+          showToast({title:"💰 Income Added",body:`₹${amount}`,icon:"💰",color:"#34D399"});
+        }
+      }
+
+      // ── ADD TASK ─────────────────────────────────────────────
+      else if (t.match(/(?:add task|create task|remind me|reminder|kaam|yaad dilao|note karo)/)) {
+        const taskText = t.replace(/add task|create task|remind me to|reminder|kaam add karo|yaad dilao|note karo/g, "").trim();
+        if (taskText) {
+          await supabase.from("tasks").insert([{
+            family_id: FAMILY_ID,
+            title: taskText,
+            assignee: "Mayank",
+            priority: "medium",
+            category: "General",
+            due_date: today,
+            done: false,
+          }]);
+          response = `✅ Task added: ${taskText}`;
+          showToast({title:"✅ Task Added",body:taskText,icon:"✅",color:"#34D399"});
+        }
+      }
+
+      // ── ADD TO SHOPPING ──────────────────────────────────────
+      else if (t.match(/(?:add|shopping|kharidna|list mein|buy)/)) {
+        const item = t.replace(/add|to shopping list|shopping list mein|kharidna hai|buy/g, "").trim();
+        if (item && item.length > 1) {
+          await supabase.from("shopping_list").insert([{
+            family_id: FAMILY_ID,
+            item_name: item,
+            purchased: false,
+            added_at: new Date().toISOString(),
+          }]);
+          response = `✅ ${item} added to shopping list`;
+          showToast({title:"🛒 Added to List",body:item,icon:"🛒",color:"#FBBF24"});
+        }
+      }
+
+      // ── WHAT IS FOR DINNER ───────────────────────────────────
+      else if (t.match(/(?:dinner|breakfast|lunch|khaana|khana|meal|kya banega|kya hai)/)) {
+        const { data: meals } = await supabase.from("meal_plan").select("*").eq("family_id", FAMILY_ID).eq("plan_date", today);
+        if (meals?.length) {
+          const mealTexts = [];
+          for (const meal of meals) {
+            const { data: recipe } = await supabase.from("recipes").select("name").eq("id", meal.recipe_id).single();
+            if (recipe) mealTexts.push(`${meal.meal_type}: ${recipe.name}`);
+          }
+          response = mealTexts.length ? mealTexts.join(" | ") : "No meals planned today";
+        } else {
+          response = "No meals planned for today";
+        }
+      }
+
+      // ── PANTRY / LOW STOCK ───────────────────────────────────
+      else if (t.match(/(?:running low|pantry|stock|khatam|grocery|restock)/)) {
+        const { data: pantryItems } = await supabase.from("pantry").select("*").eq("family_id", FAMILY_ID);
+        const low = pantryItems?.filter(p => Number(p.quantity) <= Number(p.par_level)) || [];
+        response = low.length ? `🔴 Low: ${low.slice(0,5).map(p=>p.name).join(", ")}` : "✅ Pantry is well stocked!";
+      }
+
+      else {
+        response = "Sorry, I didn't understand. Try: 'Spent 500 on groceries' or 'Add task call patient'";
+      }
+
+    } catch(err) {
+      response = "Error processing command. Please try again.";
+      console.error("Voice command error:", err);
+    }
+
+    setResult(response);
+    setProcessing(false);
+    setTimeout(() => { setResult(null); setTranscript(""); }, 4000);
+  };
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast({title:"Not supported",body:"Use Chrome or Safari for voice commands",icon:"🎤",color:"#F87171"});
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognitionRef.current = recognition;
+
+    recognition.onstart = () => { setListening(true); setResult(null); setTranscript(""); };
+    recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setTranscript(text);
+      setListening(false);
+      processCommand(text);
+    };
+    recognition.onerror = () => { setListening(false); setResult("Could not hear you. Please try again."); };
+    recognition.onend = () => setListening(false);
+    recognition.start();
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  };
+
+  return (
+    <>
+      {/* Voice FAB Button */}
+      <button
+        onClick={listening ? stopListening : startListening}
+        style={{
+          position:"fixed",
+          bottom:"calc(80px + env(safe-area-inset-bottom,0px))",
+          left:"max(16px, calc(50vw - 199px))",
+          width:54,height:54,borderRadius:17,
+          background:listening?"linear-gradient(135deg,#F87171,#E55)":"linear-gradient(135deg,#2DD4BF,#0D9488)",
+          boxShadow:listening?"0 4px 24px rgba(248,113,113,0.5)":"0 4px 24px rgba(45,212,191,0.4)",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          cursor:"pointer",zIndex:150,border:"none",
+          transition:"all .25s cubic-bezier(.16,1,.3,1)",
+          animation:listening?"pulse 1s ease-in-out infinite":"none",
+        }}>
+        <span style={{fontSize:22}}>{listening ? "⏹" : "🎤"}</span>
+      </button>
+
+      {/* Transcript / Result popup */}
+      {(listening || transcript || result || processing) && (
+        <div style={{
+          position:"fixed",
+          bottom:"calc(148px + env(safe-area-inset-bottom,0px))",
+          left:"max(12px, calc(50vw - 210px))",
+          width:240,
+          background:"#13131F",border:"1px solid rgba(45,212,191,0.3)",
+          borderRadius:16,padding:"14px 16px",
+          zIndex:149,boxShadow:"0 8px 32px rgba(0,0,0,0.6)",
+          animation:"fabMenuIn .25s cubic-bezier(.16,1,.3,1)",
+        }}>
+          {listening && (
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <div style={{display:"flex",gap:4}}>
+                <div className="ai-dot" style={{background:"#2DD4BF"}}/>
+                <div className="ai-dot" style={{background:"#2DD4BF"}}/>
+                <div className="ai-dot" style={{background:"#2DD4BF"}}/>
+              </div>
+              <span style={{fontSize:13,color:"#2DD4BF",fontWeight:600}}>Listening...</span>
+            </div>
+          )}
+          {transcript && !processing && !result && (
+            <div style={{fontSize:12,color:"rgba(238,236,248,0.7)"}}> "{transcript}"</div>
+          )}
+          {processing && (
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <div className="spinner" style={{width:16,height:16}}/>
+              <span style={{fontSize:12,color:T.muted}}>Processing...</span>
+            </div>
+          )}
+          {result && (
+            <div style={{fontSize:13,color:"#EEECf8",fontWeight:500,lineHeight:1.4}}>{result}</div>
+          )}
+        </div>
+      )}
+    </>
+  );
+};
+
 // ─── ALEXA COMMAND CENTER ─────────────────────────────────────────────────────
 const AlexaCommandCenter = ({ onClose }) => {
   const [search, setSearch] = useState("");
@@ -2331,6 +2546,7 @@ export default function App() {
       <Nav active={screen} go={setScreen}/>
       <ToastRenderer/>
       <MealTimeReminder familyId={FAMILY_ID}/>
+      <VoiceCommandButton familyId={FAMILY_ID}/>
       <GlobalFAB screen={screen} familyId={FAMILY_ID}/>
       {modal==="income"  && <AddIncomeModal  onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
       {modal==="expense" && <AddExpenseModal onClose={()=>setModal(null)} familyId={FAMILY_ID}/>}
