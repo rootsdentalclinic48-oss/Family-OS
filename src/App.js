@@ -1081,6 +1081,8 @@ const FinanceScreen = ({ familyId }) => {
 const HouseholdScreen = ({ familyId }) => {
   const [tab, setTab] = useState("chores");
   const [showAddTask, setShowAddTask] = useState(false);
+  const [showAddReminder, setShowAddReminder] = useState(false);
+  const [reminderForm, setReminderForm] = useState({title:"",category:"Appliance",due_date:"",repeat:"none",notes:"",emoji:"🔔"});
   const [showAddGrocery, setShowAddGrocery] = useState(false);
   const [showAddMaint, setShowAddMaint] = useState(false);
   const [showAddDoc, setShowAddDoc] = useState(false);
@@ -1100,7 +1102,7 @@ const HouseholdScreen = ({ familyId }) => {
         <div className="ps">{tasks.filter(t=>!t.done).length} tasks pending · {grocery.filter(g=>Number(g.quantity)<=Number(g.par_level)).length} grocery alerts</div>
       </div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
-        {["chores","grocery","maintenance","documents"].map(t=>(
+        {["chores","grocery","maintenance","documents","reminders"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
@@ -1188,14 +1190,53 @@ const HouseholdScreen = ({ familyId }) => {
             </div>
           </Modal>
         )}
+        {/* ADD SERVICE REMINDER MODAL */}
+        {showAddReminder && (
+          <Modal title="Add Service Reminder" onClose={()=>setShowAddReminder(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="e.g. AC Service, Car Service" autoFocus value={reminderForm.title} onChange={e=>setReminderForm(x=>({...x,title:e.target.value}))}/>
+              <select className="input" value={reminderForm.category} onChange={e=>setReminderForm(x=>({...x,category:e.target.value}))}>
+                {["Appliance","Vehicle","Medical","Subscription","Insurance","Property","Utility","Other"].map(c=><option key={c}>{c}</option>)}
+              </select>
+              <input className="input" type="date" placeholder="Due date" value={reminderForm.due_date} onChange={e=>setReminderForm(x=>({...x,due_date:e.target.value}))}/>
+              <select className="input" value={reminderForm.repeat} onChange={e=>setReminderForm(x=>({...x,repeat:e.target.value}))}>
+                <option value="none">No Repeat</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Every 3 Months</option>
+                <option value="biannual">Every 6 Months</option>
+                <option value="annual">Yearly</option>
+              </select>
+              <div style={{display:"flex",gap:8}}>
+                <input className="input" placeholder="Emoji" value={reminderForm.emoji} onChange={e=>setReminderForm(x=>({...x,emoji:e.target.value}))} style={{flex:1}}/>
+                <input className="input" placeholder="Notes" value={reminderForm.notes} onChange={e=>setReminderForm(x=>({...x,notes:e.target.value}))} style={{flex:2}}/>
+              </div>
+              <button className="btn-primary" onClick={async()=>{
+                if(!reminderForm.title || !reminderForm.due_date) return;
+                await supabase.from("reminders").insert([{
+                  family_id:familyId,
+                  content:`${reminderForm.emoji} ${reminderForm.title} — ${reminderForm.category}`,
+                  due_date:reminderForm.due_date,
+                  done:false,
+                  notes:reminderForm.notes,
+                  repeat:reminderForm.repeat,
+                  category:reminderForm.category,
+                }]);
+                showToast({title:"Reminder Added!",body:`${reminderForm.title} due ${reminderForm.due_date}`,icon:reminderForm.emoji,color:"#8B7CF8"});
+                setReminderForm({title:"",category:"Appliance",due_date:"",repeat:"none",notes:"",emoji:"🔔"});
+                setShowAddReminder(false);
+              }}>Add Reminder</button>
+            </div>
+          </Modal>
+        )}
         {/* ADD BUTTON */}
         <button className="btn-primary" onClick={()=>{
           if(tab==="chores") setShowAddTask(true);
           else if(tab==="grocery") setShowAddGrocery(true);
           else if(tab==="maintenance") setShowAddMaint(true);
           else if(tab==="documents") setShowAddDoc(true);
+          else if(tab==="reminders") setShowAddReminder(true);
         }} style={{width:"100%",height:44,fontSize:14,marginBottom:14}}>
-          + Add {tab==="chores"?"Task":tab==="grocery"?"Grocery Item":tab==="maintenance"?"Maintenance":tab==="documents"?"Document":"Item"}
+          + Add {tab==="chores"?"Task":tab==="grocery"?"Grocery Item":tab==="maintenance"?"Maintenance":tab==="documents"?"Document":tab==="reminders"?"Service Reminder":"Item"}
         </button>
         {tab==="chores" && (
           <>
@@ -1277,6 +1318,9 @@ const HouseholdScreen = ({ familyId }) => {
                   </div>
                 ))}
               </div>
+        )}
+        {tab==="reminders" && (
+          <ServiceReminders familyId={familyId}/>
         )}
         {tab==="documents" && (
           docs.length===0
@@ -2037,6 +2081,125 @@ const VoiceCommandButton = ({ familyId }) => {
   );
 };
 
+
+
+// ─── SERVICE REMINDERS COMPONENT ─────────────────────────────────────────────
+const ServiceReminders = ({ familyId }) => {
+  const { rows: reminders, refresh } = useTable("reminders", familyId, { order: "due_date", asc: true });
+
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+
+  const getDaysLeft = (due) => {
+    if (!due) return null;
+    const diff = Math.ceil((new Date(due) - today) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
+
+  const getColor = (days) => {
+    if (days === null) return T.muted;
+    if (days < 0) return T.red;
+    if (days <= 3) return T.red;
+    if (days <= 7) return T.amber;
+    return T.green;
+  };
+
+  const getLabel = (days) => {
+    if (days === null) return "";
+    if (days < 0) return `${Math.abs(days)}d overdue`;
+    if (days === 0) return "Due today!";
+    if (days === 1) return "Due tomorrow!";
+    return `${days}d left`;
+  };
+
+  const markDone = async (r) => {
+    await supabase.from("reminders").update({ done: true }).eq("id", r.id);
+    // If repeating, create next reminder
+    if (r.repeat && r.repeat !== "none") {
+      const months = r.repeat === "monthly" ? 1 : r.repeat === "quarterly" ? 3 : r.repeat === "biannual" ? 6 : 12;
+      const nextDate = new Date(r.due_date);
+      nextDate.setMonth(nextDate.getMonth() + months);
+      await supabase.from("reminders").insert([{
+        family_id: familyId,
+        content: r.content,
+        due_date: nextDate.toISOString().split("T")[0],
+        done: false,
+        repeat: r.repeat,
+        category: r.category,
+        notes: r.notes,
+      }]);
+      showToast({title:"Next reminder set!",body:`Next due: ${nextDate.toISOString().split("T")[0]}`,icon:"🔔",color:"#8B7CF8"});
+    }
+    refresh();
+  };
+
+  const pending = reminders.filter(r => !r.done);
+  const done = reminders.filter(r => r.done);
+
+  if (!pending.length && !done.length) {
+    return <div className="empty"><div className="empty-icon">🔔</div><div className="empty-text">No service reminders yet.</div></div>;
+  }
+
+  return (
+    <div>
+      {pending.length > 0 && (
+        <>
+          <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>
+            Pending ({pending.length})
+          </div>
+          <div className="card" style={{padding:"2px 14px",marginBottom:16}}>
+            {pending.sort((a,b)=>new Date(a.due_date)-new Date(b.due_date)).map(r => {
+              const days = getDaysLeft(r.due_date);
+              const color = getColor(days);
+              const label = getLabel(days);
+              return (
+                <div key={r.id} className="list-row">
+                  <div style={{width:40,height:40,borderRadius:12,background:`${color}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>
+                    {r.content?.split(" ")[0] || "🔔"}
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:600}}>{r.content?.split("—")[0]?.replace(/^[^\s]+\s/,"").trim() || r.content}</div>
+                    <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>
+                      {r.category && <span style={{marginRight:6}}>{r.category}</span>}
+                      {r.repeat && r.repeat !== "none" && <span style={{color:T.accent}}>🔄 {r.repeat}</span>}
+                    </div>
+                    <div style={{fontSize:12,fontWeight:700,color,marginTop:3}}>{r.due_date} · {label}</div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
+                    <button onClick={()=>markDone(r)} style={{padding:"6px 12px",background:"rgba(52,211,153,0.12)",border:"1px solid rgba(52,211,153,0.3)",borderRadius:10,color:"#34D399",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                      ✅ Done
+                    </button>
+                    <button onClick={async()=>{await supabase.from("reminders").delete().eq("id",r.id);refresh();}} style={{padding:"4px 10px",background:"transparent",border:"none",color:T.red,fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+      {done.length > 0 && (
+        <>
+          <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>
+            Completed ({done.length})
+          </div>
+          <div className="card" style={{padding:"2px 14px",opacity:0.5}}>
+            {done.slice(0,5).map(r => (
+              <div key={r.id} className="list-row" style={{cursor:"default"}}>
+                <div style={{fontSize:20}}>{r.content?.split(" ")[0] || "✅"}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,textDecoration:"line-through"}}>{r.content?.split("—")[0]?.replace(/^[^\s]+\s/,"").trim() || r.content}</div>
+                  <div style={{fontSize:11,color:T.muted}}>{r.due_date}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 // ─── GMAIL SYNC SCREEN ────────────────────────────────────────────────────────
 const GmailSyncScreen = ({ familyId }) => {
