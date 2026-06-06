@@ -1302,6 +1302,12 @@ const HouseholdScreen = ({ familyId }) => {
 // ─── PLANNER SCREEN ───────────────────────────────────────────────────────────
 const PlannerScreen = ({ familyId }) => {
   const [tab, setTab] = useState("goals");
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [showAddHealth, setShowAddHealth] = useState(false);
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [goalForm, setGoalForm] = useState({title:"",target_amount:"",saved_amount:"0",emoji:"🎯",color:"#8B7CF8",reminder_date:""});
+  const [healthForm, setHealthForm] = useState({member_name:"Mayank",weight:"",blood_pressure:"",blood_sugar:"",medications:"None",notes:"",next_checkup:""});
+  const [eventForm, setEventForm] = useState({title:"",event_date:"",type:"General",emoji:"📅",notes:""});
   const { rows: goals } = useTable("goals", familyId);
   const { rows: events } = useTable("events", familyId, { order: "event_date", asc: true });
   const { rows: health } = useTable("health", familyId);
@@ -1315,6 +1321,89 @@ const PlannerScreen = ({ familyId }) => {
         ))}
       </div>
       <div style={{padding:"0 18px"}}>
+
+        {/* ADD GOAL MODAL */}
+        {showAddGoal && (
+          <Modal title="Add Savings Goal" onClose={()=>setShowAddGoal(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="Goal title e.g. Vacation Fund" autoFocus value={goalForm.title} onChange={e=>setGoalForm(x=>({...x,title:e.target.value}))}/>
+              <input className="input" type="number" placeholder="Target amount (₹)" value={goalForm.target_amount} onChange={e=>setGoalForm(x=>({...x,target_amount:e.target.value}))}/>
+              <input className="input" type="number" placeholder="Already saved (₹)" value={goalForm.saved_amount} onChange={e=>setGoalForm(x=>({...x,saved_amount:e.target.value}))}/>
+              <div style={{display:"flex",gap:8}}>
+                <input className="input" placeholder="Emoji" value={goalForm.emoji} onChange={e=>setGoalForm(x=>({...x,emoji:e.target.value}))} style={{flex:1}}/>
+                <input className="input" type="date" placeholder="Target date" value={goalForm.reminder_date} onChange={e=>setGoalForm(x=>({...x,reminder_date:e.target.value}))} style={{flex:2}}/>
+              </div>
+              <button className="btn-primary" onClick={async()=>{
+                if(!goalForm.title || !goalForm.target_amount) return;
+                await supabase.from("goals").insert([{family_id:familyId,title:goalForm.title,target_amount:Number(goalForm.target_amount),saved_amount:Number(goalForm.saved_amount||0),emoji:goalForm.emoji,color:"#8B7CF8",reminder_date:goalForm.reminder_date||null}]);
+                setGoalForm({title:"",target_amount:"",saved_amount:"0",emoji:"🎯",color:"#8B7CF8",reminder_date:""});
+                setShowAddGoal(false);
+              }}>Add Goal</button>
+            </div>
+          </Modal>
+        )}
+
+        {/* ADD HEALTH RECORD MODAL */}
+        {showAddHealth && (
+          <Modal title="Add Health Record" onClose={()=>setShowAddHealth(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <select className="input" value={healthForm.member_name} onChange={e=>setHealthForm(x=>({...x,member_name:e.target.value}))}>
+                <option>Mayank</option><option>Simmi</option><option>Veda</option>
+              </select>
+              <div style={{display:"flex",gap:8}}>
+                <input className="input" placeholder="Weight (kg)" value={healthForm.weight} onChange={e=>setHealthForm(x=>({...x,weight:e.target.value}))} style={{flex:1}}/>
+                <input className="input" placeholder="BP (120/80)" value={healthForm.blood_pressure} onChange={e=>setHealthForm(x=>({...x,blood_pressure:e.target.value}))} style={{flex:1}}/>
+              </div>
+              <input className="input" placeholder="Blood Sugar (mg/dL)" value={healthForm.blood_sugar} onChange={e=>setHealthForm(x=>({...x,blood_sugar:e.target.value}))}/>
+              <input className="input" placeholder="Medications (or None)" value={healthForm.medications} onChange={e=>setHealthForm(x=>({...x,medications:e.target.value}))}/>
+              <input className="input" placeholder="Notes / symptoms" value={healthForm.notes} onChange={e=>setHealthForm(x=>({...x,notes:e.target.value}))}/>
+              <div style={{fontSize:12,fontWeight:700,color:T.accent,marginTop:4}}>Next Checkup Reminder</div>
+              <input className="input" type="date" placeholder="Next checkup date" value={healthForm.next_checkup} onChange={e=>setHealthForm(x=>({...x,next_checkup:e.target.value}))}/>
+              <button className="btn-primary" onClick={async()=>{
+                await supabase.from("health").insert([{family_id:familyId,member_name:healthForm.member_name,weight:healthForm.weight||null,blood_pressure:healthForm.blood_pressure||null,blood_sugar:healthForm.blood_sugar||null,medications:healthForm.medications,notes:healthForm.notes,date:new Date().toISOString().split("T")[0]}]);
+                if(healthForm.next_checkup){
+                  await supabase.from("reminders").insert([{family_id:familyId,content:`Health checkup for ${healthForm.member_name}`,due_date:healthForm.next_checkup,done:false}]);
+                  showToast({title:"Reminder set!",body:`Checkup reminder for ${healthForm.next_checkup}`,icon:"💊",color:"#60A5FA"});
+                }
+                setHealthForm({member_name:"Mayank",weight:"",blood_pressure:"",blood_sugar:"",medications:"None",notes:"",next_checkup:""});
+                setShowAddHealth(false);
+              }}>Save Health Record</button>
+            </div>
+          </Modal>
+        )}
+
+        {/* ADD EVENT MODAL */}
+        {showAddEvent && (
+          <Modal title="Add Event" onClose={()=>setShowAddEvent(false)}>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <input className="input" placeholder="Event title" autoFocus value={eventForm.title} onChange={e=>setEventForm(x=>({...x,title:e.target.value}))}/>
+              <input className="input" type="date" value={eventForm.event_date} onChange={e=>setEventForm(x=>({...x,event_date:e.target.value}))}/>
+              <select className="input" value={eventForm.type} onChange={e=>setEventForm(x=>({...x,type:e.target.value}))}>
+                {["General","Birthday","Anniversary","Medical","School","Travel","Festival","Family"].map(c=><option key={c}>{c}</option>)}
+              </select>
+              <div style={{display:"flex",gap:8}}>
+                <input className="input" placeholder="Emoji" value={eventForm.emoji} onChange={e=>setEventForm(x=>({...x,emoji:e.target.value}))} style={{flex:1}}/>
+                <input className="input" placeholder="Notes" value={eventForm.notes} onChange={e=>setEventForm(x=>({...x,notes:e.target.value}))} style={{flex:2}}/>
+              </div>
+              <button className="btn-primary" onClick={async()=>{
+                if(!eventForm.title || !eventForm.event_date) return;
+                await supabase.from("events").insert([{family_id:familyId,...eventForm}]);
+                setEventForm({title:"",event_date:"",type:"General",emoji:"📅",notes:""});
+                setShowAddEvent(false);
+              }}>Add Event</button>
+            </div>
+          </Modal>
+        )}
+
+        {/* SMART ADD BUTTON */}
+        <button className="btn-primary" onClick={()=>{
+          if(tab==="goals") setShowAddGoal(true);
+          else if(tab==="health") setShowAddHealth(true);
+          else if(tab==="calendar") setShowAddEvent(true);
+        }} style={{width:"100%",height:44,fontSize:14,marginBottom:14}}>
+          + Add {tab==="goals"?"Goal":tab==="health"?"Health Record":"Event"}
+        </button>
+
         {tab==="goals" && (
           goals.length===0
             ? <div className="empty"><div className="empty-icon">🎯</div><div className="empty-text">No goals yet.</div></div>
