@@ -3301,6 +3301,10 @@ export default function App() {
       setUser(session?.user??null);
       setAuthLoading(false);
     });
+    // Refresh when app becomes visible again
+    const onVisible = () => { if(document.visibilityState==="visible") { window.dispatchEvent(new Event("familyos-refresh")); } };
+    document.addEventListener("visibilitychange", onVisible);
+
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{ setUser(session?.user??null); });
     return ()=>subscription.unsubscribe();
   },[]);
