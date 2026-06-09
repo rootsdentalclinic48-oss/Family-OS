@@ -2905,7 +2905,7 @@ const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId }) => {
           value={query}
           onChange={e=>setQuery(e.target.value)}
           autoFocus
-          style={{paddingLeft:14,fontSize:14}}
+          style={{paddingLeft:14,fontSize:14,background:"#FFFFFF",color:"#2D2721",border:`1px solid ${T.border}`}}
         />
         {query && <span onClick={()=>setQuery("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:13,color:T.muted,fontWeight:700}}>✕</span>}
       </div>
