@@ -4021,14 +4021,14 @@ const KitchenScreen = ({ familyId }) => {
       )}
       {/* ASSIGN RECIPE MODAL */}
       {addMealModal && (
-        <div className="modal-bg" onClick={()=>setAddMealModal(null)}>
-          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"80vh",overflowY:"auto"}}>
+        <div className="modal-overlay" onClick={()=>setAddMealModal(null)}>
+          <div className="modal-box" onClick={e=>e.stopPropagation()} style={{maxHeight:"92vh",height:"92vh",overflowY:"auto",borderRadius:"24px 24px 0 0",paddingBottom:40}}>
             <div className="modal-handle"/>
             <div className="row" style={{marginBottom:14}}>
-              <span style={{fontSize:18,fontWeight:700}}>
-                {MEAL_EMOJI[addMealModal.meal_type]} {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)}
+              <span style={{fontSize:18,fontWeight:700,color:T.text}}>
+                {MEAL_EMOJI[addMealModal.meal_type]} Replace {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)}
               </span>
-              <div onClick={()=>setAddMealModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <div onClick={()=>setAddMealModal(null)} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
