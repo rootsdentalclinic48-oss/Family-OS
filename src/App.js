@@ -2862,55 +2862,98 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
 
 
 // ─── MEAL PICKER SEARCH ───────────────────────────────────────────────────────
-const MealPickerSearch = ({ recipes, defaultMealType, onSelect }) => {
+const MEAL_TYPE_EMOJI = {breakfast:"🌅",lunch:"☀️",dinner:"🌙",snack:"🍎",dessert:"🍮"};
+const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId }) => {
   const [query, setQuery] = React.useState("");
-  const [filter, setFilter] = React.useState(defaultMealType || "all");
-  const mealTypes = ["all","breakfast","lunch","dinner","snack","dessert"];
+  const [recentNames, setRecentNames] = React.useState([]);
+
+  React.useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from("cook_logs")
+        .select("recipe_name").eq("family_id", familyId)
+        .order("cooked_at", {ascending:false}).limit(20);
+      if (data) {
+        const seen = new Set();
+        const names = [];
+        data.forEach(d => { if (!seen.has(d.recipe_name)) { seen.add(d.recipe_name); names.push(d.recipe_name); } });
+        setRecentNames(names.slice(0,6));
+      }
+    };
+    load();
+  }, [familyId]);
 
   const results = React.useMemo(() => {
-    let list = filter === "all" ? recipes : recipes.filter(r => r.meal_type === filter);
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      list = list.filter(r =>
-        r.name.toLowerCase().includes(q) ||
-        (r.tags||[]).some(t => t.toLowerCase().includes(q))
-      );
-    }
-    return list.sort((a,b) => a.name.localeCompare(b.name));
-  }, [recipes, query, filter]);
+    if (!query.trim()) return [];
+    const q = query.toLowerCase()
+      .replace(/paratha/g,"parantha").replace(/aata/g,"atta").replace(/gobhi/g,"gobhi");
+    return recipes.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      (r.tags||[]).some(t => t.toLowerCase().includes(q)) ||
+      r.meal_type.toLowerCase().includes(q)
+    ).sort((a,b) => a.name.localeCompare(b.name));
+  }, [recipes, query]);
+
+  const recentRecipes = recentNames.map(n => recipes.find(r=>r.name===n)).filter(Boolean);
+  const showRecent = !query.trim() && recentRecipes.length > 0;
 
   return (
     <div>
-      <div style={{position:"relative",marginBottom:10}}>
+      <div style={{position:"relative",marginBottom:12}}>
         <input
           className="input"
-          placeholder="Search recipes..."
+          placeholder="🔍 Search any recipe — no restrictions..."
           value={query}
           onChange={e=>setQuery(e.target.value)}
           autoFocus
-          style={{paddingLeft:34}}
+          style={{paddingLeft:14,fontSize:14}}
         />
-        <span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:14}}>🔍</span>
-        {query && <span onClick={()=>setQuery("")} style={{position:"absolute",right:11,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:12,color:T.muted}}>✕</span>}
+        {query && <span onClick={()=>setQuery("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:13,color:T.muted,fontWeight:700}}>✕</span>}
       </div>
-      <div className="scroll-x" style={{marginBottom:10,gap:6,display:"flex"}}>
-        {mealTypes.map(m=>(
-          <div key={m} className={`chip ${filter===m?"on":""}`} onClick={()=>setFilter(m)} style={{textTransform:"capitalize",fontSize:11,padding:"5px 11px"}}>{m}</div>
-        ))}
-      </div>
-      <div style={{fontSize:11,color:T.muted,marginBottom:8}}>{results.length} recipes</div>
-      <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:"50vh",overflowY:"auto"}}>
-        {results.map(r => (
-          <div key={r.id} onClick={()=>onSelect(r)}
-            className="card card-tap" style={{padding:"11px 13px",marginBottom:0}}>
-            <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
-            <div style={{fontSize:11,color:T.muted,marginTop:2}}>⏱ {r.prep_time_mins}min · 👥 {r.servings} · <span style={{textTransform:"capitalize"}}>{r.meal_type}</span></div>
+
+      {showRecent && (
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>⭐ Recently Cooked</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            {recentRecipes.map(r => (
+              <div key={r.id} onClick={()=>onSelect(r)}
+                className="card card-tap" style={{padding:"10px 13px",marginBottom:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
+                  <div style={{fontSize:11,color:T.muted,marginTop:1}}>{MEAL_TYPE_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min</div>
+                </div>
+                <span style={{fontSize:11,color:T.accent,fontWeight:700}}>Select →</span>
+              </div>
+            ))}
           </div>
-        ))}
-        {results.length === 0 && (
-          <div style={{textAlign:"center",color:T.muted,padding:"20px 0",fontSize:13}}>No recipes found</div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {!showRecent && query.trim() && (
+        <>
+          <div style={{fontSize:11,color:T.muted,marginBottom:8}}>{results.length} recipes found</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:"55vh",overflowY:"auto"}}>
+            {results.map(r => (
+              <div key={r.id} onClick={()=>onSelect(r)}
+                className="card card-tap" style={{padding:"11px 13px",marginBottom:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
+                  <div style={{fontSize:11,color:T.muted,marginTop:2}}>{MEAL_TYPE_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min · 👥 {r.servings}</div>
+                </div>
+                <span style={{fontSize:11,color:T.accent,fontWeight:700}}>Select →</span>
+              </div>
+            ))}
+            {results.length === 0 && (
+              <div style={{textAlign:"center",color:T.muted,padding:"20px 0",fontSize:13}}>No recipes found for "{query}"</div>
+            )}
+          </div>
+        </>
+      )}
+
+      {!query.trim() && !showRecent && (
+        <div style={{textAlign:"center",color:T.muted,padding:"24px 0",fontSize:13}}>
+          Start typing to search all 145+ recipes
+        </div>
+      )}
     </div>
   );
 };
@@ -3572,19 +3615,12 @@ const KitchenScreen = ({ familyId }) => {
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
-            <div style={{fontSize:12,color:T.muted,marginBottom:12}}>{addMealModal.date}</div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {recipes.filter(r => r.meal_type === addMealModal.meal_type).map(r => (
-                <div key={r.id} onClick={()=>assignRecipe(r.id, addMealModal.date, addMealModal.meal_type)}
-                  className="card card-tap" style={{padding:"12px 14px"}}>
-                  <div style={{fontSize:15,fontWeight:600}}>{r.name}</div>
-                  <div style={{fontSize:11.5,color:T.muted,marginTop:3}}>⏱ {r.prep_time_mins}min · 👥 {r.servings}</div>
-                </div>
-              ))}
-              {recipes.filter(r=>r.meal_type===addMealModal.meal_type).length===0 && (
-                <div style={{textAlign:"center",color:T.muted,padding:"20px 0",fontSize:14}}>No recipes for this meal type yet.</div>
-              )}
-            </div>
+            <MealPickerSearch
+              recipes={recipes}
+              defaultMealType={addMealModal.meal_type}
+              familyId={familyId}
+              onSelect={(r) => { assignRecipe(r.id, addMealModal.date, addMealModal.meal_type); setAddMealModal(null); }}
+            />
           </div>
         </div>
       )}
