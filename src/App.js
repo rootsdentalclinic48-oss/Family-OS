@@ -3342,26 +3342,35 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
   const [ingredients, setIngredients] = React.useState({}); // recipeId -> ingredients[]
   const [loadingIngredients, setLoadingIngredients] = React.useState(true);
 
-  React.useEffect(() => {
-    const load = async () => {
+  const loadData = React.useCallback(async () => {
+    setLoadingIngredients(true);
+    try {
       // Load cook logs
       const start = new Date(); start.setDate(start.getDate()-30);
       const { data: logs } = await supabase.from("cook_logs").select("recipe_name,cooked_at").eq("family_id", familyId).gte("cooked_at", start.toISOString()).order("cooked_at", {ascending:false});
       setCookLogs(logs||[]);
-      // Load all recipe ingredients in one query
-      const { data: ings } = await supabase.from("recipe_ingredients").select("*");
-      if (ings) {
-        const map = {};
-        ings.forEach(ing => {
-          if (!map[ing.recipe_id]) map[ing.recipe_id] = [];
-          map[ing.recipe_id].push(ing);
-        });
-        setIngredients(map);
+      // Load ALL recipe ingredients - paginate to get past 1000 row limit
+      let allIngs = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data: ings } = await supabase.from("recipe_ingredients").select("*").range(from, from+pageSize-1);
+        if (!ings || ings.length === 0) break;
+        allIngs = [...allIngs, ...ings];
+        if (ings.length < pageSize) break;
+        from += pageSize;
       }
-      setLoadingIngredients(false);
-    };
-    load();
+      const map = {};
+      allIngs.forEach(ing => {
+        if (!map[ing.recipe_id]) map[ing.recipe_id] = [];
+        map[ing.recipe_id].push(ing);
+      });
+      setIngredients(map);
+    } catch(e) { console.error(e); }
+    setLoadingIngredients(false);
   }, [familyId]);
+
+  React.useEffect(() => { loadData(); }, [loadData]);
 
   const cookCount = React.useMemo(() => {
     const map = {};
@@ -3427,6 +3436,10 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
 
   return (
     <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em"}}>Based on current pantry</div>
+        <button onClick={loadData} style={{fontSize:11,fontWeight:700,color:T.accent,background:T.accentSoft,border:"none",borderRadius:8,padding:"5px 10px",cursor:"pointer"}}>↻ Refresh</button>
+      </div>
       <div className="card" style={{padding:"12px 14px",marginBottom:12,display:"flex",gap:12}}>
         <div style={{flex:1,textAlign:"center"}}>
           <div style={{fontSize:22,fontWeight:800,color:T.green}}>{canCookNow.length}</div>
