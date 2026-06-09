@@ -3253,7 +3253,7 @@ const KitchenScreen = ({ familyId }) => {
               const meal = todayMeals.find(m => m.meal_type === mealType);
               const recipe = meal ? recipes.find(r => r.id === meal.recipe_id) : null;
               return (
-                <div key={mealType} className="card" style={{padding:"14px 16px",borderColor:meal?.cooked?"rgba(52,211,153,0.3)":T.border}}>
+                <div key={mealType} className="card" style={{padding:"14px 16px",borderColor:meal?.cooked?T.green:T.border,cursor:'pointer'}}>
                   <div className="row" style={{marginBottom:recipe?10:0}}>
                     <div style={{display:"flex",gap:10,alignItems:"center"}}>
                       <span style={{fontSize:22}}>{MEAL_EMOJI[mealType]}</span>
@@ -3313,16 +3313,26 @@ const KitchenScreen = ({ familyId }) => {
               const dayNum = d.getDate();
               const isToday = date === todayStr;
               return (
-                <div key={date} className="card" style={{padding:"12px 14px",borderColor:isToday?"rgba(139,124,248,0.3)":T.border}}>
+                <div key={date} className="card" style={{padding:"12px 14px",borderColor:isToday?T.accent:T.border}}>
                   <div className="row" style={{marginBottom:8}}>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                      <div style={{width:36,height:36,borderRadius:10,background:isToday?T.accent:"rgba(255,255,255,0.06)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                      <div style={{width:36,height:36,borderRadius:10,background:isToday?T.accent:T.accentSoft,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
                         <span style={{fontSize:9,fontWeight:700,color:isToday?"white":T.muted,textTransform:"uppercase"}}>{dayName}</span>
                         <span style={{fontSize:14,fontWeight:800,color:isToday?"white":T.text}}>{dayNum}</span>
                       </div>
                       {isToday && <span style={{fontSize:13,fontWeight:700,color:T.accent}}>Today</span>}
                     </div>
-                    <span style={{fontSize:11,color:T.dim}}>{dayMeals.filter(m=>m.cooked).length}/{MEAL_TYPES.length} cooked</span>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3}}>
+                      <span style={{fontSize:12,fontWeight:700,color:dayMeals.filter(m=>m.cooked).length===MEAL_TYPES.length?T.green:T.muted}}>
+                        {dayMeals.filter(m=>m.cooked).length}/{MEAL_TYPES.length} cooked
+                      </span>
+                      <div style={{display:"flex",gap:3}}>
+                        {MEAL_TYPES.map(mt=>{
+                          const m = dayMeals.find(x=>x.meal_type===mt);
+                          return <div key={mt} style={{width:8,height:8,borderRadius:"50%",background:m?.cooked?T.green:m?T.accent:T.border}}/>;
+                        })}
+                      </div>
+                    </div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
                     {MEAL_TYPES.map(mt => {
@@ -3330,9 +3340,13 @@ const KitchenScreen = ({ familyId }) => {
                       const rec = m ? recipes.find(r => r.id === m.recipe_id) : null;
                       return (
                         <div key={mt} onClick={()=>setAddMealModal({date,meal_type:mt})}
-                          style={{padding:"7px 9px",borderRadius:9,cursor:"pointer",background:m?.cooked?"rgba(52,211,153,0.08)":rec?"rgba(255,255,255,0.04)":"rgba(255,255,255,0.02)",border:`1px solid ${m?.cooked?"rgba(52,211,153,0.2)":"rgba(255,255,255,0.07)"}`,transition:"all .15s"}}>
-                          <div style={{fontSize:10,color:T.dim,fontWeight:600,textTransform:"capitalize"}}>{MEAL_EMOJI[mt]} {mt}</div>
-                          <div style={{fontSize:11.5,fontWeight:500,color:rec?T.text:T.dim,marginTop:2}}>{rec ? rec.name : "+ Add"}</div>
+                          style={{padding:"7px 9px",borderRadius:9,cursor:"pointer",background:m?.cooked?T.greenSoft:rec?T.accentSoft:"rgba(125,157,124,0.04)",border:`0.5px solid ${m?.cooked?T.green:rec?T.accent:T.border}`,transition:"all .15s"}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                            <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"capitalize"}}>{MEAL_EMOJI[mt]} {mt}</div>
+                            {m?.cooked && <span style={{fontSize:9,color:T.green,fontWeight:800}}>✓</span>}
+                            {m && !m.cooked && <span style={{fontSize:9,color:T.dim}}>○</span>}
+                          </div>
+                          <div style={{fontSize:11.5,fontWeight:600,color:rec?T.text:T.dim,marginTop:2,lineHeight:1.3}}>{rec ? rec.name : "+ Add"}</div>
                         </div>
                       );
                     })}
