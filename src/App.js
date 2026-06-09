@@ -1661,7 +1661,10 @@ Extract all purchased grocery items. Normalize brand names: "Aashirvaad Atta"→
         body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, messages })
       });
       const data = await res.json();
+      console.log("API response:", JSON.stringify(data).slice(0,500));
+      if (data.error) { setError("API Error: " + data.error.message); setStage("upload"); return; }
       const text = data.content?.map(c=>c.text||"").join("").trim();
+      console.log("Extracted text:", text.slice(0,300));
       const clean = text.replace(/```json|```/g,"").trim();
       const items = JSON.parse(clean);
       setExtractedItems(items.map((it,i) => ({
