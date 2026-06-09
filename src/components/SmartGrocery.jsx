@@ -222,7 +222,7 @@ export default function SmartGrocery({ familyId }) {
             {items.map(item => (
               <div key={item.id} style={S.itemRow}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{item.name}
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#EEECf8' }}>{item.name}
                     {item.auto_added && <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 20, background: T.amberSoft, color: T.amber, fontWeight: 700 }}>auto</span>}
                   </div>
                   {item.brand && <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{item.brand}</div>}
@@ -230,7 +230,7 @@ export default function SmartGrocery({ familyId }) {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                   <StockBar pct={item.stock_pct || 100} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: T.dim }}>{item.stock_pct || 100}%</span>
+                    <span style={{ fontSize: 11, color: T.muted }}>{item.stock_pct || 100}%</span>
                     <input type="range" min={0} max={100} step={5} value={item.stock_pct || 100} style={{ width: 60 }} onChange={e => updateStock(item.id, parseInt(e.target.value))} />
                   </div>
                 </div>
@@ -380,6 +380,6 @@ const S = {
   select: { background: 'rgba(255,255,255,0.058)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 12, padding: '8px 12px', color: '#EEECf8', fontSize: 13, fontFamily: 'inherit' },
   btnPrimary: { padding: '8px 16px', borderRadius: 12, border: 'none', background: '#8B7CF8', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' },
   card: { background: 'rgba(255,255,255,0.042)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 16, padding: '14px 16px' },
-  itemRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.075)', marginBottom: 8, background: 'rgba(255,255,255,0.03)' },
+  itemRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.075)', marginBottom: 8, background: 'rgba(255,255,255,0.06)' },
   empty: { textAlign: 'center', padding: '2rem', color: 'rgba(238,236,248,0.42)', fontSize: 14, lineHeight: 1.7 },
 };
