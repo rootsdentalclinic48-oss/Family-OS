@@ -3043,6 +3043,7 @@ const KitchenScreen = ({ familyId }) => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [showAlexaCommands, setShowAlexaCommands] = useState(false);
   const [cookLogModal, setCookLogModal] = useState(null); // {meal, recipe}
+  const [editCookLog, setEditCookLog] = useState(null); // {meal, recipe}
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
@@ -3088,6 +3089,36 @@ const KitchenScreen = ({ familyId }) => {
       }
     } catch(e) { console.error(e); }
     setCooking(null);
+  };
+
+  const handleUndoCookLog = async (meal) => {
+    if (!window.confirm("Undo this meal log? Pantry quantities will be restored.")) return;
+    try {
+      // Find the cook log for this meal
+      const { data: logs } = await supabase.from("cook_logs")
+        .select("*").eq("family_id", familyId).eq("recipe_name", recipes.find(r=>r.id===meal.recipe_id)?.name || "")
+        .order("cooked_at", {ascending: false}).limit(1);
+      if (logs?.length) {
+        const log = logs[0];
+        // Restore pantry quantities from transactions
+        const { data: txns } = await supabase.from("pantry_transactions").select("*").eq("cook_log_id", log.id);
+        for (const txn of (txns || [])) {
+          const pantryItem = pantry.find(p => p.name.toLowerCase() === txn.pantry_item_name.toLowerCase());
+          if (pantryItem) {
+            const restoredQty = Number(pantryItem.quantity) + Number(txn.quantity_used);
+            await supabase.from("pantry").update({ quantity: restoredQty, updated_at: new Date().toISOString() }).eq("id", pantryItem.id);
+          }
+        }
+        // Delete transactions and cook log
+        await supabase.from("pantry_transactions").delete().eq("cook_log_id", log.id);
+        await supabase.from("cook_logs").delete().eq("id", log.id);
+      }
+      // Mark meal as uncooked
+      await supabase.from("meal_plan").update({ cooked: false, cooked_at: null }).eq("id", meal.id);
+      await refreshPantry();
+      await refreshMeal();
+      showToast({ title: "↩ Meal Unlogged", body: "Pantry quantities restored.", icon: "↩", color: T.amber });
+    } catch(e) { console.error(e); }
   };
 
   const assignRecipe = async (recipeId, date, mealType) => {
@@ -3183,7 +3214,19 @@ const KitchenScreen = ({ familyId }) => {
                           {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "🍽 Log Meal"}
                         </button>
                       )}
-                      {meal?.cooked && <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>}
+                      {meal?.cooked && (
+                        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                          <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>
+                          <button onClick={()=>setEditCookLog({meal, recipe: recipes.find(r=>r.id===meal.recipe_id)})}
+                            style={{padding:"5px 10px",background:T.accentSoft,border:`1px solid ${T.border}`,borderRadius:8,color:T.accent,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                            ✏️ Edit
+                          </button>
+                          <button onClick={()=>handleUndoCookLog(meal)}
+                            style={{padding:"5px 10px",background:T.redSoft,border:`1px solid rgba(196,96,58,0.2)`,borderRadius:8,color:T.red,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                            ↩ Undo
+                          </button>
+                        </div>
+                      )}
                       <div onClick={()=>setAddMealModal({date:todayStr,meal_type:mealType})}
                         style={{width:32,height:32,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                         <I n="edit" s={14} c={T.accent}/>
@@ -3528,6 +3571,85 @@ const KitchenScreen = ({ familyId }) => {
             <button className="btn-primary" onClick={savePantryItem}>Save Item</button>
           </div>
         </Modal>
+      )}
+
+      {/* EDIT COOK LOG MODAL */}
+      {editCookLog && (
+        <div className="modal-overlay" onClick={()=>setEditCookLog(null)}>
+          <div className="modal-box" onClick={e=>e.stopPropagation()} style={{maxWidth:380}}>
+            <div className="modal-handle"/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+              <div>
+                <div style={{fontSize:17,fontWeight:800}}>✏️ Edit Meal Log</div>
+                <div style={{fontSize:13,color:T.muted,marginTop:2}}>{editCookLog.recipe?.name || "Unknown Recipe"}</div>
+              </div>
+              <div onClick={()=>setEditCookLog(null)} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <I n="x" s={15} c={T.muted}/>
+              </div>
+            </div>
+            <CookLogForm
+              meal={editCookLog.meal}
+              recipe={editCookLog.recipe}
+              familyId={familyId}
+              recipes={recipes}
+              pantry={pantry}
+              onDone={async (logData) => {
+                setEditCookLog(null);
+                try {
+                  // Find existing cook log
+                  const { data: logs } = await supabase.from("cook_logs")
+                    .select("*").eq("family_id", familyId)
+                    .eq("recipe_name", editCookLog.recipe?.name || "")
+                    .order("cooked_at", {ascending:false}).limit(1);
+                  if (logs?.length) {
+                    const log = logs[0];
+                    // Restore pantry from old transactions
+                    const { data: txns } = await supabase.from("pantry_transactions").select("*").eq("cook_log_id", log.id);
+                    for (const txn of (txns||[])) {
+                      const item = pantry.find(p=>p.name.toLowerCase()===txn.pantry_item_name.toLowerCase());
+                      if (item) {
+                        await supabase.from("pantry").update({ quantity: Number(item.quantity)+Number(txn.quantity_used), updated_at: new Date().toISOString() }).eq("id", item.id);
+                      }
+                    }
+                    await supabase.from("pantry_transactions").delete().eq("cook_log_id", log.id);
+                    await supabase.from("cook_logs").delete().eq("id", log.id);
+                  }
+                  // Re-log with new values
+                  const ratio = logData.quantityMade / (editCookLog.recipe?.servings || 3);
+                  const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", editCookLog.meal.recipe_id);
+                  const deducted = [];
+                  for (const ing of (ingredients||[])) {
+                    const needed = Number(ing.quantity) * ratio;
+                    const item = pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase());
+                    if (item) {
+                      const newQty = Math.max(0, Number(item.quantity)-needed);
+                      await supabase.from("pantry").update({ quantity: newQty, updated_at: new Date().toISOString() }).eq("id", item.id);
+                      deducted.push({ name: ing.pantry_item_name, used: needed, unit: ing.unit });
+                    }
+                  }
+                  const { data: newLog } = await supabase.from("cook_logs").insert([{
+                    family_id: familyId, recipe_id: editCookLog.meal.recipe_id,
+                    recipe_name: editCookLog.recipe?.name || "Unknown",
+                    quantity_made: logData.quantityMade, unit_label: logData.unitLabel,
+                    people_served_adults: logData.adults, people_served_children: logData.children,
+                    people_served_guests: logData.guests, leftovers: logData.leftovers,
+                    cooked_at: new Date().toISOString(),
+                  }]).select().single();
+                  for (const d of deducted) {
+                    await supabase.from("pantry_transactions").insert([{
+                      family_id: familyId, pantry_item_name: d.name, quantity_used: d.used,
+                      unit: d.unit, recipe_name: editCookLog.recipe?.name || "Unknown",
+                      cook_log_id: newLog?.id || null, transaction_date: new Date().toISOString().split("T")[0],
+                    }]);
+                  }
+                  await refreshPantry();
+                  showToast({ title: "✏️ Meal Updated", body: `Logged ${logData.quantityMade} ${logData.unitLabel}. Pantry recalculated.`, icon: "✏️", color: T.accent });
+                } catch(e) { console.error(e); }
+              }}
+              onClose={()=>setEditCookLog(null)}
+            />
+          </div>
+        </div>
       )}
 
       {/* COOK LOG MODAL */}
