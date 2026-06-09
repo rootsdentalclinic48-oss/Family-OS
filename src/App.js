@@ -2809,8 +2809,8 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
   const [guests, setGuests] = React.useState(0);
   const [leftovers, setLeftovers] = React.useState(0);
 
-  const inputStyle = {width:"100%",padding:"10px 12px",borderRadius:10,border:"1px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.05)",color:"#EEE4F8",fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"};
-  const labelStyle = {fontSize:12,fontWeight:700,color:"rgba(238,228,248,0.5)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4,display:"block"};
+  const inputStyle = {width:"100%",padding:"11px 13px",borderRadius:12,border:`0.5px solid ${T.border}`,background:"#FAFAF8",color:T.text,fontSize:14,fontFamily:"'Plus Jakarta Sans',sans-serif",boxSizing:"border-box",fontWeight:500};
+  const labelStyle = {fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:5,display:"block"};
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -2830,7 +2830,7 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
         <label style={labelStyle}>People Served</label>
         <div style={{display:"flex",gap:8}}>
           <div style={{flex:1,textAlign:"center"}}>
-            <div style={{fontSize:11,color:T.muted,marginBottom:4}}>Adults</div>
+            <div style={{fontSize:11,fontWeight:600,color:T.muted,marginBottom:4}}>Adults</div>
             <input type="number" style={{...inputStyle,textAlign:"center"}} value={adults} min={0} onChange={e=>setAdults(Number(e.target.value))}/>
           </div>
           <div style={{flex:1,textAlign:"center"}}>
@@ -2847,12 +2847,12 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
         <label style={labelStyle}>Leftovers (optional)</label>
         <input type="number" style={inputStyle} value={leftovers} min={0} placeholder="0" onChange={e=>setLeftovers(Number(e.target.value))}/>
       </div>
-      <div style={{padding:"10px 12px",background:"rgba(52,211,153,0.08)",borderRadius:10,border:"1px solid rgba(52,211,153,0.15)"}}>
-        <div style={{fontSize:12,color:"#34D399",fontWeight:700,marginBottom:4}}>📦 Pantry will auto-deduct</div>
-        <div style={{fontSize:11.5,color:"rgba(238,228,248,0.5)"}}>Based on {qty} {unit} × per-serving ingredient ratios</div>
+      <div style={{padding:"10px 13px",background:T.greenSoft,borderRadius:12,border:`0.5px solid ${T.green}33`}}>
+        <div style={{fontSize:12,color:T.green,fontWeight:700,marginBottom:3}}>📦 Pantry will auto-deduct</div>
+        <div style={{fontSize:11.5,color:T.muted}}>Based on {qty} {unit} × per-serving ingredient ratios</div>
       </div>
       <button onClick={()=>onDone({quantityMade:qty,unitLabel:unit,adults,children,guests,leftovers})}
-        style={{padding:"12px",background:"linear-gradient(135deg,#8B7CF8,#A78BFA)",border:"none",borderRadius:12,color:"white",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+        className="btn-primary">
         ✅ Confirm & Log Meal
       </button>
     </div>
