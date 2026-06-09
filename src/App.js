@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
+import SmartGrocery from "./components/SmartGrocery";
 
 // ─── SUPABASE CLIENT ──────────────────────────────────────────────────────────
 const supabase = createClient(
@@ -4205,6 +4206,7 @@ const Nav = ({ active, go }) => (
       {id:"finance", icon:"finance", lbl:"Wallet"},
       {id:"household",icon:"house",  lbl:"House"},
       {id:"kitchen", icon:"kitchen", lbl:"Kitchen"},
+      {id:"grocery", icon:"kitchen", lbl:"Grocery"},
       {id:"planner", icon:"plan",    lbl:"Plan"},
       {id:"ai",      icon:"ai",      lbl:"AI"},
       {id:"profile", icon:"profile", lbl:"You"},
@@ -4258,6 +4260,7 @@ export default function App() {
     planner:   <PlannerScreen familyId={FAMILY_ID}/>,
     ai:        <AIScreen familyId={FAMILY_ID}/>,
     profile:   <ProfileScreen user={user} onSignOut={signOut} familyId={FAMILY_ID}/>,
+    grocery:   <SmartGrocery familyId={FAMILY_ID}/>,
   };
 
   return (
