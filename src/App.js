@@ -409,12 +409,12 @@ const I = ({ n, s = 20, c = "currentColor", w = 1.8 }) => {
 
 // ─── MODAL WRAPPER ────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children }) => (
-  <div className="modal-bg" onClick={onClose}>
-    <div className="modal" onClick={e => e.stopPropagation()}>
+  <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-box" onClick={e => e.stopPropagation()}>
       <div className="modal-handle"/>
       <div className="row" style={{marginBottom:16}}>
-        <span style={{fontSize:19,fontWeight:700}}>{title}</span>
-        <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+        <span style={{fontSize:19,fontWeight:700,color:T.text}}>{title}</span>
+        <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
           <I n="x" s={15} c={T.muted}/>
         </div>
       </div>
