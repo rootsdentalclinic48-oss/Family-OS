@@ -231,7 +231,7 @@ export default function SmartGrocery({ familyId }) {
                   <StockBar pct={item.stock_pct || 100} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 11, color: T.muted }}>{item.stock_pct || 100}%</span>
-                    <input type="range" min={0} max={100} step={5} value={item.stock_pct || 100} style={{ width: 60 }} onChange={e => updateStock(item.id, parseInt(e.target.value))} />
+                    <input type="range" min={0} max={100} step={5} value={item.stock_pct || 100} style={{ width: 70, accentColor: '#8B7CF8', cursor: 'pointer' }} onChange={e => updateStock(item.id, parseInt(e.target.value))} />
                   </div>
                 </div>
                 <button onClick={() => removeItem(item.id)} style={{ marginLeft: 8, padding: '4px 8px', borderRadius: 8, border: '1px solid rgba(248,113,113,0.3)', background: T.redSoft, color: T.red, cursor: 'pointer', fontSize: 12 }}>✕</button>
@@ -382,4 +382,5 @@ const S = {
   card: { background: 'rgba(255,255,255,0.042)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 16, padding: '14px 16px' },
   itemRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.075)', marginBottom: 8, background: 'rgba(255,255,255,0.06)' },
   empty: { textAlign: 'center', padding: '2rem', color: 'rgba(238,236,248,0.42)', fontSize: 14, lineHeight: 1.7 },
+  slider: { width: 70, accentColor: '#8B7CF8', cursor: 'pointer' },
 };
