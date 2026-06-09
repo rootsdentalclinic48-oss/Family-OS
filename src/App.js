@@ -1812,13 +1812,7 @@ Extract all purchased grocery items. Normalize brand names: "Aashirvaad Atta"→
         </div>
         <textarea
           className="input"
-          placeholder={"Example:
-Aashirvaad Atta 10kg
-Amul Gold Milk 6 pcs
-Mother Dairy Paneer 500g
-Onion 5kg
-Tomato 2kg
-Ghee 1L"}
+          placeholder={"Example:\nAashirvaad Atta 10kg\nAmul Gold Milk 6 pcs\nMother Dairy Paneer 500g\nOnion 5kg\nTomato 2kg\nGhee 1L"}
           style={{minHeight:160,resize:"vertical",lineHeight:1.6,fontSize:13}}
           value={pasteText}
           onChange={e=>setPasteText(e.target.value)}
