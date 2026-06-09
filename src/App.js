@@ -2796,6 +2796,138 @@ const markMealCooked = async (familyId, mealPlanRow, recipes, pantryRows) => {
   return { deducted, lowStockItems };
 };
 
+
+// ─── COOK LOG FORM ────────────────────────────────────────────────────────────
+const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose }) => {
+  const T = THEME;
+  const unitOptions = recipe?.meal_type === "breakfast"
+    ? ["paranthas","idlis","dosas","chillas","portions","pieces","cups","plates"]
+    : ["portions","bowls","servings","cups","plates","pieces"];
+  const [qty, setQty] = React.useState(recipe?.servings || 3);
+  const [unit, setUnit] = React.useState(unitOptions[0]);
+  const [adults, setAdults] = React.useState(2);
+  const [children, setChildren] = React.useState(1);
+  const [guests, setGuests] = React.useState(0);
+  const [leftovers, setLeftovers] = React.useState(0);
+
+  const inputStyle = {width:"100%",padding:"10px 12px",borderRadius:10,border:"1px solid rgba(255,255,255,0.1)",background:"rgba(255,255,255,0.05)",color:"#EEE4F8",fontSize:14,fontFamily:"'Outfit',sans-serif",boxSizing:"border-box"};
+  const labelStyle = {fontSize:12,fontWeight:700,color:"rgba(238,228,248,0.5)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4,display:"block"};
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <div style={{display:"flex",gap:10}}>
+        <div style={{flex:1}}>
+          <label style={labelStyle}>Quantity Made</label>
+          <input type="number" style={inputStyle} value={qty} min={1} onChange={e=>setQty(Number(e.target.value))}/>
+        </div>
+        <div style={{flex:1}}>
+          <label style={labelStyle}>Unit</label>
+          <select style={inputStyle} value={unit} onChange={e=>setUnit(e.target.value)}>
+            {unitOptions.map(u=><option key={u}>{u}</option>)}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style={labelStyle}>People Served</label>
+        <div style={{display:"flex",gap:8}}>
+          <div style={{flex:1,textAlign:"center"}}>
+            <div style={{fontSize:11,color:T.muted,marginBottom:4}}>Adults</div>
+            <input type="number" style={{...inputStyle,textAlign:"center"}} value={adults} min={0} onChange={e=>setAdults(Number(e.target.value))}/>
+          </div>
+          <div style={{flex:1,textAlign:"center"}}>
+            <div style={{fontSize:11,color:T.muted,marginBottom:4}}>Children</div>
+            <input type="number" style={{...inputStyle,textAlign:"center"}} value={children} min={0} onChange={e=>setChildren(Number(e.target.value))}/>
+          </div>
+          <div style={{flex:1,textAlign:"center"}}>
+            <div style={{fontSize:11,color:T.muted,marginBottom:4}}>Guests</div>
+            <input type="number" style={{...inputStyle,textAlign:"center"}} value={guests} min={0} onChange={e=>setGuests(Number(e.target.value))}/>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label style={labelStyle}>Leftovers (optional)</label>
+        <input type="number" style={inputStyle} value={leftovers} min={0} placeholder="0" onChange={e=>setLeftovers(Number(e.target.value))}/>
+      </div>
+      <div style={{padding:"10px 12px",background:"rgba(52,211,153,0.08)",borderRadius:10,border:"1px solid rgba(52,211,153,0.15)"}}>
+        <div style={{fontSize:12,color:"#34D399",fontWeight:700,marginBottom:4}}>📦 Pantry will auto-deduct</div>
+        <div style={{fontSize:11.5,color:"rgba(238,228,248,0.5)"}}>Based on {qty} {unit} × per-serving ingredient ratios</div>
+      </div>
+      <button onClick={()=>onDone({quantityMade:qty,unitLabel:unit,adults,children,guests,leftovers})}
+        style={{padding:"12px",background:"linear-gradient(135deg,#8B7CF8,#A78BFA)",border:"none",borderRadius:12,color:"white",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+        ✅ Confirm & Log Meal
+      </button>
+    </div>
+  );
+};
+
+// ─── WHAT CAN I COOK ──────────────────────────────────────────────────────────
+const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
+  const T = THEME;
+  const [filter, setFilter] = React.useState("all");
+  const [cookLogs, setCookLogs] = React.useState([]);
+
+  React.useEffect(() => {
+    const load = async () => {
+      const start = new Date(); start.setDate(start.getDate()-30);
+      const { data } = await supabase.from("cook_logs").select("recipe_name,cooked_at").eq("family_id", familyId).gte("cooked_at", start.toISOString()).order("cooked_at", {ascending:false});
+      setCookLogs(data||[]);
+    };
+    load();
+  }, [familyId]);
+
+  const cookCount = React.useMemo(() => {
+    const map = {};
+    cookLogs.forEach(l => { map[l.recipe_name] = (map[l.recipe_name]||0)+1; });
+    return map;
+  }, [cookLogs]);
+
+  const canCook = React.useMemo(() => {
+    return recipes.map(recipe => {
+      // We don't have ingredients loaded here, so score by pantry name match
+      return recipe;
+    });
+  }, [recipes, pantry]);
+
+  const mealTypes = ["all","breakfast","lunch","dinner","snack","dessert"];
+  const filtered = filter==="all" ? recipes : recipes.filter(r=>r.meal_type===filter);
+
+  // Sort: most cooked first
+  const sorted = [...filtered].sort((a,b)=>(cookCount[b.name]||0)-(cookCount[a.name]||0));
+
+  return (
+    <div>
+      {cookLogs.length > 0 && (
+        <div className="card" style={{padding:"14px 16px",marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:800,marginBottom:10,color:T.accent}}>🔥 Most Cooked This Month</div>
+          {Object.entries(cookCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,count])=>(
+            <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+              <div style={{fontSize:13,fontWeight:500}}>{name}</div>
+              <div style={{fontSize:12,color:T.accent,fontWeight:700,background:T.accentSoft,padding:"2px 8px",borderRadius:20}}>{count}x</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="scroll-x" style={{marginBottom:12,gap:6,display:"flex"}}>
+        {mealTypes.map(m=>(
+          <div key={m} className={`chip ${filter===m?"on":""}`} onClick={()=>setFilter(m)} style={{textTransform:"capitalize"}}>{m}</div>
+        ))}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {sorted.map(r=>(
+          <div key={r.id} onClick={()=>onSelectRecipe(r)}
+            className="card card-tap" style={{padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <div style={{fontSize:14,fontWeight:600}}>{r.name}</div>
+              <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>⏱ {r.prep_time_mins}min · 👥 {r.servings} · {r.meal_type}</div>
+            </div>
+            {cookCount[r.name] && <div style={{fontSize:11,color:T.accent,fontWeight:700,background:T.accentSoft,padding:"3px 8px",borderRadius:20,flexShrink:0}}>{cookCount[r.name]}x</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ─── KITCHEN SCREEN ───────────────────────────────────────────────────────────
 const KitchenScreen = ({ familyId }) => {
   const [tab, setTab] = useState("today");
@@ -2807,6 +2939,7 @@ const KitchenScreen = ({ familyId }) => {
   const [editShopItem, setEditShopItem] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [showAlexaCommands, setShowAlexaCommands] = useState(false);
+  const [cookLogModal, setCookLogModal] = useState(null); // {meal, recipe}
   const [recipeIngredients, setRecipeIngredients] = useState([]);
   const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
@@ -2913,6 +3046,7 @@ const KitchenScreen = ({ familyId }) => {
           {id:"today", label:"📅 Today"},
           {id:"week",  label:"🗓 Week"},
           {id:"recipes",label:"🥘 Recipes"},
+          {id:"suggest",label:"💡 Can Cook"},
           {id:"pantry", label:"🧺 Pantry"},
           {id:"shop",   label:"🛒 Shop"},
         ].map(t => (
@@ -2940,9 +3074,9 @@ const KitchenScreen = ({ familyId }) => {
                     </div>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       {meal && !meal.cooked && (
-                        <button onClick={()=>handleMarkCooked(meal)} disabled={cooking===meal.id}
+                        <button onClick={()=>setCookLogModal({meal, recipe: recipes.find(r=>r.id===meal.recipe_id)})} disabled={cooking===meal.id}
                           style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(52,211,153,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "✅ Cooked"}
+                          {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "🍽 Log Meal"}
                         </button>
                       )}
                       {meal?.cooked && <span style={{fontSize:12,color:T.green,fontWeight:700}}>✓ Done</span>}
@@ -3032,6 +3166,19 @@ const KitchenScreen = ({ familyId }) => {
         )}
 
         {/* PANTRY */}
+        {/* CAN COOK */}
+        {tab==="suggest" && (
+          <WhatCanICook
+            recipes={recipes}
+            pantry={pantry}
+            familyId={familyId}
+            onSelectRecipe={(r) => {
+              setSelectedRecipe(r);
+              setTab("recipes");
+              supabase.from("recipe_ingredients").select("*").eq("recipe_id", r.id).then(({data}) => setRecipeIngredients(data||[]));
+            }}
+          />
+        )}
         {tab==="pantry" && (
           <>
             <button onClick={()=>setShowAddPantry(true)} className="btn-primary" style={{marginBottom:14,height:44,fontSize:14}}>
@@ -3261,6 +3408,24 @@ const KitchenScreen = ({ familyId }) => {
             <button className="btn-primary" onClick={savePantryItem}>Save Item</button>
           </div>
         </Modal>
+      )}
+
+      {/* COOK LOG MODAL */}
+      {cookLogModal && (
+        <div className="modal-overlay" onClick={()=>setCookLogModal(null)}>
+          <div className="modal-box" onClick={e=>e.stopPropagation()} style={{maxWidth:380}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+              <div>
+                <div style={{fontSize:17,fontWeight:800}}>🍽 Log Meal</div>
+                <div style={{fontSize:13,color:T.muted,marginTop:2}}>{cookLogModal.recipe?.name || "Unknown Recipe"}</div>
+              </div>
+              <div onClick={()=>setCookLogModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <I n="x" s={15} c={T.muted}/>
+              </div>
+            </div>
+            <CookLogForm meal={cookLogModal.meal} recipe={cookLogModal.recipe} familyId={familyId} recipes={recipes} pantry={pantry} onDone={async (logData) => { setCooking(cookLogModal.meal.id); setCookLogModal(null); try { const ratio = logData.quantityMade / (cookLogModal.recipe?.servings || 3); const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", cookLogModal.meal.recipe_id); const deducted = []; const lowStockItems = []; for (const ing of (ingredients || [])) { const needed = Number(ing.quantity) * ratio; const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase()); if (pantryItem) { const newQty = Math.max(0, Number(pantryItem.quantity) - needed); await supabase.from("pantry").update({ quantity: newQty, updated_at: new Date().toISOString() }).eq("id", pantryItem.id); deducted.push({ name: ing.pantry_item_name, used: needed, unit: ing.unit, remaining: newQty }); if (newQty <= Number(pantryItem.par_level)) { lowStockItems.push({ name: pantryItem.name, qty: newQty, unit: pantryItem.unit, category: pantryItem.category }); } } } const { data: cookLog } = await supabase.from("cook_logs").insert([{ family_id: familyId, recipe_id: cookLogModal.meal.recipe_id, recipe_name: cookLogModal.recipe?.name || "Unknown", quantity_made: logData.quantityMade, unit_label: logData.unitLabel, people_served_adults: logData.adults, people_served_children: logData.children, people_served_guests: logData.guests, leftovers: logData.leftovers, cooked_at: new Date().toISOString() }]).select().single(); for (const d of deducted) { await supabase.from("pantry_transactions").insert([{ family_id: familyId, pantry_item_name: d.name, quantity_used: d.used, unit: d.unit, recipe_name: cookLogModal.recipe?.name || "Unknown", cook_log_id: cookLog?.id || null, transaction_date: new Date().toISOString().split("T")[0] }]); } await supabase.from("meal_plan").update({ cooked: true, cooked_at: new Date().toISOString() }).eq("id", cookLogModal.meal.id); for (const item of lowStockItems) { const { data: ex } = await supabase.from("shopping_list").select("id").eq("family_id", familyId).eq("item_name", item.name).eq("purchased", false); if (!ex?.length) { await supabase.from("shopping_list").insert([{ family_id: familyId, item_name: item.name, quantity_needed: item.qty <= 0 ? 1 : item.qty, unit: item.unit, category: item.category, purchased: false }]); } notifyPantryLow(familyId, { name: item.name, quantity: item.qty, unit: item.unit }); } await refreshPantry(); await refreshMeal(); showToast({ title: "🍽 Meal Logged!", body: logData.quantityMade + " " + logData.unitLabel + " cooked. " + deducted.length + " ingredients deducted.", icon: "🍽", color: "#34D399" }); } catch(e) { console.error(e); } setCooking(null); }} onClose={()=>setCookLogModal(null)}/>
+          </div>
+        </div>
       )}
     </div>
   );
