@@ -1558,9 +1558,10 @@ const AIScreen = ({ familyId }) => {
   const { rows: pantry } = useTable("pantry", familyId);
   const { rows: goals } = useTable("goals", familyId);
   const { rows: bills } = useTable("bills", familyId);
-  const [msgs, setMsgs] = useState([{ role:"assistant", text:"Namaste! 🙏 I'm your Family OS AI.\n\nAsk me about spending, tasks, grocery, pantry, bills or goals!" }]);
+  const [msgs, setMsgs] = useState([{ role:"assistant", text:"Namaste! 🙏 I'm your Family OS AI.\n\nAsk me about spending, tasks, grocery, pantry, bills or goals!\n\n📄 New: Upload a grocery bill to auto-stock your pantry!" }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showBillImporter, setShowBillImporter] = useState(false);
   const bottomRef = useRef(null);
   const suggestions = ["Summarise spending","Pending tasks?","Grocery restock?","Goals progress?","Bills due?","Pantry status?"];
 
@@ -1624,6 +1625,17 @@ const AIScreen = ({ familyId }) => {
           <div key={s} className="chip" onClick={()=>send(s)} style={{fontSize:12}}>{s}</div>
         ))}
       </div>
+      <div style={{padding:"8px 20px 0"}}>
+        <div onClick={()=>setShowBillImporter(true)}
+          style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",background:"#FFFFFF",border:`0.5px solid ${T.border}`,borderRadius:14,cursor:"pointer",boxShadow:"0 1px 4px rgba(60,50,40,0.06)"}}>
+          <span style={{fontSize:22}}>📄</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,color:T.text}}>Import Grocery Bill</div>
+            <div style={{fontSize:11,color:T.muted}}>Upload bill → AI extracts items → Auto-stock pantry</div>
+          </div>
+          <span style={{fontSize:12,color:T.accent,fontWeight:700}}>→</span>
+        </div>
+      </div>
       <div style={{flex:1,overflowY:"auto",padding:"14px 20px",display:"flex",flexDirection:"column",gap:12,minHeight:0}}>
         {msgs.map((m,i)=>(
           <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
@@ -1647,6 +1659,29 @@ const AIScreen = ({ familyId }) => {
           <I n="send" s={17} c="white"/>
         </div>
       </div>
+
+      {showBillImporter && (
+        <div className="modal-overlay" onClick={()=>setShowBillImporter(false)}>
+          <div className="modal-box" onClick={e=>e.stopPropagation()}>
+            <div className="modal-handle"/>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+              <div>
+                <div style={{fontSize:17,fontWeight:800,color:T.text}}>📄 Import Grocery Bill</div>
+                <div style={{fontSize:12,color:T.muted,marginTop:2}}>AI will extract and stock your pantry</div>
+              </div>
+              <div onClick={()=>setShowBillImporter(false)} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <I n="x" s={15} c={T.muted}/>
+              </div>
+            </div>
+            <GroceryBillImporter
+              familyId={familyId}
+              pantry={pantry}
+              onDone={()=>{ setShowBillImporter(false); setMsgs(m=>[...m,{role:"assistant",text:"✅ Pantry updated from your grocery bill! Stock levels have been refreshed."}]); }}
+              onClose={()=>setShowBillImporter(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
