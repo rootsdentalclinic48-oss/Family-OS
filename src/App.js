@@ -3497,6 +3497,8 @@ const KitchenScreen = ({ familyId }) => {
   const [showAddPantry, setShowAddPantry] = useState(false);
   const [restocking, setRestocking] = useState(false);
   const [pantrySearch, setPantrySearch] = useState("");
+  const [pantryCatFilter, setPantryCatFilter] = useState("All");
+  const [pantryStockFilter, setPantryStockFilter] = useState("all");
   const [editPantryItem, setEditPantryItem] = useState(null);
   const [editShopItem, setEditShopItem] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -3820,19 +3822,82 @@ const KitchenScreen = ({ familyId }) => {
             <div style={{display:"flex",gap:8,marginBottom:12}}>
               <button onClick={()=>setShowAddPantry(true)} className="btn-primary" style={{flex:1,height:44,fontSize:14}}>+ Add Item</button>
             </div>
-            <div style={{position:"relative",marginBottom:12}}>
-              <input className="input" placeholder="🔍 Search pantry..." value={pantrySearch} onChange={e=>setPantrySearch(e.target.value)} style={{paddingLeft:14}}/>
+
+            {/* Search */}
+            <div style={{position:"relative",marginBottom:10}}>
+              <input className="input" placeholder="🔍 Search pantry... (Rice, Milk, Paneer)" value={pantrySearch} onChange={e=>setPantrySearch(e.target.value)} style={{paddingLeft:14}}/>
               {pantrySearch && <span onClick={()=>setPantrySearch("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:13,color:T.muted}}>✕</span>}
             </div>
+
+            {/* Stock filter buttons */}
+            {(()=>{
+              const outCount = pantry.filter(p=>Number(p.quantity)<=0).length;
+              const lowCount = pantry.filter(p=>Number(p.quantity)>0&&Number(p.quantity)<=Number(p.par_level)).length;
+              const expCount = pantry.filter(p=>{ if(!p.expiry_date) return false; return Math.ceil((new Date(p.expiry_date)-new Date())/86400000)<=7; }).length;
+              return (
+                <div className="scroll-x" style={{marginBottom:10,gap:6}}>
+                  {[
+                    {id:"all",   label:"All",            count:pantry.length},
+                    {id:"low",   label:"⚠️ Low Stock",   count:lowCount},
+                    {id:"out",   label:"🔴 Out of Stock", count:outCount},
+                    {id:"expiring",label:"⏰ Expiring",  count:expCount},
+                  ].map(f=>(
+                    <div key={f.id} onClick={()=>setPantryStockFilter(f.id)}
+                      style={{display:"inline-flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:20,border:`1px solid ${pantryStockFilter===f.id?T.accent:T.border}`,background:pantryStockFilter===f.id?T.accentSoft:"transparent",color:pantryStockFilter===f.id?T.accent:T.muted,fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+                      {f.label}
+                      <span style={{background:pantryStockFilter===f.id?T.accent:"rgba(255,255,255,0.1)",color:pantryStockFilter===f.id?"#fff":T.muted,borderRadius:20,padding:"0 6px",fontSize:10,fontWeight:700}}>{f.count}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Category filter chips */}
+            <div className="scroll-x" style={{marginBottom:12,gap:6}}>
+              {["All","Grains","Pulses","Dairy","Vegetables","Fruits","Oils","Spices","Beverages","Snacks","Frozen","Child","Household","Personal","Other"].map(cat=>(
+                <div key={cat} onClick={()=>setPantryCatFilter(cat)}
+                  style={{display:"inline-flex",alignItems:"center",gap:4,padding:"5px 12px",borderRadius:20,border:`1px solid ${pantryCatFilter===cat?T.accent:T.border}`,background:pantryCatFilter===cat?T.accent:"transparent",color:pantryCatFilter===cat?"#fff":T.muted,fontSize:12,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
+                  {{"All":"📦","Grains":"🌾","Pulses":"🫘","Dairy":"🥛","Vegetables":"🥦","Fruits":"🍎","Oils":"🫙","Spices":"🌶️","Beverages":"☕","Snacks":"🍞","Frozen":"🧊","Child":"👶","Household":"🧹","Personal":"🧴","Other":"🗂️"}[cat]} {cat}
+                </div>
+              ))}
+            </div>
+
+            {/* Low stock alert */}
+            {lowStock.length > 0 && pantryStockFilter==="all" && pantryCatFilter==="All" && !pantrySearch && (
               <div style={{padding:"10px 14px",background:T.amberSoft,border:"1px solid rgba(251,191,36,0.22)",borderRadius:12,marginBottom:12}}>
                 <div style={{fontSize:13,fontWeight:700,color:T.amber}}>🛒 {lowStock.length} item{lowStock.length>1?"s":""} running low</div>
-                <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>{lowStock.map(i=>i.name).join(", ")}</div>
+                <div style={{fontSize:11.5,color:T.muted,marginTop:2,lineHeight:1.5}}>{lowStock.slice(0,8).map(i=>i.name).join(", ")}{lowStock.length>8?` +${lowStock.length-8} more`:""}</div>
               </div>
             )}
+
+            {/* Results count */}
+            {(()=>{
+              const filtered = pantry.filter(p=>{
+                const matchSearch = !pantrySearch || p.name.toLowerCase().includes(pantrySearch.toLowerCase()) || (p.category||"").toLowerCase().includes(pantrySearch.toLowerCase());
+                const matchCat = pantryCatFilter==="All" || (p.category||"").toLowerCase()===pantryCatFilter.toLowerCase();
+                const matchStock = pantryStockFilter==="all" ? true
+                  : pantryStockFilter==="low"  ? (Number(p.quantity)>0 && Number(p.quantity)<=Number(p.par_level))
+                  : pantryStockFilter==="out"  ? Number(p.quantity)<=0
+                  : pantryStockFilter==="expiring" ? (p.expiry_date && Math.ceil((new Date(p.expiry_date)-new Date())/86400000)<=7)
+                  : true;
+                return matchSearch && matchCat && matchStock;
+              });
+              return <div style={{fontSize:11,color:T.muted,fontWeight:600,marginBottom:8}}>Showing {filtered.length} of {pantry.length} items {(pantrySearch||pantryCatFilter!=="All"||pantryStockFilter!=="all") && <span onClick={()=>{setPantrySearch("");setPantryCatFilter("All");setPantryStockFilter("all");}} style={{marginLeft:6,color:T.red,cursor:"pointer",fontWeight:700}}>✕ Clear</span>}</div>;
+            })()}
+
             {pantry.length === 0
               ? <div className="empty"><div className="empty-icon">🧺</div><div className="empty-text">Pantry is empty.<br/>Add items to start tracking.</div></div>
               : <div className="card" style={{padding:"2px 14px"}}>
-                  {(pantrySearch ? pantry.filter(p=>p.name.toLowerCase().includes(pantrySearch.toLowerCase())||p.category.toLowerCase().includes(pantrySearch.toLowerCase())) : pantry).map(item => {
+                  {pantry.filter(p=>{
+                    const matchSearch = !pantrySearch || p.name.toLowerCase().includes(pantrySearch.toLowerCase()) || (p.category||"").toLowerCase().includes(pantrySearch.toLowerCase());
+                    const matchCat = pantryCatFilter==="All" || (p.category||"").toLowerCase()===pantryCatFilter.toLowerCase();
+                    const matchStock = pantryStockFilter==="all" ? true
+                      : pantryStockFilter==="low"  ? (Number(p.quantity)>0 && Number(p.quantity)<=Number(p.par_level))
+                      : pantryStockFilter==="out"  ? Number(p.quantity)<=0
+                      : pantryStockFilter==="expiring" ? (p.expiry_date && Math.ceil((new Date(p.expiry_date)-new Date())/86400000)<=7)
+                      : true;
+                    return matchSearch && matchCat && matchStock;
+                  }).map(item => {
                     const isLow = Number(item.quantity) <= Number(item.par_level);
                     const pct_ = item.par_level > 0 ? Math.min(100, Math.round((item.quantity / (item.par_level * 3)) * 100)) : 100;
                     return (
