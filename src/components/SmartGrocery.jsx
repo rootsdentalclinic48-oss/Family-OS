@@ -166,15 +166,15 @@ export default function SmartGrocery({ familyId }) {
   const lowStockItems = items.filter(i => i.stock_pct < (i.low_threshold || 25));
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem', color: 'rgba(255,255,255,0.7)', fontSize: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem', color: '#444444', fontSize: 14 }}>
       Loading Smart Grocery...
     </div>
   );
 
   return (
-    <div style={{ fontFamily: "'Outfit', sans-serif", color: '#ffffff', paddingBottom: '2rem' }}>
+    <div style={{ fontFamily: "'Outfit', sans-serif", color: '#111111', paddingBottom: '2rem' }}>
       {toast && (
-        <div style={{ position: 'fixed', bottom: 90, right: 16, background: '#13131F', border: '1px solid rgba(255,255,255,0.11)', borderRadius: 12, padding: '10px 16px', fontSize: 13, color: '#ffffff', zIndex: 999 }}>
+        <div style={{ position: 'fixed', bottom: 90, right: 16, background: '#13131F', border: '1px solid rgba(255,255,255,0.11)', borderRadius: 12, padding: '10px 16px', fontSize: 13, color: '#111111', zIndex: 999 }}>
           {toast}
         </div>
       )}
@@ -183,7 +183,7 @@ export default function SmartGrocery({ familyId }) {
       <div style={{ padding: '52px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-.4px' }}>🛒 Smart Grocery</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: '#444444', marginTop: 2 }}>
             {items.length} items · <span style={{ color: lowStockItems.length > 0 ? T.amber : T.green }}>{lowStockItems.length} low stock</span>
           </div>
         </div>
@@ -222,15 +222,15 @@ export default function SmartGrocery({ familyId }) {
             {items.map(item => (
               <div key={item.id} style={S.itemRow}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#ffffff' }}>{item.name}
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#111111' }}>{item.name}
                     {item.auto_added && <span style={{ marginLeft: 6, fontSize: 10, padding: '1px 6px', borderRadius: 20, background: T.amberSoft, color: T.amber, fontWeight: 700 }}>auto</span>}
                   </div>
-                  {item.brand && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>{item.brand}</div>}
+                  {item.brand && <div style={{ fontSize: 12, color: '#444444', marginTop: 2 }}>{item.brand}</div>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                   <StockBar pct={item.stock_pct || 100} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{item.stock_pct || 100}%</span>
+                    <span style={{ fontSize: 11, color: '#444444' }}>{item.stock_pct || 100}%</span>
                     <input type="range" min={0} max={100} step={5} value={item.stock_pct || 100} style={{ width: 70, accentColor: '#8B7CF8', cursor: 'pointer' }} onChange={e => updateStock(item.id, parseInt(e.target.value))} />
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export default function SmartGrocery({ familyId }) {
                     ].map(s => (
                       <div key={s.l} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '10px', textAlign: 'center' }}>
                         <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'capitalize' }}>{s.v}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>{s.l}</div>
+                        <div style={{ fontSize: 11, color: '#444444', marginTop: 3 }}>{s.l}</div>
                       </div>
                     ))}
                   </div>
@@ -274,11 +274,11 @@ export default function SmartGrocery({ familyId }) {
                       <span style={{ marginLeft: 'auto', fontWeight: 700, fontSize: 15 }}>{fmt(r.total)}</span>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-                      <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 600 }}>{fmt(r.totalBasket)}</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>basket</div></div>
-                      <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 600 }}>{r.deliveryFee > 0 ? fmt(r.deliveryFee) : 'Free'}</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>delivery</div></div>
+                      <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 600 }}>{fmt(r.totalBasket)}</div><div style={{ fontSize: 11, color: '#444444' }}>basket</div></div>
+                      <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 600 }}>{r.deliveryFee > 0 ? fmt(r.deliveryFee) : 'Free'}</div><div style={{ fontSize: 11, color: '#444444' }}>delivery</div></div>
                     </div>
                     <a href={PLATFORM_META[r.slug]?.link + encodeURIComponent(compareResults.itemNames.join(' '))} target="_blank" rel="noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 10, border: '1px solid ' + T.border, background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 13 }}>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 10, border: '1px solid ' + T.border, background: 'rgba(255,255,255,0.03)', color: '#444444', textDecoration: 'none', fontSize: 13 }}>
                       Open {PLATFORM_META[r.slug]?.label} ↗
                     </a>
                   </div>
@@ -286,12 +286,12 @@ export default function SmartGrocery({ familyId }) {
                   <div style={S.empty}>No price data yet. Log prices in the Price History tab first.</div>
                 )}
                 <div style={{ marginTop: 14 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Open & shop directly</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#666666', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Open & shop directly</div>
                   {compareResults.deepLinks.map(dl => (
                     <a key={dl.slug} href={dl.url} target="_blank" rel="noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid ' + T.border, background: 'rgba(255,255,255,0.03)', textDecoration: 'none', color: '#ffffff', marginBottom: 8, fontSize: 13 }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 10, border: '1px solid ' + T.border, background: 'rgba(255,255,255,0.03)', textDecoration: 'none', color: '#111111', marginBottom: 8, fontSize: 13 }}>
                       <PlatformBadge slug={dl.slug} />
-                      <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>Open ↗</span>
+                      <span style={{ marginLeft: 'auto', color: '#444444', fontSize: 12 }}>Open ↗</span>
                     </a>
                   ))}
                 </div>
@@ -304,7 +304,7 @@ export default function SmartGrocery({ familyId }) {
         {tab === 2 && (
           <>
             <div style={{ ...S.card, marginBottom: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Log a price</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#666666', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Log a price</div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <select style={S.select} value={priceForm.item_id} onChange={e => setPriceForm(p => ({ ...p, item_id: e.target.value }))}>
                   <option value="">Select item</option>
@@ -334,7 +334,7 @@ export default function SmartGrocery({ familyId }) {
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', borderBottom: '1px solid ' + T.border, fontSize: 13 }}>
                   <div style={{ flex: 1 }}>
                     <span style={{ fontWeight: 600 }}>{h.item_name}</span>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginLeft: 8 }}>{new Date(h.logged_at).toLocaleDateString('en-IN')}</span>
+                    <span style={{ fontSize: 11, color: '#666666', marginLeft: 8 }}>{new Date(h.logged_at).toLocaleDateString('en-IN')}</span>
                   </div>
                   <PlatformBadge slug={h.platform} />
                   <span style={{ fontWeight: 700, marginLeft: 10 }}>{fmt(h.price)}</span>
@@ -348,8 +348,8 @@ export default function SmartGrocery({ familyId }) {
         {tab === 3 && (
           <>
             <div style={S.card}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Amazon PA API</div>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>Real-time prices for packaged goods. Register at affiliate-program.amazon.in</p>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#666666', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Amazon PA API</div>
+              <p style={{ fontSize: 12, color: '#444444', marginBottom: 10 }}>Real-time prices for packaged goods. Register at affiliate-program.amazon.in</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <input style={S.input} placeholder="Access Key" value={amazonConfig.access_key} onChange={e => setAmazonConfig(c => ({ ...c, access_key: e.target.value }))} />
                 <input style={S.input} type="password" placeholder="Secret Key" value={amazonConfig.secret_key} onChange={e => setAmazonConfig(c => ({ ...c, secret_key: e.target.value }))} />
@@ -359,8 +359,8 @@ export default function SmartGrocery({ familyId }) {
               {apiConfig.amazon?.is_active && <div style={{ fontSize: 12, color: T.green, marginTop: 8, fontWeight: 600 }}>✓ Amazon API active</div>}
             </div>
             <div style={{ ...S.card, marginTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Flipkart Affiliate API</div>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginBottom: 10 }}>Grocery catalogue + pricing. Register at affiliate.flipkart.com</p>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#666666', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Flipkart Affiliate API</div>
+              <p style={{ fontSize: 12, color: '#444444', marginBottom: 10 }}>Grocery catalogue + pricing. Register at affiliate.flipkart.com</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <input style={S.input} placeholder="App ID" value={flipkartConfig.app_id} onChange={e => setFlipkartConfig(c => ({ ...c, app_id: e.target.value }))} />
                 <input style={S.input} type="password" placeholder="App Token" value={flipkartConfig.app_token} onChange={e => setFlipkartConfig(c => ({ ...c, app_token: e.target.value }))} />
@@ -376,8 +376,8 @@ export default function SmartGrocery({ familyId }) {
 }
 
 const S = {
-  input: { background: 'rgba(255,255,255,0.058)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 12, padding: '8px 12px', color: '#ffffff', fontSize: 13, fontFamily: 'inherit', flex: 1, minWidth: 100 },
-  select: { background: 'rgba(255,255,255,0.058)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 12, padding: '8px 12px', color: '#ffffff', fontSize: 13, fontFamily: 'inherit' },
+  input: { background: 'rgba(255,255,255,0.058)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 12, padding: '8px 12px', color: '#111111', fontSize: 13, fontFamily: 'inherit', flex: 1, minWidth: 100 },
+  select: { background: 'rgba(255,255,255,0.058)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 12, padding: '8px 12px', color: '#111111', fontSize: 13, fontFamily: 'inherit' },
   btnPrimary: { padding: '8px 16px', borderRadius: 12, border: 'none', background: '#8B7CF8', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' },
   card: { background: 'rgba(255,255,255,0.042)', border: '1px solid rgba(255,255,255,0.075)', borderRadius: 16, padding: '14px 16px' },
   itemRow: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.075)', marginBottom: 8, background: 'rgba(255,255,255,0.06)' },
