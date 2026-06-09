@@ -3803,10 +3803,13 @@ const KitchenScreen = ({ familyId }) => {
         )}
         {tab==="pantry" && (
           <>
-            <button onClick={()=>setShowAddPantry(true)} className="btn-primary" style={{marginBottom:14,height:44,fontSize:14}}>
-              + Add Pantry Item
-            </button>
-            {lowStock.length > 0 && (
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <button onClick={()=>setShowAddPantry(true)} className="btn-primary" style={{flex:1,height:44,fontSize:14}}>+ Add Item</button>
+            </div>
+            <div style={{position:"relative",marginBottom:12}}>
+              <input className="input" placeholder="🔍 Search pantry..." value={pantrySearch} onChange={e=>setPantrySearch(e.target.value)} style={{paddingLeft:14}}/>
+              {pantrySearch && <span onClick={()=>setPantrySearch("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:13,color:T.muted}}>✕</span>}
+            </div>
               <div style={{padding:"10px 14px",background:T.amberSoft,border:"1px solid rgba(251,191,36,0.22)",borderRadius:12,marginBottom:12}}>
                 <div style={{fontSize:13,fontWeight:700,color:T.amber}}>🛒 {lowStock.length} item{lowStock.length>1?"s":""} running low</div>
                 <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>{lowStock.map(i=>i.name).join(", ")}</div>
@@ -3815,7 +3818,7 @@ const KitchenScreen = ({ familyId }) => {
             {pantry.length === 0
               ? <div className="empty"><div className="empty-icon">🧺</div><div className="empty-text">Pantry is empty.<br/>Add items to start tracking.</div></div>
               : <div className="card" style={{padding:"2px 14px"}}>
-                  {pantry.map(item => {
+                  {(pantrySearch ? pantry.filter(p=>p.name.toLowerCase().includes(pantrySearch.toLowerCase())||p.category.toLowerCase().includes(pantrySearch.toLowerCase())) : pantry).map(item => {
                     const isLow = Number(item.quantity) <= Number(item.par_level);
                     const pct_ = item.par_level > 0 ? Math.min(100, Math.round((item.quantity / (item.par_level * 3)) * 100)) : 100;
                     return (
