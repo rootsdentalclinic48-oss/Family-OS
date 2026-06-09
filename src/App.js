@@ -2859,6 +2859,111 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
   );
 };
 
+
+// ─── RECIPE SEARCH ────────────────────────────────────────────────────────────
+const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign, onViewRecipe }) => {
+  const [query, setQuery] = React.useState("");
+  const [filter, setFilter] = React.useState("all");
+  const [assignModal, setAssignModal] = React.useState(null); // recipe to assign
+
+  const mealTypes = ["all","breakfast","lunch","dinner","snack","dessert"];
+
+  const results = React.useMemo(() => {
+    let list = recipes;
+    if (filter !== "all") list = list.filter(r => r.meal_type === filter);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter(r =>
+        r.name.toLowerCase().includes(q) ||
+        (r.tags || []).some(t => t.toLowerCase().includes(q)) ||
+        r.meal_type.toLowerCase().includes(q)
+      );
+    }
+    return list.sort((a,b) => a.name.localeCompare(b.name));
+  }, [recipes, query, filter]);
+
+  const alreadyPlanned = (recipeId) => mealPlan.some(m => m.recipe_id === recipeId && m.plan_date === todayStr);
+
+  return (
+    <div>
+      <div style={{position:"relative",marginBottom:12}}>
+        <input
+          className="input"
+          placeholder="Search recipes... (e.g. paneer, dal, parantha)"
+          value={query}
+          onChange={e=>setQuery(e.target.value)}
+          autoFocus
+          style={{paddingLeft:36}}
+        />
+        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:15}}>🔍</span>
+        {query && (
+          <span onClick={()=>setQuery("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:13,color:T.muted}}>✕</span>
+        )}
+      </div>
+      <div className="scroll-x" style={{marginBottom:12,gap:6,display:"flex"}}>
+        {mealTypes.map(m=>(
+          <div key={m} className={`chip ${filter===m?"on":""}`} onClick={()=>setFilter(m)} style={{textTransform:"capitalize"}}>{m}</div>
+        ))}
+      </div>
+      <div style={{fontSize:12,color:T.muted,marginBottom:10}}>{results.length} recipe{results.length!==1?"s":""} found</div>
+      {results.length === 0
+        ? <div className="empty"><div className="empty-icon">🔍</div><div className="empty-text">No recipes found.<br/>Try a different search.</div></div>
+        : <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {results.map(r => (
+              <div key={r.id} className="card" style={{padding:"12px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                  <div style={{flex:1}} onClick={()=>onViewRecipe(r)}>
+                    <div style={{fontSize:14,fontWeight:700}}>{r.name}</div>
+                    <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>⏱ {r.prep_time_mins}min · 👥 {r.servings} · <span style={{textTransform:"capitalize"}}>{r.meal_type}</span></div>
+                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>
+                      {(r.tags||[]).map(tag=>(
+                        <span key={tag} style={{fontSize:10,background:T.accentSoft,color:T.accent,padding:"2px 7px",borderRadius:20,fontWeight:600}}>{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>onViewRecipe(r)}
+                    style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.text,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                    👁 View
+                  </button>
+                  {alreadyPlanned(r.id)
+                    ? <div style={{flex:1,padding:"8px",background:T.greenSoft,border:"1px solid rgba(52,211,153,0.3)",borderRadius:10,color:T.green,fontSize:12,fontWeight:600,textAlign:"center"}}>✓ In Today</div>
+                    : <button onClick={()=>setAssignModal(r)}
+                        style={{flex:1,padding:"8px",background:T.accentSoft,border:"1px solid rgba(139,124,248,0.3)",borderRadius:10,color:T.accent,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                        + Add to Today
+                      </button>
+                  }
+                </div>
+              </div>
+            ))}
+          </div>
+      }
+      {assignModal && (
+        <div className="modal-overlay" onClick={()=>setAssignModal(null)}>
+          <div className="modal-box" onClick={e=>e.stopPropagation()} style={{maxWidth:340}}>
+            <div style={{fontSize:16,fontWeight:800,marginBottom:4}}>Add to Today's Plan</div>
+            <div style={{fontSize:13,color:T.muted,marginBottom:16}}>{assignModal.name}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {["breakfast","lunch","dinner","snack"].map(mt=>{
+                const taken = mealPlan.find(m=>m.plan_date===todayStr && m.meal_type===mt);
+                return (
+                  <button key={mt} onClick={()=>{ onAssign(assignModal.id, todayStr, mt); setAssignModal(null); }}
+                    style={{padding:"12px 14px",background:taken?"rgba(255,255,255,0.03)":"rgba(139,124,248,0.1)",border:taken?"1px solid rgba(255,255,255,0.07)":"1px solid rgba(139,124,248,0.25)",borderRadius:12,color:taken?T.dim:T.accent,fontSize:14,fontWeight:600,cursor:taken?"default":"pointer",fontFamily:"'Outfit',sans-serif",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{textTransform:"capitalize"}}>🍽 {mt}</span>
+                    {taken && <span style={{fontSize:11,color:T.muted}}>{taken.recipe_name || "Planned"}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={()=>setAssignModal(null)} style={{marginTop:12,width:"100%",padding:"10px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── WHAT CAN I COOK ──────────────────────────────────────────────────────────
 const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
   const [filter, setFilter] = React.useState("all");
@@ -3044,6 +3149,7 @@ const KitchenScreen = ({ familyId }) => {
           {id:"today", label:"📅 Today"},
           {id:"week",  label:"🗓 Week"},
           {id:"recipes",label:"🥘 Recipes"},
+          {id:"search",label:"🔍 Search"},
           {id:"suggest",label:"💡 Can Cook"},
           {id:"pantry", label:"🧺 Pantry"},
           {id:"shop",   label:"🛒 Shop"},
