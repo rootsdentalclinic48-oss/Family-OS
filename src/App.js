@@ -99,7 +99,7 @@ const notifyIncomeAdded = (familyId, { amount, category, balance }) => {
     title: `${category === "Clinic Income" ? "🏥" : "👩"} ${category} Added`,
     body: `₹${Number(amount).toLocaleString("en-IN")} added. Balance: ₹${Number(balance).toLocaleString("en-IN")}`,
     icon: category === "Clinic Income" ? "🏥" : "👩",
-    color: "#34D399", type: "income",
+    color: "#6D9B6B", type: "income",
   };
   showToast(n); saveNotif(familyId, n);
   sendEmail("income", {
@@ -113,7 +113,7 @@ const notifyExpenseAdded = (familyId, { amount, category, balance, added_by }) =
   const n = {
     title: "💸 Expense Recorded",
     body: `₹${Math.abs(Number(amount)).toLocaleString("en-IN")} on ${category}. Balance: ₹${Number(balance).toLocaleString("en-IN")}`,
-    icon: "💸", color: "#F87171", type: "expense",
+    icon: "💸", color: "#C4603A", type: "expense",
   };
   showToast(n); saveNotif(familyId, n);
   sendEmail("expense", {
@@ -124,7 +124,7 @@ const notifyExpenseAdded = (familyId, { amount, category, balance, added_by }) =
   });
 };
 const notifyTaskAdded = (familyId, { title, assignee, priority, due_date }) => {
-  const n = { title: "✅ New Task Added", body: title, icon: "✅", color: "#34D399", type: "task" };
+  const n = { title: "✅ New Task Added", body: title, icon: "✅", color: "#6D9B6B", type: "task" };
   showToast(n); saveNotif(familyId, n);
   sendEmail("task", { title, assignee: assignee || "Unassigned", priority: priority || "medium", due_date });
 };
@@ -132,21 +132,21 @@ const notifyEventAdded = (familyId, { title, date, type }) => {
   const n = {
     title: "📅 Event Scheduled",
     body: `${title}${date ? " on " + date : ""}`,
-    icon: "📅", color: "#60A5FA", type: "event",
+    icon: "📅", color: "#5B8DB8", type: "event",
   };
   showToast(n); saveNotif(familyId, n);
   sendEmail("event", { title, event_date: date, type: type || "personal" });
 };
 const notifyGroceryAdded = (familyId, { name }) => {
-  const n = { title: "🛒 Shopping Item Added", body: `${name} added to shopping list.`, icon: "🛒", color: "#FBBF24", type: "grocery" };
+  const n = { title: "🛒 Shopping Item Added", body: `${name} added to shopping list.`, icon: "🛒", color: "#C4883A", type: "grocery" };
   showToast(n); saveNotif(familyId, n);
 };
 const notifyNoteAdded = (familyId) => {
-  const n = { title: "📝 Note Saved", body: "Note saved successfully.", icon: "📝", color: "#60A5FA", type: "note" };
+  const n = { title: "📝 Note Saved", body: "Note saved successfully.", icon: "📝", color: "#5B8DB8", type: "note" };
   showToast(n); saveNotif(familyId, n);
 };
 const notifyReminderAdded = (familyId, { content, due_date }) => {
-  const n = { title: "⏰ Reminder Set", body: content, icon: "⏰", color: "#F472B6", type: "reminder" };
+  const n = { title: "⏰ Reminder Set", body: content, icon: "⏰", color: "#C4728A", type: "reminder" };
   showToast(n); saveNotif(familyId, n);
   sendEmail("reminder", { content, due_date: due_date || "Today" });
 };
@@ -155,7 +155,7 @@ const notifyGoalAdded = (familyId, { title }) => {
   showToast(n); saveNotif(familyId, n);
 };
 const notifyPantryLow = (familyId, { name, quantity, unit }) => {
-  const n = { title: "📦 Pantry Low", body: `${name}: ${quantity} ${unit} remaining`, icon: "📦", color: "#FBBF24", type: "pantry" };
+  const n = { title: "📦 Pantry Low", body: `${name}: ${quantity} ${unit} remaining`, icon: "📦", color: "#C4883A", type: "pantry" };
   showToast(n); saveNotif(familyId, n);
   sendEmail("pantry_low", { name, quantity, unit });
 };
@@ -217,17 +217,17 @@ const NotificationsScreen = ({ familyId, onClose }) => {
           <div>
             <span style={{ fontSize: 18, fontWeight: 700 }}>Notifications</span>
             {unread.length > 0 && (
-              <span style={{ marginLeft: 8, background: "rgba(139,124,248,0.15)", color: "#8B7CF8", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 100 }}>
+              <span style={{ marginLeft: 8, background: "rgba(125,157,124,0.12)", color: "#7D9D7C", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 100 }}>
                 {unread.length} unread
               </span>
             )}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {unread.length > 0 && (
-              <span onClick={markAll} style={{ fontSize: 12, color: "#8B7CF8", fontWeight: 600, cursor: "pointer" }}>Mark all read</span>
+              <span onClick={markAll} style={{ fontSize: 12, color: "#7D9D7C", fontWeight: 600, cursor: "pointer" }}>Mark all read</span>
             )}
-            <div onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(238,236,248,0.42)" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <div onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(125,157,124,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9E9488" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </div>
           </div>
         </div>
@@ -237,14 +237,14 @@ const NotificationsScreen = ({ familyId, onClose }) => {
           <div className="card" style={{ padding: "0 0" }}>
             {notifs.map(n => (
               <div key={n.id} className={`notif-item ${!n.read ? "unread" : ""}`} onClick={() => !n.read && markRead(n.id)}>
-                <div style={{ width: 38, height: 38, borderRadius: 11, background: (n.color || "#8B7CF8") + "18", border: `1px solid ${n.color || "#8B7CF8"}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{n.icon || "🔔"}</div>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: (n.color || "#7D9D7C") + "18", border: `1px solid ${n.color || "#7D9D7C"}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{n.icon || "🔔"}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: n.read ? "rgba(238,236,248,0.6)" : "#EEECf8" }}>{n.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: n.read ? "rgba(238,236,248,0.6)" : "#2D2721" }}>{n.title}</div>
                   <div style={{ fontSize: 11.5, color: "rgba(238,236,248,0.4)", marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
                   <div style={{ fontSize: 10.5, color: "rgba(238,236,248,0.25)", marginTop: 3 }}>{timeAgo(n.created_at)}</div>
                 </div>
                 <div onClick={e => { e.stopPropagation(); removeNotif(n.id); }} style={{ opacity: 0.3, cursor: "pointer", padding: "4px", flexShrink: 0 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C4603A" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
                 </div>
               </div>
             ))}
@@ -273,7 +273,7 @@ const Styles = () => (
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation;}
-    body{font-family:'Outfit',sans-serif;background:${T.bg};color:${T.text};min-height:100vh;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:${T.bg};color:${T.text};min-height:100vh;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
     ::-webkit-scrollbar{display:none;}
     *{scrollbar-width:none;}
     .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};background-image:radial-gradient(ellipse 600px 400px at 20% -100px,rgba(139,124,248,0.08) 0%,transparent 60%),radial-gradient(ellipse 300px 300px at 85% 30%,rgba(96,165,250,0.04) 0%,transparent 55%);position:relative;}
@@ -282,25 +282,25 @@ const Styles = () => (
     .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;}
     .card-tap{cursor:pointer;}
     .card-tap:active{transform:scale(0.982);background:${T.cardHover};}
-    .btn{border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
-    .btn-primary{background:${T.accent};color:#fff;border-radius:14px;padding:0 22px;height:52px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .18s;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:52px;}
+    .btn{border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-primary{background:${T.accent};color:#fff;border-radius:14px;padding:0 22px;height:52px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:52px;}
     .btn-primary:active{transform:scale(0.97);opacity:0.9;}
     .btn-primary:disabled{opacity:0.45;cursor:not-allowed;}
-    .input{width:100%;background:rgba(255,255,255,0.058);border:1px solid ${T.border};border-radius:14px;padding:0 16px;height:52px;color:${T.text};font-family:'Outfit',sans-serif;font-size:16px;outline:none;transition:all .18s;-webkit-appearance:none;appearance:none;}
+    .input{width:100%;background:rgba(255,255,255,0.058);border:1px solid ${T.border};border-radius:14px;padding:0 16px;height:52px;color:${T.text};font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;outline:none;transition:all .18s;-webkit-appearance:none;appearance:none;}
     .input:focus{border-color:${T.accent};background:rgba(139,124,248,0.06);}
     .input::placeholder{color:${T.dim};}
     textarea.input{height:auto;padding:14px 16px;resize:none;line-height:1.5;}
     select.input{appearance:none;-webkit-appearance:none;} select.input option{background:#13131F;color:#EEECf8;}
     .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:8px 2px calc(8px + env(safe-area-inset-bottom, 0px));background:rgba(8,8,16,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid ${T.border};display:flex;justify-content:space-around;align-items:center;z-index:100;}
     .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 8px;border-radius:12px;transition:all .18s;flex:1;min-height:44px;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
-    .nav-btn.on{background:rgba(139,124,248,0.12);}
+    .nav-btn.on{background:rgba(125,157,124,0.12);}
     .nav-btn:active{transform:scale(0.88);}
     .nav-lbl{font-size:9px;font-weight:600;letter-spacing:.01em;margin-top:1px;}
     .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
     .modal{width:100%;max-width:430px;background:#0D0D1C;border:1px solid ${T.border};border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px calc(32px + env(safe-area-inset-bottom, 0px));animation:slideUp .3s cubic-bezier(.16,1,.3,1);max-height:92dvh;overflow-y:auto;}
     @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-    .modal-handle{width:40px;height:4px;background:rgba(255,255,255,0.14);border-radius:2px;margin:0 auto 18px;}
+    .modal-handle{width:40px;height:4px;background:#DDD9D2;border-radius:2px;margin:0 auto 18px;}
     .ph{padding:calc(52px + env(safe-area-inset-top, 0px)) 18px 0;}
     .pt{font-size:22px;font-weight:800;letter-spacing:-.3px;}
     .ps{font-size:12.5px;color:${T.muted};margin-top:3px;}
@@ -315,7 +315,7 @@ const Styles = () => (
     .list-row{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid ${T.border};cursor:pointer;transition:opacity .15s;min-height:56px;}
     .list-row:last-child{border-bottom:none;}
     .list-row:active{opacity:.6;}
-    .progress{height:5px;background:rgba(255,255,255,0.07);border-radius:100px;overflow:hidden;}
+    .progress{height:5px;background:rgba(125,157,124,0.08);border-radius:100px;overflow:hidden;}
     .progress-fill{height:100%;border-radius:100px;transition:width 1s cubic-bezier(.16,1,.3,1);}
     .tag{display:inline-flex;align-items:center;gap:3px;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600;}
     .mono{font-family:'JetBrains Mono',monospace;}
@@ -335,7 +335,7 @@ const Styles = () => (
     .fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
     .fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom, 0px));right:max(16px, calc(50vw - 199px));width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow},0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .fab:active{transform:scale(0.91);}
-    .fab.open{transform:rotate(45deg);background:linear-gradient(135deg,#F87171,#E55);}
+    .fab.open{transform:rotate(45deg);background:linear-gradient(135deg,#C4603A,#E55);}
     .fab-menu{position:fixed;bottom:calc(148px + env(safe-area-inset-bottom, 0px));right:max(12px, calc(50vw - 210px));z-index:149;display:flex;flex-direction:column;gap:10px;align-items:flex-end;animation:fabMenuIn .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fabMenuIn{from{opacity:0;transform:translateY(16px) scale(0.94);}to{opacity:1;transform:translateY(0) scale(1);}}
     .fab-item{display:flex;align-items:center;gap:10px;cursor:pointer;animation:fabItemIn .22s cubic-bezier(.16,1,.3,1) both;}
@@ -346,7 +346,7 @@ const Styles = () => (
     .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
     .type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
     .type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;cursor:pointer;transition:all .18s;border:1px solid transparent;min-height:68px;justify-content:center;-webkit-tap-highlight-color:transparent;}
-    .type-btn.active{border-color:rgba(139,124,248,0.35);background:rgba(139,124,248,0.1);}
+    .type-btn.active{border-color:rgba(139,124,248,0.35);background:rgba(125,157,124,0.1);}
     .type-btn:active{transform:scale(0.93);}
     .toast-container{position:fixed;top:calc(16px + env(safe-area-inset-top, 0px));left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;width:calc(100% - 28px);max-width:402px;pointer-events:none;}
     .toast{background:#13131F;border:1px solid rgba(255,255,255,0.11);border-radius:16px;padding:12px 14px;display:flex;gap:11px;align-items:flex-start;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.55),0 2px 8px rgba(0,0,0,0.3);animation:toastIn .3s cubic-bezier(.16,1,.3,1);}
@@ -356,14 +356,14 @@ const Styles = () => (
     .toast-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
     .toast-title{font-size:13px;font-weight:700;color:#EEECf8;line-height:1.3;}
     .toast-body{font-size:11.5px;color:rgba(238,236,248,0.5);margin-top:2px;line-height:1.4;}
-    .notif-badge{position:absolute;top:-5px;right:-5px;background:#F87171;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #080810;}
-    .notif-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.055);cursor:pointer;transition:background .15s;position:relative;min-height:60px;align-items:center;}
+    .notif-badge{position:absolute;top:-5px;right:-5px;background:#C4603A;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #080810;}
+    .notif-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #FFFFFF;cursor:pointer;transition:background .15s;position:relative;min-height:60px;align-items:center;}
     .notif-item:last-child{border-bottom:none;}
     .notif-item:active{background:rgba(255,255,255,0.03);}
-    .notif-item.unread::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#8B7CF8;}
+    .notif-item.unread::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#7D9D7C;}
     .person-sel{display:flex;gap:8px;}
     .person-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:13px;border:1px solid ${T.border};background:transparent;cursor:pointer;transition:all .18s;font-size:14px;font-weight:600;color:${T.muted};-webkit-tap-highlight-color:transparent;}
-    .person-btn.on{border-color:rgba(139,124,248,0.35);background:rgba(139,124,248,0.1);color:${T.accent};}
+    .person-btn.on{border-color:rgba(139,124,248,0.35);background:rgba(125,157,124,0.1);color:${T.accent};}
     .person-btn:active{transform:scale(0.96);}
     .priority-sel{display:flex;gap:8px;}
     .priority-btn{flex:1;height:44px;border-radius:12px;border:1px solid ${T.border};background:transparent;cursor:pointer;transition:all .18s;font-size:12px;font-weight:700;text-transform:capitalize;-webkit-tap-highlight-color:transparent;}
@@ -371,7 +371,7 @@ const Styles = () => (
     .sec-header{display:flex;justify-content:space-between;align-items:center;padding:0 18px;margin-bottom:10px;}
     .icon-btn{width:40px;height:40px;border-radius:12px;background:${T.card};border:1px solid ${T.border};display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;}
     .icon-btn:active{transform:scale(0.9);}
-    .balance-card{margin:12px 18px 0;background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(139,124,248,0.08));border:1px solid rgba(52,211,153,0.2);border-radius:20px;padding:18px;cursor:pointer;transition:all .18s;}
+    .balance-card{margin:12px 18px 0;background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(139,124,248,0.08));border:1px solid rgba(109,155,107,0.2);border-radius:20px;padding:18px;cursor:pointer;transition:all .18s;}
     .balance-card:active{transform:scale(0.985);}
     .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 18px 0;}
     .quick-action{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
@@ -492,7 +492,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
         <div className="modal-handle"/>
         <div className="row" style={{marginBottom:14}}>
           <span style={{fontSize:19,fontWeight:700}}>Quick Add</span>
-          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
             <I n="x" s={15} c={T.muted}/>
           </div>
         </div>
@@ -514,7 +514,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
             </select>
             <div style={{display:"flex",gap:8}}>
               {["Mayank","Simmi"].map(m=>(
-                <div key={m} onClick={()=>set("added_by",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.added_by===m?"rgba(139,124,248,0.3)":T.border}`,background:f.added_by===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.added_by===m?T.accent:T.muted,transition:"all .2s"}}>
+                <div key={m} onClick={()=>set("added_by",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.added_by===m?"rgba(125,157,124,0.3)":T.border}`,background:f.added_by===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.added_by===m?T.accent:T.muted,transition:"all .2s"}}>
                   {m==="Mayank"?"👨‍⚕️":"👩"} {m}
                 </div>
               ))}
@@ -524,7 +524,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
             <input className="input" placeholder="What needs to be done?" value={f.title} onChange={e=>set("title",e.target.value)} autoFocus/>
             <div style={{display:"flex",gap:8}}>
               {["Mayank","Simmi"].map(m=>(
-                <div key={m} onClick={()=>set("assignee",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.assignee===m?"rgba(139,124,248,0.3)":T.border}`,background:f.assignee===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.assignee===m?T.accent:T.muted,transition:"all .2s"}}>
+                <div key={m} onClick={()=>set("assignee",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.assignee===m?"rgba(125,157,124,0.3)":T.border}`,background:f.assignee===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.assignee===m?T.accent:T.muted,transition:"all .2s"}}>
                   {m==="Mayank"?"👨‍⚕️":"👩"} {m}
                 </div>
               ))}
@@ -551,7 +551,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
             <textarea className="input" placeholder="Write your note..." value={f.noteText} onChange={e=>set("noteText",e.target.value)} rows={4} style={{resize:"none"}} autoFocus/>
             <div style={{display:"flex",gap:8}}>
               {["Mayank","Simmi"].map(m=>(
-                <div key={m} onClick={()=>set("added_by",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.added_by===m?"rgba(139,124,248,0.3)":T.border}`,background:f.added_by===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.added_by===m?T.accent:T.muted,transition:"all .2s"}}>
+                <div key={m} onClick={()=>set("added_by",m)} style={{flex:1,padding:"9px",borderRadius:12,border:`1px solid ${f.added_by===m?"rgba(125,157,124,0.3)":T.border}`,background:f.added_by===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",fontSize:13,fontWeight:600,color:f.added_by===m?T.accent:T.muted,transition:"all .2s"}}>
                   {m==="Mayank"?"👨‍⚕️":"👩"} {m}
                 </div>
               ))}
@@ -578,7 +578,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
             <input className="input" type="number" placeholder="Already saved (₹)" value={f.savedAmount} onChange={e=>set("savedAmount",e.target.value)}/>
           </>}
         </div>
-        <button className="btn-primary" onClick={save} disabled={loading||saved} style={{marginTop:14,background:saved?"rgba(52,211,153,0.3)":undefined,borderColor:saved?T.green:undefined}}>
+        <button className="btn-primary" onClick={save} disabled={loading||saved} style={{marginTop:14,background:saved?"rgba(109,155,107,0.3)":undefined,borderColor:saved?T.green:undefined}}>
           {saved ? "✓ Saved!" : loading ? <div className="spinner"/> : `Save ${currentType?.label}`}
         </button>
       </div>
@@ -644,7 +644,7 @@ const AuthScreen = ({ onLogin }) => {
     setLoading(false);
   };
   return (
-    <div style={{flex:1,display:"flex",flexDirection:"column",padding:"60px 24px 40px",background:T.bg,minHeight:"100vh",backgroundImage:`radial-gradient(ellipse 600px 500px at 50% -100px,rgba(139,124,248,0.12) 0%,transparent 65%)`}}>
+    <div style={{flex:1,display:"flex",flexDirection:"column",padding:"60px 24px 40px",background:T.bg,minHeight:"100vh",backgroundImage:`radial-gradient(ellipse 600px 500px at 50% -100px,rgba(125,157,124,0.12) 0%,transparent 65%)`}}>
       <div style={{textAlign:"center",marginBottom:36}}>
         <div style={{fontSize:56,marginBottom:16,animation:"float 3s ease-in-out infinite"}}>🏠</div>
         <div style={{fontSize:30,fontWeight:900,letterSpacing:"-.5px"}}>Family OS</div>
@@ -654,7 +654,7 @@ const AuthScreen = ({ onLogin }) => {
         <div style={{fontSize:11,color:T.dim,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Quick Sign In</div>
         <div style={{display:"flex",gap:10}}>
           {[{n:"Mayank",e:"👨‍⚕️"},{n:"Simmi",e:"👩"}].map(m => (
-            <div key={m.n} onClick={() => prefill(m.n)} style={{flex:1,padding:"13px",background:form.name===m.n ? T.accentSoft : T.card,border:`1px solid ${form.name===m.n ? "rgba(139,124,248,0.3)" : T.border}`,borderRadius:16,textAlign:"center",cursor:"pointer",transition:"all .2s"}}>
+            <div key={m.n} onClick={() => prefill(m.n)} style={{flex:1,padding:"13px",background:form.name===m.n ? T.accentSoft : T.card,border:`1px solid ${form.name===m.n ? "rgba(125,157,124,0.3)" : T.border}`,borderRadius:16,textAlign:"center",cursor:"pointer",transition:"all .2s"}}>
               <div style={{fontSize:28,marginBottom:5}}>{m.e}</div>
               <div style={{fontSize:14,fontWeight:700,color:form.name===m.n ? T.accent : T.text}}>{m.n}</div>
             </div>
@@ -666,7 +666,7 @@ const AuthScreen = ({ onLogin }) => {
         <input className="input" type="email" placeholder="Email" inputMode="email" autoComplete="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} autoCapitalize="none"/>
         <input className="input" type="password" placeholder="Password" autoComplete="current-password" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&handle()}/>
       </div>
-      {error && <div style={{padding:"10px 14px",background:T.redSoft,border:"1px solid rgba(248,113,113,0.2)",borderRadius:12,fontSize:13,color:T.red,marginBottom:12}}>{error}</div>}
+      {error && <div style={{padding:"10px 14px",background:T.redSoft,border:"1px solid rgba(196,96,58,0.2)",borderRadius:12,fontSize:13,color:T.red,marginBottom:12}}>{error}</div>}
       <button className="btn-primary" onClick={handle} disabled={loading}>
         {loading ? <div className="spinner"/> : mode==="signin" ? "Sign In →" : "Create Account →"}
       </button>
@@ -724,8 +724,8 @@ const BellButton = ({ familyId }) => {
   const unread = notifs.filter(n => !n.read).length;
   return (
     <>
-      <div style={{width:38,height:38,borderRadius:11,background:"rgba(255,255,255,0.042)",border:"1px solid rgba(255,255,255,0.075)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}} onClick={()=>setOpen(true)}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(238,236,248,0.42)" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <div style={{width:38,height:38,borderRadius:11,background:"#FFFFFF",border:"1px solid #E8E4DE",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}} onClick={()=>setOpen(true)}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9E9488" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         {unread > 0 && <div className="notif-badge">{unread > 9 ? "9+" : unread}</div>}
       </div>
       {open && <NotificationsScreen familyId={familyId} onClose={()=>setOpen(false)}/>}
@@ -738,7 +738,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
   const bal = calcBalance(txns);
   return (
     <div style={{padding:"12px 20px 0"}}>
-      <div style={{background:"linear-gradient(135deg,rgba(52,211,153,0.12),rgba(139,124,248,0.10))",border:`1px solid rgba(52,211,153,0.22)`,borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer"}} onClick={()=>navigate("finance")}>
+      <div style={{background:"linear-gradient(135deg,rgba(109,155,107,0.12),rgba(139,124,248,0.10))",border:`1px solid rgba(52,211,153,0.22)`,borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer"}} onClick={()=>navigate("finance")}>
         <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
         <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
           {bal.available<0?"-":""}₹{Math.abs(bal.available).toLocaleString("en-IN")}
@@ -751,7 +751,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
             {l:"💸 Spent",v:inr(bal.totalExpenses),c:T.red},
             {l:"✅ Tasks",v:`${pendingTasks.length} left`,c:T.accent},
           ].map((s)=>(
-            <div key={s.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px 10px"}}>
+            <div key={s.l} style={{background:"#FAFAF8",borderRadius:10,padding:"8px 10px"}}>
               <div style={{fontSize:10,color:T.muted,fontWeight:600}}>{s.l}</div>
               <div style={{fontSize:14,fontWeight:700,color:s.c,marginTop:2}}>{s.v}</div>
             </div>
@@ -835,7 +835,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
       {(urgentBills.length > 0 || lowGrocery.length > 0 || lowPantry.length > 0) && (
         <div style={{padding:"12px 18px 0"}}>
           {urgentBills.length > 0 && (
-            <div className="alert-bar" style={{background:T.redSoft,border:"1px solid rgba(248,113,113,0.2)"}}>
+            <div className="alert-bar" style={{background:T.redSoft,border:"1px solid rgba(196,96,58,0.2)"}}>
               <span style={{fontSize:15}}>🔴</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:600,color:T.red}}>{urgentBills.length} Urgent Bill{urgentBills.length>1?"s":""}</div>
@@ -845,7 +845,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
             </div>
           )}
           {(lowGrocery.length > 0 || lowPantry.length > 0) && (
-            <div className="alert-bar" style={{background:T.amberSoft,border:"1px solid rgba(251,191,36,0.2)"}}>
+            <div className="alert-bar" style={{background:T.amberSoft,border:"1px solid rgba(196,136,58,0.2)"}}>
               <span style={{fontSize:15}}>🛒</span>
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:600,color:T.amber}}>{lowGrocery.length + lowPantry.length} items need restocking</div>
@@ -966,7 +966,7 @@ const FinanceScreen = ({ familyId }) => {
         </div>
       </div>
       <div style={{padding:"12px 18px 0"}}>
-        <div className="card" style={{padding:18,background:"linear-gradient(135deg,rgba(139,124,248,0.12),rgba(96,165,250,0.06))",borderColor:"rgba(139,124,248,0.2)",marginBottom:12}}>
+        <div className="card" style={{padding:18,background:"linear-gradient(135deg,rgba(125,157,124,0.12),rgba(96,165,250,0.06))",borderColor:"rgba(125,157,124,0.2)",marginBottom:12}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             {[{l:"Income",v:inr(income),c:T.green},{l:"Spent",v:inr(spent),c:T.red},{l:"Net",v:inr(income-spent),c:T.accent}].map(s=>(
               <div key={s.l} style={{textAlign:"center"}}>
@@ -1019,7 +1019,7 @@ const FinanceScreen = ({ familyId }) => {
                 await updTx(editTx.id,{description:editTx.description,amount:editTx.amount,category:editTx.category,date:editTx.date});
                 setEditTx(null);
               }}>Save Changes</button>
-              <button onClick={async()=>{await remove(editTx.id);setEditTx(null);}} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+              <button onClick={async()=>{await remove(editTx.id);setEditTx(null);}} style={{width:"100%",padding:"14px",background:"rgba(196,96,58,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#C4603A",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
                 Delete Transaction
               </button>
             </div>
@@ -1222,7 +1222,7 @@ const HouseholdScreen = ({ familyId }) => {
                   repeat:reminderForm.repeat,
                   category:reminderForm.category,
                 }]);
-                showToast({title:"Reminder Added!",body:`${reminderForm.title} due ${reminderForm.due_date}`,icon:reminderForm.emoji,color:"#8B7CF8"});
+                showToast({title:"Reminder Added!",body:`${reminderForm.title} due ${reminderForm.due_date}`,icon:reminderForm.emoji,color:"#7D9D7C"});
                 setReminderForm({title:"",category:"Appliance",due_date:"",repeat:"none",notes:"",emoji:"🔔"});
                 setShowAddReminder(false);
               }}>Add Reminder</button>
@@ -1350,7 +1350,7 @@ const PlannerScreen = ({ familyId }) => {
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showAddHealth, setShowAddHealth] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
-  const [goalForm, setGoalForm] = useState({title:"",target_amount:"",saved_amount:"0",emoji:"🎯",color:"#8B7CF8",reminder_date:""});
+  const [goalForm, setGoalForm] = useState({title:"",target_amount:"",saved_amount:"0",emoji:"🎯",color:"#7D9D7C",reminder_date:""});
   const [healthForm, setHealthForm] = useState({member_name:"Mayank",weight:"",blood_pressure:"",blood_sugar:"",medications:"None",notes:"",next_checkup:""});
   const [eventForm, setEventForm] = useState({title:"",event_date:"",type:"General",emoji:"📅",notes:""});
   const { rows: goals } = useTable("goals", familyId);
@@ -1380,8 +1380,8 @@ const PlannerScreen = ({ familyId }) => {
               </div>
               <button className="btn-primary" onClick={async()=>{
                 if(!goalForm.title || !goalForm.target_amount) return;
-                await supabase.from("goals").insert([{family_id:familyId,title:goalForm.title,target_amount:Number(goalForm.target_amount),saved_amount:Number(goalForm.saved_amount||0),emoji:goalForm.emoji,color:"#8B7CF8",reminder_date:goalForm.reminder_date||null}]);
-                setGoalForm({title:"",target_amount:"",saved_amount:"0",emoji:"🎯",color:"#8B7CF8",reminder_date:""});
+                await supabase.from("goals").insert([{family_id:familyId,title:goalForm.title,target_amount:Number(goalForm.target_amount),saved_amount:Number(goalForm.saved_amount||0),emoji:goalForm.emoji,color:"#7D9D7C",reminder_date:goalForm.reminder_date||null}]);
+                setGoalForm({title:"",target_amount:"",saved_amount:"0",emoji:"🎯",color:"#7D9D7C",reminder_date:""});
                 setShowAddGoal(false);
               }}>Add Goal</button>
             </div>
@@ -1408,7 +1408,7 @@ const PlannerScreen = ({ familyId }) => {
                 await supabase.from("health").insert([{family_id:familyId,member_name:healthForm.member_name,weight:healthForm.weight||null,blood_pressure:healthForm.blood_pressure||null,blood_sugar:healthForm.blood_sugar||null,medications:healthForm.medications,notes:healthForm.notes,date:new Date().toISOString().split("T")[0]}]);
                 if(healthForm.next_checkup){
                   await supabase.from("reminders").insert([{family_id:familyId,content:`Health checkup for ${healthForm.member_name}`,due_date:healthForm.next_checkup,done:false}]);
-                  showToast({title:"Reminder set!",body:`Checkup reminder for ${healthForm.next_checkup}`,icon:"💊",color:"#60A5FA"});
+                  showToast({title:"Reminder set!",body:`Checkup reminder for ${healthForm.next_checkup}`,icon:"💊",color:"#5B8DB8"});
                 }
                 setHealthForm({member_name:"Mayank",weight:"",blood_pressure:"",blood_sugar:"",medications:"None",notes:"",next_checkup:""});
                 setShowAddHealth(false);
@@ -1532,7 +1532,7 @@ const PlannerScreen = ({ familyId }) => {
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
                       {[{l:"Weight",v:h.weight||"—"},{l:"BP",v:h.blood_pressure||"—"},{l:"Sugar",v:h.blood_sugar||"—"}].map(m=>(
-                        <div key={m.l} style={{padding:"9px 11px",background:"rgba(255,255,255,0.04)",borderRadius:10}}>
+                        <div key={m.l} style={{padding:"9px 11px",background:"#FAFAF8",borderRadius:10}}>
                           <div style={{fontSize:10,color:T.muted}}>{m.l}</div>
                           <div style={{fontSize:13,fontWeight:600,marginTop:2}}>{m.v}</div>
                         </div>
@@ -1848,7 +1848,7 @@ const AIScreen = ({ familyId }) => {
     <div className="screen" style={{display:"flex",flexDirection:"column"}}>
       <div style={{padding:"52px 20px 0"}}>
         <div style={{display:"flex",gap:12,alignItems:"center"}}>
-          <div style={{width:46,height:46,borderRadius:14,background:"linear-gradient(135deg,rgba(139,124,248,0.25),rgba(96,165,250,0.15))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}} className="float">🤖</div>
+          <div style={{width:46,height:46,borderRadius:14,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}} className="float">🤖</div>
           <div>
             <div className="pt" style={{fontSize:22}}>AI Assistant</div>
             <div style={{display:"flex",gap:5,alignItems:"center",marginTop:2}}>
@@ -1877,14 +1877,14 @@ const AIScreen = ({ familyId }) => {
       <div style={{flex:1,overflowY:"auto",padding:"14px 20px",display:"flex",flexDirection:"column",gap:12,minHeight:0}}>
         {msgs.map((m,i)=>(
           <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
-            <div style={{maxWidth:"86%",padding:"13px 15px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",background:m.role==="user"?T.accent:"rgba(255,255,255,0.055)",border:m.role==="user"?"none":`1px solid ${T.border}`,fontSize:14,lineHeight:1.65,whiteSpace:"pre-line"}}>
+            <div style={{maxWidth:"86%",padding:"13px 15px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",background:m.role==="user"?T.accent:"#FFFFFF",border:m.role==="user"?"none":`0.5px solid ${T.border}`,fontSize:14,lineHeight:1.65,whiteSpace:"pre-line"}}>
               {m.text}
             </div>
           </div>
         ))}
         {loading&&(
           <div style={{display:"flex"}}>
-            <div style={{padding:"13px 16px",borderRadius:"18px 18px 18px 4px",background:"rgba(255,255,255,0.055)",border:`1px solid ${T.border}`,display:"flex",gap:5,alignItems:"center"}}>
+            <div style={{padding:"13px 16px",borderRadius:"18px 18px 18px 4px",background:"#FFFFFF",border:`1px solid ${T.border}`,display:"flex",gap:5,alignItems:"center"}}>
               <div className="ai-dot"/><div className="ai-dot"/><div className="ai-dot"/>
             </div>
           </div>
@@ -1934,7 +1934,7 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
     <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
         <div style={{display:"flex",gap:15,alignItems:"center"}}>
-          <div style={{width:68,height:68,borderRadius:22,background:"linear-gradient(135deg,rgba(139,124,248,0.25),rgba(96,165,250,0.15))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,border:"2px solid rgba(139,124,248,0.3)"}}>
+          <div style={{width:68,height:68,borderRadius:22,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,border:"2px solid rgba(125,157,124,0.3)"}}>
             {name==="Simmi"?"👩":"👨‍⚕️"}
           </div>
           <div>
@@ -1963,7 +1963,7 @@ const ProfileScreen = ({ user, onSignOut, familyId }) => {
             <div style={{fontSize:12,color:T.green,marginTop:4}}>● Real-time sync active</div>
           </div>
         </div>
-        <button onClick={onSignOut} style={{width:"100%",padding:"14px",background:T.redSoft,border:`1px solid rgba(248,113,113,0.25)`,borderRadius:14,color:T.red,fontSize:15,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"'Outfit',sans-serif"}}>
+        <button onClick={onSignOut} style={{width:"100%",padding:"14px",background:T.redSoft,border:`1px solid rgba(248,113,113,0.25)`,borderRadius:14,color:T.red,fontSize:15,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
           <I n="logout" s={18} c={T.red}/> Sign Out
         </button>
         <div style={{textAlign:"center",padding:"20px 0",color:T.dim,fontSize:12}}>
@@ -2119,20 +2119,20 @@ const MealTimeReminder = ({ familyId }) => {
   return (
     <div style={{position:"fixed",bottom:"calc(80px + env(safe-area-inset-bottom,0px))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:398,background:"#13131F",border:"1px solid rgba(139,124,248,0.4)",borderRadius:16,padding:"14px 16px",zIndex:145,boxShadow:"0 8px 32px rgba(0,0,0,0.6)",animation:"slideUp .3s cubic-bezier(.16,1,.3,1)"}}>
       <div style={{display:"flex",gap:12,alignItems:"center"}}>
-        <div style={{width:40,height:40,borderRadius:12,background:"rgba(139,124,248,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🍽</div>
+        <div style={{width:40,height:40,borderRadius:12,background:"rgba(125,157,124,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🍽</div>
         <div style={{flex:1}}>
-          <div style={{fontSize:13,fontWeight:700,color:"#EEECf8"}}>{reminder.label} Time!</div>
+          <div style={{fontSize:13,fontWeight:700,color:"#2D2721"}}>{reminder.label} Time!</div>
           <div style={{fontSize:12,color:"rgba(238,236,248,0.6)",marginTop:2}}>{reminder.recipe.name}</div>
         </div>
         <div style={{display:"flex",gap:8}}>
           <button onClick={async()=>{
             await supabase.from("meal_plan").update({cooked:true,cooked_at:new Date().toISOString()}).eq("id",reminder.meal.id);
-            showToast({title:"Marked as eaten!",body:reminder.recipe.name,icon:"🍽",color:"#34D399"});
+            showToast({title:"Marked as eaten!",body:reminder.recipe.name,icon:"🍽",color:"#6D9B6B"});
             setReminder(null); refresh();
-          }} style={{padding:"8px 12px",background:"rgba(52,211,153,0.15)",border:"1px solid rgba(52,211,153,0.3)",borderRadius:10,color:"#34D399",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+          }} style={{padding:"8px 12px",background:"rgba(52,211,153,0.15)",border:"1px solid rgba(109,155,107,0.3)",borderRadius:10,color:"#6D9B6B",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
             Ate it
           </button>
-          <button onClick={()=>setReminder(null)} style={{padding:"8px 12px",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(248,113,113,0.2)",borderRadius:10,color:"#F87171",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+          <button onClick={()=>setReminder(null)} style={{padding:"8px 12px",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(196,96,58,0.2)",borderRadius:10,color:"#C4603A",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
             Skip
           </button>
         </div>
@@ -2174,7 +2174,7 @@ const VoiceCommandButton = ({ familyId }) => {
           emoji: "💸",
         }]);
         response = `✅ ₹${amount} expense recorded for ${category}`;
-        showToast({title:"💸 Expense Added",body:`₹${amount} on ${category}`,icon:"💸",color:"#F87171"});
+        showToast({title:"💸 Expense Added",body:`₹${amount} on ${category}`,icon:"💸",color:"#C4603A"});
       }
 
       // ── INCOME ───────────────────────────────────────────────
@@ -2193,7 +2193,7 @@ const VoiceCommandButton = ({ familyId }) => {
             emoji: isClinic ? "🏥" : "👩",
           }]);
           response = `✅ ₹${amount} income recorded`;
-          showToast({title:"💰 Income Added",body:`₹${amount}`,icon:"💰",color:"#34D399"});
+          showToast({title:"💰 Income Added",body:`₹${amount}`,icon:"💰",color:"#6D9B6B"});
         }
       }
 
@@ -2211,7 +2211,7 @@ const VoiceCommandButton = ({ familyId }) => {
             done: false,
           }]);
           response = `✅ Task added: ${taskText}`;
-          showToast({title:"✅ Task Added",body:taskText,icon:"✅",color:"#34D399"});
+          showToast({title:"✅ Task Added",body:taskText,icon:"✅",color:"#6D9B6B"});
         }
       }
 
@@ -2226,7 +2226,7 @@ const VoiceCommandButton = ({ familyId }) => {
             added_at: new Date().toISOString(),
           }]);
           response = `✅ ${item} added to shopping list`;
-          showToast({title:"🛒 Added to List",body:item,icon:"🛒",color:"#FBBF24"});
+          showToast({title:"🛒 Added to List",body:item,icon:"🛒",color:"#C4883A"});
         }
       }
 
@@ -2269,7 +2269,7 @@ const VoiceCommandButton = ({ familyId }) => {
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      showToast({title:"Not supported",body:"Use Chrome or Safari for voice commands",icon:"🎤",color:"#F87171"});
+      showToast({title:"Not supported",body:"Use Chrome or Safari for voice commands",icon:"🎤",color:"#C4603A"});
       return;
     }
     const recognition = new SpeechRecognition();
@@ -2305,7 +2305,7 @@ const VoiceCommandButton = ({ familyId }) => {
           bottom:"calc(80px + env(safe-area-inset-bottom,0px))",
           left:"max(16px, calc(50vw - 199px))",
           width:54,height:54,borderRadius:17,
-          background:listening?"linear-gradient(135deg,#F87171,#E55)":"linear-gradient(135deg,#2DD4BF,#0D9488)",
+          background:listening?"linear-gradient(135deg,#C4603A,#E55)":"linear-gradient(135deg,#4A9B8E,#0D9488)",
           boxShadow:listening?"0 4px 24px rgba(248,113,113,0.5)":"0 4px 24px rgba(45,212,191,0.4)",
           display:"flex",alignItems:"center",justifyContent:"center",
           cursor:"pointer",zIndex:150,border:"none",
@@ -2330,11 +2330,11 @@ const VoiceCommandButton = ({ familyId }) => {
           {listening && (
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
               <div style={{display:"flex",gap:4}}>
-                <div className="ai-dot" style={{background:"#2DD4BF"}}/>
-                <div className="ai-dot" style={{background:"#2DD4BF"}}/>
-                <div className="ai-dot" style={{background:"#2DD4BF"}}/>
+                <div className="ai-dot" style={{background:"#4A9B8E"}}/>
+                <div className="ai-dot" style={{background:"#4A9B8E"}}/>
+                <div className="ai-dot" style={{background:"#4A9B8E"}}/>
               </div>
-              <span style={{fontSize:13,color:"#2DD4BF",fontWeight:600}}>Listening...</span>
+              <span style={{fontSize:13,color:"#4A9B8E",fontWeight:600}}>Listening...</span>
             </div>
           )}
           {transcript && !processing && !result && (
@@ -2347,7 +2347,7 @@ const VoiceCommandButton = ({ familyId }) => {
             </div>
           )}
           {result && (
-            <div style={{fontSize:13,color:"#EEECf8",fontWeight:500,lineHeight:1.4}}>{result}</div>
+            <div style={{fontSize:13,color:"#2D2721",fontWeight:500,lineHeight:1.4}}>{result}</div>
           )}
         </div>
       )}
@@ -2402,7 +2402,7 @@ const ServiceReminders = ({ familyId }) => {
         category: r.category,
         notes: r.notes,
       }]);
-      showToast({title:"Next reminder set!",body:`Next due: ${nextDate.toISOString().split("T")[0]}`,icon:"🔔",color:"#8B7CF8"});
+      showToast({title:"Next reminder set!",body:`Next due: ${nextDate.toISOString().split("T")[0]}`,icon:"🔔",color:"#7D9D7C"});
     }
     refresh();
   };
@@ -2440,7 +2440,7 @@ const ServiceReminders = ({ familyId }) => {
                     <div style={{fontSize:12,fontWeight:700,color,marginTop:3}}>{r.due_date} · {label}</div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
-                    <button onClick={()=>markDone(r)} style={{padding:"6px 12px",background:"rgba(52,211,153,0.12)",border:"1px solid rgba(52,211,153,0.3)",borderRadius:10,color:"#34D399",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                    <button onClick={()=>markDone(r)} style={{padding:"6px 12px",background:"rgba(109,155,107,0.12)",border:"1px solid rgba(109,155,107,0.3)",borderRadius:10,color:"#6D9B6B",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
                       ✅ Done
                     </button>
                     <button onClick={async()=>{await supabase.from("reminders").delete().eq("id",r.id);refresh();}} style={{padding:"4px 10px",background:"transparent",border:"none",color:T.red,fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
@@ -2563,7 +2563,7 @@ const FinanceAdvisorScreen = ({ familyId }) => {
 <head><meta charset="utf-8"/><style>
   body{font-family:Arial,sans-serif;margin:30px;color:#1a1a2e;}
   h1{color:#6B7CF8;border-bottom:3px solid #6B7CF8;padding-bottom:10px;}
-  h2{color:#2DD4BF;margin-top:24px;}
+  h2{color:#4A9B8E;margin-top:24px;}
   .summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:20px 0;}
   .card{background:#f8f9ff;border-radius:12px;padding:16px;text-align:center;}
   .card-label{font-size:12px;color:#666;font-weight:600;}
@@ -2617,7 +2617,7 @@ const FinanceAdvisorScreen = ({ familyId }) => {
             <div style={{fontSize:22,fontWeight:900}}>📊 Finance Advisor</div>
             <div style={{fontSize:12,color:T.muted,marginTop:2}}>Monthly analysis & PDF report</div>
           </div>
-          <button onClick={generatePDF} disabled={generating} style={{padding:"10px 16px",background:"rgba(139,124,248,0.15)",border:"1px solid rgba(139,124,248,0.4)",borderRadius:12,color:T.accent,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+          <button onClick={generatePDF} disabled={generating} style={{padding:"10px 16px",background:"rgba(125,157,124,0.12)",border:"1px solid rgba(139,124,248,0.4)",borderRadius:12,color:T.accent,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
             {generating ? "⏳" : "📄 PDF"}
           </button>
         </div>
@@ -2675,10 +2675,10 @@ const FinanceAdvisorScreen = ({ familyId }) => {
                     const pct = expenses > 0 ? Math.round((amt/expenses)*100) : 0;
                     return (
                       <div key={cat} className="list-row" style={{cursor:"default"}}>
-                        <div style={{width:28,height:28,borderRadius:8,background:"rgba(139,124,248,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:T.accent}}>{i+1}</div>
+                        <div style={{width:28,height:28,borderRadius:8,background:"rgba(125,157,124,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:T.accent}}>{i+1}</div>
                         <div style={{flex:1}}>
                           <div style={{fontSize:13,fontWeight:600}}>{cat}</div>
-                          <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginTop:5}}>
+                          <div style={{height:4,background:"#FAFAF8",borderRadius:2,marginTop:5}}>
                             <div style={{height:4,background:T.accent,borderRadius:2,width:`${pct}%`}}/>
                           </div>
                         </div>
@@ -2763,14 +2763,14 @@ const GmailSyncScreen = ({ familyId }) => {
         body: JSON.stringify({access_token: at, refresh_token: rt}),
       });
       const data = await r.json();
-      if (data.error) { showToast({title:"Error",body:data.error,icon:"❌",color:"#F87171"}); return; }
+      if (data.error) { showToast({title:"Error",body:data.error,icon:"❌",color:"#C4603A"}); return; }
       const existingIds = syncHistory.map(h => h.gmail_id);
       const newTxns = (data.transactions || []).filter(t => !existingIds.includes(t.gmail_id));
       setTransactions(newTxns);
       setSelected(new Set(newTxns.map((_, i) => i)));
       setStep("review");
     } catch(err) {
-      showToast({title:"Error",body:err.message,icon:"❌",color:"#F87171"});
+      showToast({title:"Error",body:err.message,icon:"❌",color:"#C4603A"});
     } finally { setSyncing(false); }
   };
 
@@ -2789,7 +2789,7 @@ const GmailSyncScreen = ({ familyId }) => {
         synced_at: new Date().toISOString(),
       }]).catch(()=>{});
     }
-    showToast({title:`${toImport.length} imported!`,body:"Check Finance screen",icon:"✅",color:"#34D399"});
+    showToast({title:`${toImport.length} imported!`,body:"Check Finance screen",icon:"✅",color:"#6D9B6B"});
     setStep("connect");
     setTransactions([]);
   };
@@ -2850,7 +2850,7 @@ const GmailSyncScreen = ({ familyId }) => {
 
         {step === "review" && (
           <>
-            <div style={{padding:"12px 14px",background:"rgba(139,124,248,0.08)",border:"1px solid rgba(139,124,248,0.2)",borderRadius:12,marginBottom:14}}>
+            <div style={{padding:"12px 14px",background:"rgba(139,124,248,0.08)",border:"1px solid rgba(125,157,124,0.2)",borderRadius:12,marginBottom:14}}>
               <div style={{fontSize:13,fontWeight:700,color:T.accent}}>Found {transactions.length} new transactions</div>
               <div style={{fontSize:12,color:T.muted}}>{selected.size} selected</div>
             </div>
@@ -2866,7 +2866,7 @@ const GmailSyncScreen = ({ familyId }) => {
                           <div style={{fontSize:11,color:T.muted}}>{tx.category} · {tx.date}</div>
                         </div>
                         <div style={{fontSize:13,fontWeight:700,color:T.red,marginRight:8}}>-₹{tx.amount}</div>
-                        <div style={{width:20,height:20,borderRadius:6,background:selected.has(i)?"#34D399":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                        <div style={{width:20,height:20,borderRadius:6,background:selected.has(i)?"#6D9B6B":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {selected.has(i) && <I n="check" s={11} c="white" w={3}/>}
                         </div>
                       </div>
@@ -2926,11 +2926,11 @@ const AlexaCommandCenter = ({ onClose }) => {
             <div style={{fontSize:19,fontWeight:800}}>🎤 Munshi Jee Commands</div>
             <div style={{fontSize:12,color:T.muted,marginTop:2}}>Say "Alexa, open munshi jee" first</div>
           </div>
-          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
             <I n="x" s={15} c={T.muted}/>
           </div>
         </div>
-        <div style={{padding:"10px 14px",background:"rgba(139,124,248,0.1)",border:"1px solid rgba(139,124,248,0.3)",borderRadius:12,marginBottom:14}}>
+        <div style={{padding:"10px 14px",background:"rgba(125,157,124,0.1)",border:"1px solid rgba(125,157,124,0.3)",borderRadius:12,marginBottom:14}}>
           <div style={{fontSize:12,fontWeight:700,color:T.accent}}>How to start:</div>
           <div style={{fontSize:13,color:T.text,marginTop:4}}>"Alexa, open munshi jee"</div>
           <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>"Alexa, munshi jee kholo"</div>
@@ -3295,13 +3295,13 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
                 </div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>onViewRecipe(r)}
-                    style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.text,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                    style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.text,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
                     👁 View
                   </button>
                   {alreadyPlanned(r.id)
-                    ? <div style={{flex:1,padding:"8px",background:T.greenSoft,border:"1px solid rgba(52,211,153,0.3)",borderRadius:10,color:T.green,fontSize:12,fontWeight:600,textAlign:"center"}}>✓ In Today</div>
+                    ? <div style={{flex:1,padding:"8px",background:T.greenSoft,border:"1px solid rgba(109,155,107,0.3)",borderRadius:10,color:T.green,fontSize:12,fontWeight:600,textAlign:"center"}}>✓ In Today</div>
                     : <button onClick={()=>setAssignModal(r)}
-                        style={{flex:1,padding:"8px",background:T.accentSoft,border:"1px solid rgba(139,124,248,0.3)",borderRadius:10,color:T.accent,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                        style={{flex:1,padding:"8px",background:T.accentSoft,border:"1px solid rgba(125,157,124,0.3)",borderRadius:10,color:T.accent,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
                         + Add to Today
                       </button>
                   }
@@ -3320,14 +3320,14 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
                 const taken = mealPlan.find(m=>m.plan_date===todayStr && m.meal_type===mt);
                 return (
                   <button key={mt} onClick={()=>{ onAssign(assignModal.id, todayStr, mt); setAssignModal(null); }}
-                    style={{padding:"12px 14px",background:taken?"rgba(255,255,255,0.03)":"rgba(139,124,248,0.1)",border:taken?"1px solid rgba(255,255,255,0.07)":"1px solid rgba(139,124,248,0.25)",borderRadius:12,color:taken?T.dim:T.accent,fontSize:14,fontWeight:600,cursor:taken?"default":"pointer",fontFamily:"'Outfit',sans-serif",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    style={{padding:"12px 14px",background:taken?"#FAFAF8":"rgba(125,157,124,0.1)",border:taken?"1px solid rgba(125,157,124,0.08)":"1px solid rgba(139,124,248,0.25)",borderRadius:12,color:taken?T.dim:T.accent,fontSize:14,fontWeight:600,cursor:taken?"default":"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <span style={{textTransform:"capitalize"}}>🍽 {mt}</span>
                     {taken && <span style={{fontSize:11,color:T.muted}}>{taken.recipe_name || "Planned"}</span>}
                   </button>
                 );
               })}
             </div>
-            <button onClick={()=>setAssignModal(null)} style={{marginTop:12,width:"100%",padding:"10px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Cancel</button>
+            <button onClick={()=>setAssignModal(null)} style={{marginTop:12,width:"100%",padding:"10px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Cancel</button>
           </div>
         </div>
       )}
@@ -3444,7 +3444,7 @@ const KitchenScreen = ({ familyId }) => {
         body: deducted.length
           ? `${deducted.length} ingredients deducted.${lowStockItems?.length ? ` ${lowStockItems.length} added to shopping list.` : ""}`
           : "Marked as cooked! (No pantry items matched)",
-        icon:"🍽", color:"#34D399"
+        icon:"🍽", color:"#6D9B6B"
       });
       sendEmail("meal_cooked", {
         meal_type: meal.meal_type,
@@ -3539,7 +3539,7 @@ const KitchenScreen = ({ familyId }) => {
             </div>
           </div>
         </div>
-        <div onClick={()=>setShowAlexaCommands(true)} style={{padding:"8px 12px",background:"rgba(139,124,248,0.12)",border:"1px solid rgba(139,124,248,0.3)",borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+        <div onClick={()=>setShowAlexaCommands(true)} style={{padding:"8px 12px",background:"rgba(125,157,124,0.12)",border:"1px solid rgba(125,157,124,0.3)",borderRadius:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
           <span style={{fontSize:15}}>🎤</span>
           <span style={{fontSize:11,fontWeight:700,color:T.accent}}>Commands</span>
         </div>
@@ -3581,7 +3581,7 @@ const KitchenScreen = ({ familyId }) => {
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
                       {meal && !meal.cooked && (
                         <button onClick={()=>setCookLogModal({meal, recipe: recipes.find(r=>r.id===meal.recipe_id)})} disabled={cooking===meal.id}
-                          style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(52,211,153,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+                          style={{padding:"8px 14px",background:T.greenSoft,border:`1px solid rgba(109,155,107,0.3)`,borderRadius:10,color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",display:"flex",alignItems:"center",gap:5}}>
                           {cooking===meal.id ? <div className="spinner" style={{width:14,height:14}}/> : "🍽 Log Meal"}
                         </button>
                       )}
@@ -3609,7 +3609,7 @@ const KitchenScreen = ({ familyId }) => {
                       <span className="tag" style={{background:T.accentSoft,color:T.accent}}>⏱ {recipe.prep_time_mins}min</span>
                       <span className="tag" style={{background:T.accentSoft,color:T.accent}}>👥 {recipe.servings}</span>
                       {(recipe.tags||[]).slice(0,2).map(tag=>(
-                        <span key={tag} className="tag" style={{background:"rgba(255,255,255,0.06)",color:T.muted}}>{tag}</span>
+                        <span key={tag} className="tag" style={{background:"#FAFAF8",color:T.muted}}>{tag}</span>
                       ))}
                     </div>
                   )}
@@ -3687,7 +3687,7 @@ const KitchenScreen = ({ familyId }) => {
                       </div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>
                         {(r.tags||[]).map(tag=>(
-                          <span key={tag} className="tag" style={{background:"rgba(255,255,255,0.06)",color:T.muted,fontSize:10}}>{tag}</span>
+                          <span key={tag} className="tag" style={{background:"#FAFAF8",color:T.muted,fontSize:10}}>{tag}</span>
                         ))}
                       </div>
                     </div>
@@ -3757,7 +3757,7 @@ const KitchenScreen = ({ familyId }) => {
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
                           <div style={{textAlign:"right",minWidth:60}}>
                             <div style={{fontSize:14,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
-                            {(()=>{ const d=calcDaysRemaining(item.quantity,item.unit,item.name); return d!==null ? <div style={{fontSize:10,color:d<=3?"#F87171":d<=7?"#FBBF24":"#34D399",fontWeight:600}}>{d}d left</div> : null; })()}
+                            {(()=>{ const d=calcDaysRemaining(item.quantity,item.unit,item.name); return d!==null ? <div style={{fontSize:10,color:d<=3?"#C4603A":d<=7?"#C4883A":"#6D9B6B",fontWeight:600}}>{d}d left</div> : null; })()}
                             {isLow && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock!</div>}
                           </div>
                           <div style={{opacity:0.4}}><I n="edit" s={14} c={T.accent}/></div>
@@ -3818,7 +3818,7 @@ const KitchenScreen = ({ familyId }) => {
         )}
       </div>
 
-      {/* SHOP EDIT MODAL */}{editShopItem && (<Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}><div style={{display:"flex",flexDirection:"column",gap:10}}><input className="input" placeholder="Item name" autoFocus defaultValue={editShopItem.item_name} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/><div style={{display:"flex",gap:8}}><input className="input" type="number" placeholder="Qty" defaultValue={editShopItem.quantity_needed} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/><select className="input" defaultValue={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>{["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}</select></div><select className="input" defaultValue={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>{["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}</select><button className="btn-primary" onClick={async()=>{if(!editShopItem.item_name) return;if(editShopItem.isNew){await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);}else{await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);}setEditShopItem(null);}}>{editShopItem.isNew?"Add to List":"Save Changes"}</button>{!editShopItem.isNew&&(<button onClick={async()=>{await supabase.from("shopping_list").delete().eq("id",editShopItem.id);setEditShopItem(null);}} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Delete Item</button>)}</div></Modal>)}
+      {/* SHOP EDIT MODAL */}{editShopItem && (<Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}><div style={{display:"flex",flexDirection:"column",gap:10}}><input className="input" placeholder="Item name" autoFocus defaultValue={editShopItem.item_name} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/><div style={{display:"flex",gap:8}}><input className="input" type="number" placeholder="Qty" defaultValue={editShopItem.quantity_needed} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/><select className="input" defaultValue={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>{["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}</select></div><select className="input" defaultValue={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>{["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}</select><button className="btn-primary" onClick={async()=>{if(!editShopItem.item_name) return;if(editShopItem.isNew){await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);}else{await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);}setEditShopItem(null);}}>{editShopItem.isNew?"Add to List":"Save Changes"}</button>{!editShopItem.isNew&&(<button onClick={async()=>{await supabase.from("shopping_list").delete().eq("id",editShopItem.id);setEditShopItem(null);}} style={{width:"100%",padding:"14px",background:"rgba(196,96,58,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#C4603A",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Delete Item</button>)}</div></Modal>)}
             {/* RECIPE DETAIL MODAL */}
       {selectedRecipe && (
         <div className="modal-bg" onClick={()=>setSelectedRecipe(null)}>
@@ -3831,7 +3831,7 @@ const KitchenScreen = ({ familyId }) => {
                   {MEAL_EMOJI[selectedRecipe.meal_type]} {selectedRecipe.meal_type} · ⏱ {selectedRecipe.prep_time_mins}min · 👥 {selectedRecipe.servings} servings
                 </div>
               </div>
-              <div onClick={()=>setSelectedRecipe(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+              <div onClick={()=>setSelectedRecipe(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
@@ -3884,7 +3884,7 @@ const KitchenScreen = ({ familyId }) => {
               <span style={{fontSize:18,fontWeight:700}}>
                 {MEAL_EMOJI[addMealModal.meal_type]} {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)}
               </span>
-              <div onClick={()=>setAddMealModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <div onClick={()=>setAddMealModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
@@ -3924,7 +3924,7 @@ const KitchenScreen = ({ familyId }) => {
               await supabase.from("pantry").delete().eq("id",editPantryItem.id);
               await refreshPantry();
               setEditPantryItem(null);
-            }} style={{width:"100%",padding:"14px",background:"rgba(248,113,113,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#F87171",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            }} style={{width:"100%",padding:"14px",background:"rgba(196,96,58,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#C4603A",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
               🗑 Delete Item
             </button>
           </div>
@@ -4039,11 +4039,11 @@ const KitchenScreen = ({ familyId }) => {
                 <div style={{fontSize:17,fontWeight:800}}>🍽 Log Meal</div>
                 <div style={{fontSize:13,color:T.muted,marginTop:2}}>{cookLogModal.recipe?.name || "Unknown Recipe"}</div>
               </div>
-              <div onClick={()=>setCookLogModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <div onClick={()=>setCookLogModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
-            <CookLogForm meal={cookLogModal.meal} recipe={cookLogModal.recipe} familyId={familyId} recipes={recipes} pantry={pantry} onDone={async (logData) => { setCooking(cookLogModal.meal.id); setCookLogModal(null); try { const ratio = logData.quantityMade / (cookLogModal.recipe?.servings || 3); const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", cookLogModal.meal.recipe_id); const deducted = []; const lowStockItems = []; for (const ing of (ingredients || [])) { const needed = Number(ing.quantity) * ratio; const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase()); if (pantryItem) { const newQty = Math.max(0, Number(pantryItem.quantity) - needed); await supabase.from("pantry").update({ quantity: newQty, updated_at: new Date().toISOString() }).eq("id", pantryItem.id); deducted.push({ name: ing.pantry_item_name, used: needed, unit: ing.unit, remaining: newQty }); if (newQty <= Number(pantryItem.par_level)) { lowStockItems.push({ name: pantryItem.name, qty: newQty, unit: pantryItem.unit, category: pantryItem.category }); } } } const { data: cookLog } = await supabase.from("cook_logs").insert([{ family_id: familyId, recipe_id: cookLogModal.meal.recipe_id, recipe_name: cookLogModal.recipe?.name || "Unknown", quantity_made: logData.quantityMade, unit_label: logData.unitLabel, people_served_adults: logData.adults, people_served_children: logData.children, people_served_guests: logData.guests, leftovers: logData.leftovers, cooked_at: new Date().toISOString() }]).select().single(); for (const d of deducted) { await supabase.from("pantry_transactions").insert([{ family_id: familyId, pantry_item_name: d.name, quantity_used: d.used, unit: d.unit, recipe_name: cookLogModal.recipe?.name || "Unknown", cook_log_id: cookLog?.id || null, transaction_date: new Date().toISOString().split("T")[0] }]); } await supabase.from("meal_plan").update({ cooked: true, cooked_at: new Date().toISOString() }).eq("id", cookLogModal.meal.id); for (const item of lowStockItems) { const { data: ex } = await supabase.from("shopping_list").select("id").eq("family_id", familyId).eq("item_name", item.name).eq("purchased", false); if (!ex?.length) { await supabase.from("shopping_list").insert([{ family_id: familyId, item_name: item.name, quantity_needed: item.qty <= 0 ? 1 : item.qty, unit: item.unit, category: item.category, purchased: false }]); } notifyPantryLow(familyId, { name: item.name, quantity: item.qty, unit: item.unit }); } await refreshPantry(); await refreshMeal(); showToast({ title: "🍽 Meal Logged!", body: logData.quantityMade + " " + logData.unitLabel + " cooked. " + deducted.length + " ingredients deducted.", icon: "🍽", color: "#34D399" }); } catch(e) { console.error(e); } setCooking(null); }} onClose={()=>setCookLogModal(null)}/>
+            <CookLogForm meal={cookLogModal.meal} recipe={cookLogModal.recipe} familyId={familyId} recipes={recipes} pantry={pantry} onDone={async (logData) => { setCooking(cookLogModal.meal.id); setCookLogModal(null); try { const ratio = logData.quantityMade / (cookLogModal.recipe?.servings || 3); const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", cookLogModal.meal.recipe_id); const deducted = []; const lowStockItems = []; for (const ing of (ingredients || [])) { const needed = Number(ing.quantity) * ratio; const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase()); if (pantryItem) { const newQty = Math.max(0, Number(pantryItem.quantity) - needed); await supabase.from("pantry").update({ quantity: newQty, updated_at: new Date().toISOString() }).eq("id", pantryItem.id); deducted.push({ name: ing.pantry_item_name, used: needed, unit: ing.unit, remaining: newQty }); if (newQty <= Number(pantryItem.par_level)) { lowStockItems.push({ name: pantryItem.name, qty: newQty, unit: pantryItem.unit, category: pantryItem.category }); } } } const { data: cookLog } = await supabase.from("cook_logs").insert([{ family_id: familyId, recipe_id: cookLogModal.meal.recipe_id, recipe_name: cookLogModal.recipe?.name || "Unknown", quantity_made: logData.quantityMade, unit_label: logData.unitLabel, people_served_adults: logData.adults, people_served_children: logData.children, people_served_guests: logData.guests, leftovers: logData.leftovers, cooked_at: new Date().toISOString() }]).select().single(); for (const d of deducted) { await supabase.from("pantry_transactions").insert([{ family_id: familyId, pantry_item_name: d.name, quantity_used: d.used, unit: d.unit, recipe_name: cookLogModal.recipe?.name || "Unknown", cook_log_id: cookLog?.id || null, transaction_date: new Date().toISOString().split("T")[0] }]); } await supabase.from("meal_plan").update({ cooked: true, cooked_at: new Date().toISOString() }).eq("id", cookLogModal.meal.id); for (const item of lowStockItems) { const { data: ex } = await supabase.from("shopping_list").select("id").eq("family_id", familyId).eq("item_name", item.name).eq("purchased", false); if (!ex?.length) { await supabase.from("shopping_list").insert([{ family_id: familyId, item_name: item.name, quantity_needed: item.qty <= 0 ? 1 : item.qty, unit: item.unit, category: item.category, purchased: false }]); } notifyPantryLow(familyId, { name: item.name, quantity: item.qty, unit: item.unit }); } await refreshPantry(); await refreshMeal(); showToast({ title: "🍽 Meal Logged!", body: logData.quantityMade + " " + logData.unitLabel + " cooked. " + deducted.length + " ingredients deducted.", icon: "🍽", color: "#6D9B6B" }); } catch(e) { console.error(e); } setCooking(null); }} onClose={()=>setCookLogModal(null)}/>
           </div>
         </div>
       )}
