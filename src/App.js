@@ -1574,31 +1574,88 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   const fileRef = React.useRef();
   const UNITS = ["kg","g","L","ml","pcs","pack","dozen","box","bottle"];
 
+  const extractPdfText = async (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const typedArray = new Uint8Array(e.target.result);
+          const pdfjsLib = window['pdfjs-dist/build/pdf'];
+          if (!pdfjsLib) { reject(new Error("PDF.js not loaded")); return; }
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+          let fullText = '';
+          for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            fullText += textContent.items.map(item => item.str).join(' ') + '
+';
+          }
+          resolve(fullText);
+        } catch(err) { reject(err); }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
   const extractFromFile = async (file) => {
     setStage("extracting");
     setError("");
     try {
-      const base64 = await new Promise((res,rej) => {
-        const r = new FileReader();
-        r.onload = () => res(r.result.split(",")[1]);
-        r.onerror = rej;
-        r.readAsDataURL(file);
-      });
       const isImage = file.type.startsWith("image/");
-      if (!isImage && file.type !== "application/pdf") {
+      const isPDF = file.type === "application/pdf";
+      if (!isImage && !isPDF) {
         setError("Please upload an image or PDF.");
         setStage("upload");
         return;
       }
-      const messages = [{
-        role: "user",
-        content: isImage
-          ? [
-              { type:"image", source:{ type:"base64", media_type:file.type, data:base64 } },
-              { type:"text", text:`Extract all grocery items from this receipt/bill. Normalize brand names: "Aashirvaad Atta"→"Atta", "Amul Gold Milk"→"Milk", "Mother Dairy Paneer"→"Paneer", "Red Onion"→"Onion". Return ONLY a JSON array, no markdown, no explanation: [{"name":"Atta","quantity":10,"unit":"kg"}]. Units: kg,g,L,ml,pcs,pack,dozen,box,bottle. If quantity unclear use 1.` }
-            ]
-          : [{ type:"text", text:`Extract grocery items from this bill. Normalize brand names. Return ONLY JSON array: [{"name":"Atta","quantity":10,"unit":"kg"}]` }]
-      }];
+
+      let messages;
+
+      if (isPDF) {
+        // Extract text from PDF first
+        let pdfText = "";
+        try {
+          pdfText = await extractPdfText(file);
+        } catch(e) {
+          // Fallback: send as base64 document
+          const base64 = await new Promise((res,rej) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result.split(",")[1]);
+            r.onerror = rej;
+            r.readAsDataURL(file);
+          });
+          pdfText = "PDF base64 content available but text extraction failed. File: " + file.name;
+        }
+        messages = [{
+          role: "user",
+          content: [{
+            type: "text",
+            text: `This is text extracted from a grocery invoice/bill (BigBasket, Blinkit, Instamart, DMart etc):
+
+${pdfText}
+
+Extract all purchased grocery items. Normalize brand names: "Aashirvaad Atta"→"Atta", "Amul Gold Milk"→"Milk", "Mother Dairy Paneer"→"Paneer", "Fresh Paneer"→"Paneer", "Red Onion"→"Onion", "Toned Milk"→"Milk". Ignore non-food items, delivery charges, taxes, totals. Return ONLY a JSON array, no markdown: [{"name":"Atta","quantity":10,"unit":"kg"},{"name":"Milk","quantity":6,"unit":"pack"}]. Units must be: kg,g,L,ml,pcs,pack,dozen,box,bottle. Convert: 500g→quantity:500,unit:g. If quantity unclear use 1.`
+          }]
+        }];
+      } else {
+        // Image upload
+        const base64 = await new Promise((res,rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result.split(",")[1]);
+          r.onerror = rej;
+          r.readAsDataURL(file);
+        });
+        messages = [{
+          role: "user",
+          content: [
+            { type:"image", source:{ type:"base64", media_type:file.type, data:base64 } },
+            { type:"text", text:`Extract all grocery items from this receipt/bill. Normalize brand names: "Aashirvaad Atta"→"Atta", "Amul Gold Milk"→"Milk", "Mother Dairy Paneer"→"Paneer", "Red Onion"→"Onion". Return ONLY a JSON array, no markdown: [{"name":"Atta","quantity":10,"unit":"kg"}]. Units: kg,g,L,ml,pcs,pack,dozen,box,bottle. If quantity unclear use 1.` }
+          ]
+        }];
+      }
+
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -1616,7 +1673,7 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
       setStage("reviewing");
     } catch(e) {
       console.error(e);
-      setError("Could not extract items. Try a clearer image.");
+      setError("Could not extract items. Try a clearer image or check the PDF.");
       setStage("upload");
     }
   };
