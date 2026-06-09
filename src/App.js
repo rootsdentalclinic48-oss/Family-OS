@@ -3483,6 +3483,7 @@ const KitchenScreen = ({ familyId }) => {
   const [showAddPantry, setShowAddPantry] = useState(false);
   const [restocking, setRestocking] = useState(false);
   const [pantrySearch, setPantrySearch] = useState("");
+  const [pantrySearch, setPantrySearch] = useState("");
   const [editPantryItem, setEditPantryItem] = useState(null);
   const [editShopItem, setEditShopItem] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
