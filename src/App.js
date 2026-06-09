@@ -1551,6 +1551,174 @@ const PlannerScreen = ({ familyId }) => {
 };
 
 // ─── AI SCREEN ────────────────────────────────────────────────────────────────
+
+// ─── GROCERY BILL IMPORTER ────────────────────────────────────────────────────
+const ITEM_EMOJI_MAP = {
+  atta:"🌾",rice:"🍚",dal:"🫘",chana:"🫘",rajma:"🫘",sugar:"🍬",salt:"🧂",
+  tea:"🍵",milk:"🥛",paneer:"🧀",curd:"🥛",butter:"🧈",ghee:"🫙",oil:"🫙",
+  potato:"🥔",onion:"🧅",tomato:"🍅",capsicum:"🫑",coriander:"🌿",ginger:"🫚",
+  garlic:"🧄",turmeric:"🟡",chilli:"🌶️",jeera:"🌿",besan:"🌾",sooji:"🌾",
+  poha:"🌾",oats:"🌾",maggi:"🍜",bread:"🍞",default:"📦"
+};
+const getBillEmoji = (name) => {
+  const n = name.toLowerCase();
+  for (const [k,v] of Object.entries(ITEM_EMOJI_MAP)) { if (n.includes(k)) return v; }
+  return ITEM_EMOJI_MAP.default;
+};
+
+const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
+  const [stage, setStage] = React.useState("upload");
+  const [extractedItems, setExtractedItems] = React.useState([]);
+  const [error, setError] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const fileRef = React.useRef();
+  const UNITS = ["kg","g","L","ml","pcs","pack","dozen","box","bottle"];
+
+  const extractFromFile = async (file) => {
+    setStage("extracting");
+    setError("");
+    try {
+      const base64 = await new Promise((res,rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result.split(",")[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      const isImage = file.type.startsWith("image/");
+      if (!isImage && file.type !== "application/pdf") {
+        setError("Please upload an image or PDF.");
+        setStage("upload");
+        return;
+      }
+      const messages = [{
+        role: "user",
+        content: isImage
+          ? [
+              { type:"image", source:{ type:"base64", media_type:file.type, data:base64 } },
+              { type:"text", text:`Extract all grocery items from this receipt/bill. Normalize brand names: "Aashirvaad Atta"→"Atta", "Amul Gold Milk"→"Milk", "Mother Dairy Paneer"→"Paneer", "Red Onion"→"Onion". Return ONLY a JSON array, no markdown, no explanation: [{"name":"Atta","quantity":10,"unit":"kg"}]. Units: kg,g,L,ml,pcs,pack,dozen,box,bottle. If quantity unclear use 1.` }
+            ]
+          : [{ type:"text", text:`Extract grocery items from this bill. Normalize brand names. Return ONLY JSON array: [{"name":"Atta","quantity":10,"unit":"kg"}]` }]
+      }];
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, messages })
+      });
+      const data = await res.json();
+      const text = data.content?.map(c=>c.text||"").join("").trim();
+      const clean = text.replace(/```json|```/g,"").trim();
+      const items = JSON.parse(clean);
+      setExtractedItems(items.map((it,i) => ({
+        ...it, id:i, selected:true,
+        existingQty: pantry.find(p=>p.name.toLowerCase()===it.name.toLowerCase())?.quantity||0,
+        existingUnit: pantry.find(p=>p.name.toLowerCase()===it.name.toLowerCase())?.unit||it.unit,
+      })));
+      setStage("reviewing");
+    } catch(e) {
+      console.error(e);
+      setError("Could not extract items. Try a clearer image.");
+      setStage("upload");
+    }
+  };
+
+  const updateItem = (id,field,val) => setExtractedItems(prev=>prev.map(it=>it.id===id?{...it,[field]:val}:it));
+
+  const saveToStock = async () => {
+    setSaving(true);
+    for (const item of extractedItems.filter(i=>i.selected)) {
+      const existing = pantry.find(p=>p.name.toLowerCase()===item.name.toLowerCase());
+      if (existing) {
+        await supabase.from("pantry").update({ quantity: Number(existing.quantity)+Number(item.quantity), updated_at:new Date().toISOString() }).eq("id",existing.id);
+      } else {
+        await supabase.from("pantry").insert([{ family_id:familyId, name:item.name, category:"Other", quantity:Number(item.quantity), unit:item.unit, par_level:0, updated_at:new Date().toISOString() }]);
+      }
+      await supabase.from("inventory_transactions").insert([{ family_id:familyId, item_name:item.name, transaction_type:"stock_in", quantity:Number(item.quantity), unit:item.unit, source_document:"grocery_bill" }]);
+    }
+    setSaving(false);
+    setStage("done");
+    setTimeout(()=>onDone(), 1800);
+  };
+
+  if (stage==="upload") return (
+    <div>
+      {error && <div style={{padding:"10px 12px",background:T.redSoft,borderRadius:12,color:T.red,fontSize:13,fontWeight:600,marginBottom:12}}>{error}</div>}
+      <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${T.accent}`,borderRadius:20,padding:"36px 20px",textAlign:"center",cursor:"pointer",background:T.accentSoft,marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:10}}>📄</div>
+        <div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:4}}>Upload Grocery Bill</div>
+        <div style={{fontSize:12,color:T.muted}}>Blinkit · BigBasket · DMart · Instamart · Local store</div>
+        <div style={{marginTop:14,padding:"8px 22px",background:T.accent,borderRadius:20,display:"inline-block",color:"white",fontSize:13,fontWeight:700}}>Choose File</div>
+      </div>
+      <input ref={fileRef} type="file" accept="image/*,application/pdf" style={{display:"none"}} onChange={e=>{ if(e.target.files[0]) extractFromFile(e.target.files[0]); }}/>
+    </div>
+  );
+
+  if (stage==="extracting") return (
+    <div style={{textAlign:"center",padding:"48px 20px"}}>
+      <div style={{fontSize:40,marginBottom:16}}>🤖</div>
+      <div style={{fontSize:16,fontWeight:700,color:T.text,marginBottom:6}}>Reading your bill...</div>
+      <div style={{fontSize:13,color:T.muted,marginBottom:20}}>AI is extracting and normalizing items</div>
+      <div className="spinner" style={{width:32,height:32,margin:"0 auto"}}/>
+    </div>
+  );
+
+  if (stage==="done") return (
+    <div style={{textAlign:"center",padding:"48px 20px"}}>
+      <div style={{fontSize:48,marginBottom:12}}>✅</div>
+      <div style={{fontSize:17,fontWeight:700,color:T.green,marginBottom:6}}>Pantry Updated!</div>
+      <div style={{fontSize:13,color:T.muted}}>{extractedItems.filter(i=>i.selected).length} items added to stock</div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <div>
+          <div style={{fontSize:15,fontWeight:700,color:T.text}}>Detected Items</div>
+          <div style={{fontSize:12,color:T.muted}}>{extractedItems.filter(i=>i.selected).length}/{extractedItems.length} selected</div>
+        </div>
+        <button onClick={()=>setExtractedItems(prev=>prev.map(i=>({...i,selected:true})))}
+          style={{fontSize:11,color:T.accent,fontWeight:700,background:T.accentSoft,border:"none",borderRadius:8,padding:"5px 10px",cursor:"pointer"}}>Select All</button>
+      </div>
+      <div style={{maxHeight:"50vh",overflowY:"auto",marginBottom:12}}>
+        {extractedItems.map(item=>(
+          <div key={item.id} style={{background:"#FFFFFF",borderRadius:14,border:`0.5px solid ${T.border}`,padding:"11px 13px",marginBottom:7,opacity:item.selected?1:0.45,transition:"opacity .15s"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div onClick={()=>updateItem(item.id,"selected",!item.selected)}
+                style={{width:22,height:22,borderRadius:6,background:item.selected?T.accent:T.border,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                {item.selected && <span style={{color:"white",fontSize:12,fontWeight:800}}>✓</span>}
+              </div>
+              <span style={{fontSize:20}}>{getBillEmoji(item.name)}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:600,color:T.text}}>{item.name}</div>
+                {item.existingQty>0 && <div style={{fontSize:11,color:T.muted}}>Stock: {item.existingQty} {item.existingUnit}</div>}
+              </div>
+              <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                <span style={{fontSize:12,color:T.accent,fontWeight:700}}>+</span>
+                <input type="number" value={item.quantity} min={0.1} step={0.1}
+                  onChange={e=>updateItem(item.id,"quantity",e.target.value)}
+                  style={{width:50,padding:"5px 6px",borderRadius:8,border:`0.5px solid ${T.border}`,fontSize:13,fontWeight:600,color:T.text,background:"#FAFAF8",textAlign:"center"}}/>
+                <select value={item.unit} onChange={e=>updateItem(item.id,"unit",e.target.value)}
+                  style={{padding:"5px 6px",borderRadius:8,border:`0.5px solid ${T.border}`,fontSize:12,color:T.text,background:"#FAFAF8"}}>
+                  {UNITS.map(u=><option key={u}>{u}</option>)}
+                </select>
+              </div>
+              <div onClick={()=>setExtractedItems(prev=>prev.filter(i=>i.id!==item.id))}
+                style={{cursor:"pointer",color:T.red,fontSize:14,flexShrink:0}}>✕</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={()=>setExtractedItems(prev=>[...prev,{id:Date.now(),name:"",quantity:1,unit:"kg",selected:true,existingQty:0}])}
+        style={{width:"100%",padding:"9px",background:"transparent",border:`0.5px dashed ${T.border}`,borderRadius:12,color:T.muted,fontSize:13,cursor:"pointer",marginBottom:10}}>
+        + Add Missing Item
+      </button>
+      <button onClick={saveToStock} disabled={saving||extractedItems.filter(i=>i.selected).length===0} className="btn-primary">
+        {saving?"Updating Pantry...":"✅ Update Pantry ("+extractedItems.filter(i=>i.selected).length+" items)"}
+      </button>
+    </div>
+  );
+};
+
 const AIScreen = ({ familyId }) => {
   const { rows: txns } = useTable("transactions", familyId, { order: "date", limit: 20 });
   const { rows: tasks } = useTable("tasks", familyId, { order: "created_at" });
