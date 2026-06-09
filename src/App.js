@@ -151,7 +151,7 @@ const notifyReminderAdded = (familyId, { content, due_date }) => {
   sendEmail("reminder", { content, due_date: due_date || "Today" });
 };
 const notifyGoalAdded = (familyId, { title }) => {
-  const n = { title: "🎯 Goal Created", body: title, icon: "🎯", color: "#A78BFA", type: "goal" };
+  const n = { title: "🎯 Goal Created", body: title, icon: "🎯", color: "#7D9D7C", type: "goal" };
   showToast(n); saveNotif(familyId, n);
 };
 const notifyPantryLow = (familyId, { name, quantity, unit }) => {
@@ -184,7 +184,7 @@ const ToastRenderer = () => {
             <div className="toast-title">{t.title}</div>
             <div className="toast-body">{t.body}</div>
           </div>
-          <div style={{ fontSize: 16, color: "rgba(238,236,248,0.25)", marginLeft: 4 }}>×</div>
+          <div style={{ fontSize: 16, color: "rgba(45,39,33,0.25)", marginLeft: 4 }}>×</div>
         </div>
       ))}
     </div>
@@ -239,9 +239,9 @@ const NotificationsScreen = ({ familyId, onClose }) => {
               <div key={n.id} className={`notif-item ${!n.read ? "unread" : ""}`} onClick={() => !n.read && markRead(n.id)}>
                 <div style={{ width: 38, height: 38, borderRadius: 11, background: (n.color || "#7D9D7C") + "18", border: `1px solid ${n.color || "#7D9D7C"}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>{n.icon || "🔔"}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: n.read ? "rgba(238,236,248,0.6)" : "#2D2721" }}>{n.title}</div>
-                  <div style={{ fontSize: 11.5, color: "rgba(238,236,248,0.4)", marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
-                  <div style={{ fontSize: 10.5, color: "rgba(238,236,248,0.25)", marginTop: 3 }}>{timeAgo(n.created_at)}</div>
+                  <div style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: n.read ? T.muted : "#2D2721" }}>{n.title}</div>
+                  <div style={{ fontSize: 11.5, color: T.muted, marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
+                  <div style={{ fontSize: 10.5, color: "rgba(45,39,33,0.25)", marginTop: 3 }}>{timeAgo(n.created_at)}</div>
                 </div>
                 <div onClick={e => { e.stopPropagation(); removeNotif(n.id); }} style={{ opacity: 0.3, cursor: "pointer", padding: "4px", flexShrink: 0 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C4603A" strokeWidth="1.8" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
@@ -264,19 +264,19 @@ const QUICK_ADD_TYPES = [
   { id:"event",    emoji:"📅", label:"Event",     color:T.pink,   table:"events" },
   { id:"memory",   emoji:"🧡", label:"Memory",    color:T.teal,   table:"memories" },
   { id:"reminder", emoji:"⏰", label:"Reminder",  color:T.red,    table:"reminders" },
-  { id:"goal",     emoji:"🎯", label:"Goal",      color:"#A78BFA", table:"goals" },
+  { id:"goal",     emoji:"🎯", label:"Goal",      color:"#7D9D7C", table:"goals" },
 ];
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
 const Styles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     html{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;touch-action:manipulation;}
     body{font-family:'Plus Jakarta Sans',sans-serif;background:${T.bg};color:${T.text};min-height:100vh;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
     ::-webkit-scrollbar{display:none;}
     *{scrollbar-width:none;}
-    .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};background-image:radial-gradient(ellipse 600px 400px at 20% -100px,rgba(139,124,248,0.08) 0%,transparent 60%),radial-gradient(ellipse 300px 300px at 85% 30%,rgba(96,165,250,0.04) 0%,transparent 55%);position:relative;}
+    .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};position:relative;}
     .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
     .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;}
@@ -286,11 +286,11 @@ const Styles = () => (
     .btn-primary{background:${T.accent};color:#fff;border-radius:14px;padding:0 22px;height:52px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:52px;}
     .btn-primary:active{transform:scale(0.97);opacity:0.9;}
     .btn-primary:disabled{opacity:0.45;cursor:not-allowed;}
-    .input{width:100%;background:rgba(255,255,255,0.058);border:1px solid ${T.border};border-radius:14px;padding:0 16px;height:52px;color:${T.text};font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;outline:none;transition:all .18s;-webkit-appearance:none;appearance:none;}
-    .input:focus{border-color:${T.accent};background:rgba(139,124,248,0.06);}
+    .input{width:100%;background:#FAFAF8;border:0.5px solid ${T.border};border-radius:14px;padding:0 16px;height:52px;color:${T.text};font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;outline:none;transition:all .18s;-webkit-appearance:none;appearance:none;}
+    .input:focus{border-color:${T.accent};background:#FFFFFF;}
     .input::placeholder{color:${T.dim};}
     textarea.input{height:auto;padding:14px 16px;resize:none;line-height:1.5;}
-    select.input{appearance:none;-webkit-appearance:none;} select.input option{background:#13131F;color:#EEECf8;}
+    select.input{appearance:none;-webkit-appearance:none;} select.input option{background:#2D2721;color:#EEECf8;}
     .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:8px 2px calc(8px + env(safe-area-inset-bottom, 0px));background:rgba(8,8,16,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid ${T.border};display:flex;justify-content:space-around;align-items:center;z-index:100;}
     .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 8px;border-radius:12px;transition:all .18s;flex:1;min-height:44px;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .nav-btn.on{background:rgba(125,157,124,0.12);}
@@ -307,8 +307,8 @@ const Styles = () => (
     .row{display:flex;justify-content:space-between;align-items:center;}
     .sec-title{font-size:14px;font-weight:700;}
     .sec-link{font-size:12.5px;color:${T.accent};font-weight:600;cursor:pointer;padding:4px 0;min-height:44px;display:flex;align-items:center;}
-    .chip{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:100px;background:rgba(255,255,255,0.058);border:1px solid ${T.border};font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap;min-height:36px;-webkit-tap-highlight-color:transparent;}
-    .chip.on{background:rgba(139,124,248,0.16);border-color:rgba(139,124,248,0.4);color:${T.accent};}
+    .chip{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:100px;background:#FAFAF8;border:0.5px solid ${T.border};font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap;min-height:36px;-webkit-tap-highlight-color:transparent;}
+    .chip.on{background:#7D9D7C;border-color:#7D9D7C;color:white;}
     .chip:active{transform:scale(0.94);}
     .scroll-x{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
     .scroll-x::-webkit-scrollbar{display:none;}
@@ -327,7 +327,7 @@ const Styles = () => (
     .ai-dot:nth-child(3){animation-delay:.36s;}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(0.75);}}
     @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-    .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;}
+    .spinner{width:20px;height:20px;border:2px solid rgba(125,157,124,0.2);border-top-color:#7D9D7C;border-radius:50%;animation:spin .7s linear infinite;}
     .empty{text-align:center;padding:48px 20px;color:${T.muted};}
     .empty-icon{font-size:40px;margin-bottom:12px;}
     .empty-text{font-size:14px;line-height:1.5;}
@@ -340,30 +340,30 @@ const Styles = () => (
     @keyframes fabMenuIn{from{opacity:0;transform:translateY(16px) scale(0.94);}to{opacity:1;transform:translateY(0) scale(1);}}
     .fab-item{display:flex;align-items:center;gap:10px;cursor:pointer;animation:fabItemIn .22s cubic-bezier(.16,1,.3,1) both;}
     @keyframes fabItemIn{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
-    .fab-item-btn{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:transform .15s;-webkit-tap-highlight-color:transparent;}
+    .fab-item-btn{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;border:1px solid rgba(125,157,124,0.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:transform .15s;-webkit-tap-highlight-color:transparent;}
     .fab-item-btn:active{transform:scale(0.88);}
     .fab-item-label{background:rgba(12,12,22,0.94);border:1px solid ${T.border};border-radius:10px;padding:6px 12px;font-size:12.5px;font-weight:600;color:${T.text};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);white-space:nowrap;}
     .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
     .type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
     .type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;cursor:pointer;transition:all .18s;border:1px solid transparent;min-height:68px;justify-content:center;-webkit-tap-highlight-color:transparent;}
-    .type-btn.active{border-color:rgba(139,124,248,0.35);background:rgba(125,157,124,0.1);}
+    .type-btn.active{border-color:rgba(125,157,124,0.35);background:rgba(125,157,124,0.1);}
     .type-btn:active{transform:scale(0.93);}
     .toast-container{position:fixed;top:calc(16px + env(safe-area-inset-top, 0px));left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;width:calc(100% - 28px);max-width:402px;pointer-events:none;}
-    .toast{background:#13131F;border:1px solid rgba(255,255,255,0.11);border-radius:16px;padding:12px 14px;display:flex;gap:11px;align-items:flex-start;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.55),0 2px 8px rgba(0,0,0,0.3);animation:toastIn .3s cubic-bezier(.16,1,.3,1);}
+    .toast{background:#2D2721;border:1px solid rgba(255,255,255,0.11);border-radius:16px;padding:12px 14px;display:flex;gap:11px;align-items:flex-start;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.55),0 2px 8px rgba(0,0,0,0.3);animation:toastIn .3s cubic-bezier(.16,1,.3,1);}
     @keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(0.96);}to{opacity:1;transform:translateY(0) scale(1);}}
     .toast.out{animation:toastOut .28s cubic-bezier(.4,0,1,1) forwards;}
     @keyframes toastOut{to{opacity:0;transform:translateY(-10px) scale(0.96);}}
     .toast-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
     .toast-title{font-size:13px;font-weight:700;color:#EEECf8;line-height:1.3;}
     .toast-body{font-size:11.5px;color:rgba(238,236,248,0.5);margin-top:2px;line-height:1.4;}
-    .notif-badge{position:absolute;top:-5px;right:-5px;background:#C4603A;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #080810;}
+    .notif-badge{position:absolute;top:-5px;right:-5px;background:#C4603A;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #F8F7F4;}
     .notif-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #FFFFFF;cursor:pointer;transition:background .15s;position:relative;min-height:60px;align-items:center;}
     .notif-item:last-child{border-bottom:none;}
-    .notif-item:active{background:rgba(255,255,255,0.03);}
+    .notif-item:active{background:#F8F7F4;}
     .notif-item.unread::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:5px;height:5px;border-radius:50%;background:#7D9D7C;}
     .person-sel{display:flex;gap:8px;}
     .person-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:13px;border:1px solid ${T.border};background:transparent;cursor:pointer;transition:all .18s;font-size:14px;font-weight:600;color:${T.muted};-webkit-tap-highlight-color:transparent;}
-    .person-btn.on{border-color:rgba(139,124,248,0.35);background:rgba(125,157,124,0.1);color:${T.accent};}
+    .person-btn.on{border-color:rgba(125,157,124,0.35);background:rgba(125,157,124,0.1);color:${T.accent};}
     .person-btn:active{transform:scale(0.96);}
     .priority-sel{display:flex;gap:8px;}
     .priority-btn{flex:1;height:44px;border-radius:12px;border:1px solid ${T.border};background:transparent;cursor:pointer;transition:all .18s;font-size:12px;font-weight:700;text-transform:capitalize;-webkit-tap-highlight-color:transparent;}
@@ -371,7 +371,7 @@ const Styles = () => (
     .sec-header{display:flex;justify-content:space-between;align-items:center;padding:0 18px;margin-bottom:10px;}
     .icon-btn{width:40px;height:40px;border-radius:12px;background:${T.card};border:1px solid ${T.border};display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;}
     .icon-btn:active{transform:scale(0.9);}
-    .balance-card{margin:12px 18px 0;background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(139,124,248,0.08));border:1px solid rgba(109,155,107,0.2);border-radius:20px;padding:18px;cursor:pointer;transition:all .18s;}
+    .balance-card{margin:12px 18px 0;background:linear-gradient(135deg,rgba(125,157,124,0.08),rgba(125,157,124,0.04));border:1px solid rgba(109,155,107,0.2);border-radius:20px;padding:18px;cursor:pointer;transition:all .18s;}
     .balance-card:active{transform:scale(0.985);}
     .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 18px 0;}
     .quick-action{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
@@ -499,7 +499,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
         <div className="type-grid">
           {QUICK_ADD_TYPES.map((t,i)=>(
             <div key={t.id} className={`type-btn ${type===t.id?"active":""}`} onClick={()=>setType(t.id)}>
-              <div style={{width:38,height:38,borderRadius:12,background:type===t.id?`${t.color}22`:"rgba(255,255,255,0.05)",border:`1px solid ${type===t.id?t.color+"44":T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"all .18s"}}>{t.emoji}</div>
+              <div style={{width:38,height:38,borderRadius:12,background:type===t.id?`${t.color}22`:"#FAFAF8",border:`1px solid ${type===t.id?t.color+"44":T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,transition:"all .18s"}}>{t.emoji}</div>
               <span style={{fontSize:9.5,color:type===t.id?t.color:T.muted,fontWeight:600}}>{t.label}</span>
             </div>
           ))}
@@ -1019,7 +1019,7 @@ const FinanceScreen = ({ familyId }) => {
                 await updTx(editTx.id,{description:editTx.description,amount:editTx.amount,category:editTx.category,date:editTx.date});
                 setEditTx(null);
               }}>Save Changes</button>
-              <button onClick={async()=>{await remove(editTx.id);setEditTx(null);}} style={{width:"100%",padding:"14px",background:"rgba(196,96,58,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#C4603A",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+              <button onClick={async()=>{await remove(editTx.id);setEditTx(null);}} style={{width:"100%",padding:"14px",background:"rgba(196,96,58,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#C4603A",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>
                 Delete Transaction
               </button>
             </div>
@@ -2117,22 +2117,22 @@ const MealTimeReminder = ({ familyId }) => {
   }, [mealPlan, recipes]);
   if (!reminder) return null;
   return (
-    <div style={{position:"fixed",bottom:"calc(80px + env(safe-area-inset-bottom,0px))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:398,background:"#13131F",border:"1px solid rgba(139,124,248,0.4)",borderRadius:16,padding:"14px 16px",zIndex:145,boxShadow:"0 8px 32px rgba(0,0,0,0.6)",animation:"slideUp .3s cubic-bezier(.16,1,.3,1)"}}>
+    <div style={{position:"fixed",bottom:"calc(80px + env(safe-area-inset-bottom,0px))",left:"50%",transform:"translateX(-50%)",width:"calc(100% - 32px)",maxWidth:398,background:"#2D2721",border:"1px solid rgba(139,124,248,0.4)",borderRadius:16,padding:"14px 16px",zIndex:145,boxShadow:"0 8px 32px rgba(0,0,0,0.6)",animation:"slideUp .3s cubic-bezier(.16,1,.3,1)"}}>
       <div style={{display:"flex",gap:12,alignItems:"center"}}>
         <div style={{width:40,height:40,borderRadius:12,background:"rgba(125,157,124,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🍽</div>
         <div style={{flex:1}}>
           <div style={{fontSize:13,fontWeight:700,color:"#2D2721"}}>{reminder.label} Time!</div>
-          <div style={{fontSize:12,color:"rgba(238,236,248,0.6)",marginTop:2}}>{reminder.recipe.name}</div>
+          <div style={{fontSize:12,color:T.muted,marginTop:2}}>{reminder.recipe.name}</div>
         </div>
         <div style={{display:"flex",gap:8}}>
           <button onClick={async()=>{
             await supabase.from("meal_plan").update({cooked:true,cooked_at:new Date().toISOString()}).eq("id",reminder.meal.id);
             showToast({title:"Marked as eaten!",body:reminder.recipe.name,icon:"🍽",color:"#6D9B6B"});
             setReminder(null); refresh();
-          }} style={{padding:"8px 12px",background:"rgba(52,211,153,0.15)",border:"1px solid rgba(109,155,107,0.3)",borderRadius:10,color:"#6D9B6B",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+          }} style={{padding:"8px 12px",background:"rgba(52,211,153,0.15)",border:"1px solid rgba(109,155,107,0.3)",borderRadius:10,color:"#6D9B6B",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>
             Ate it
           </button>
-          <button onClick={()=>setReminder(null)} style={{padding:"8px 12px",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(196,96,58,0.2)",borderRadius:10,color:"#C4603A",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+          <button onClick={()=>setReminder(null)} style={{padding:"8px 12px",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(196,96,58,0.2)",borderRadius:10,color:"#C4603A",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>
             Skip
           </button>
         </div>
@@ -2306,7 +2306,7 @@ const VoiceCommandButton = ({ familyId }) => {
           left:"max(16px, calc(50vw - 199px))",
           width:54,height:54,borderRadius:17,
           background:listening?"linear-gradient(135deg,#C4603A,#E55)":"linear-gradient(135deg,#4A9B8E,#0D9488)",
-          boxShadow:listening?"0 4px 24px rgba(248,113,113,0.5)":"0 4px 24px rgba(45,212,191,0.4)",
+          boxShadow:listening?"0 4px 24px rgba(196,96,58,0.3)":"0 4px 24px rgba(125,157,124,0.3)",
           display:"flex",alignItems:"center",justifyContent:"center",
           cursor:"pointer",zIndex:150,border:"none",
           transition:"all .25s cubic-bezier(.16,1,.3,1)",
@@ -2322,7 +2322,7 @@ const VoiceCommandButton = ({ familyId }) => {
           bottom:"calc(148px + env(safe-area-inset-bottom,0px))",
           left:"max(12px, calc(50vw - 210px))",
           width:240,
-          background:"#13131F",border:"1px solid rgba(45,212,191,0.3)",
+          background:"#2D2721",border:"1px solid rgba(45,212,191,0.3)",
           borderRadius:16,padding:"14px 16px",
           zIndex:149,boxShadow:"0 8px 32px rgba(0,0,0,0.6)",
           animation:"fabMenuIn .25s cubic-bezier(.16,1,.3,1)",
@@ -2338,7 +2338,7 @@ const VoiceCommandButton = ({ familyId }) => {
             </div>
           )}
           {transcript && !processing && !result && (
-            <div style={{fontSize:12,color:"rgba(238,236,248,0.7)"}}> "{transcript}"</div>
+            <div style={{fontSize:12,color:T.muted}}> "{transcript}"</div>
           )}
           {processing && (
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -2440,10 +2440,10 @@ const ServiceReminders = ({ familyId }) => {
                     <div style={{fontSize:12,fontWeight:700,color,marginTop:3}}>{r.due_date} · {label}</div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:6,alignItems:"flex-end"}}>
-                    <button onClick={()=>markDone(r)} style={{padding:"6px 12px",background:"rgba(109,155,107,0.12)",border:"1px solid rgba(109,155,107,0.3)",borderRadius:10,color:"#6D9B6B",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                    <button onClick={()=>markDone(r)} style={{padding:"6px 12px",background:"rgba(109,155,107,0.12)",border:"1px solid rgba(109,155,107,0.3)",borderRadius:10,color:"#6D9B6B",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>
                       ✅ Done
                     </button>
-                    <button onClick={async()=>{await supabase.from("reminders").delete().eq("id",r.id);refresh();}} style={{padding:"4px 10px",background:"transparent",border:"none",color:T.red,fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                    <button onClick={async()=>{await supabase.from("reminders").delete().eq("id",r.id);refresh();}} style={{padding:"4px 10px",background:"transparent",border:"none",color:T.red,fontSize:11,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>
                       Delete
                     </button>
                   </div>
@@ -2617,7 +2617,7 @@ const FinanceAdvisorScreen = ({ familyId }) => {
             <div style={{fontSize:22,fontWeight:900}}>📊 Finance Advisor</div>
             <div style={{fontSize:12,color:T.muted,marginTop:2}}>Monthly analysis & PDF report</div>
           </div>
-          <button onClick={generatePDF} disabled={generating} style={{padding:"10px 16px",background:"rgba(125,157,124,0.12)",border:"1px solid rgba(139,124,248,0.4)",borderRadius:12,color:T.accent,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+          <button onClick={generatePDF} disabled={generating} style={{padding:"10px 16px",background:"rgba(125,157,124,0.12)",border:"1px solid rgba(139,124,248,0.4)",borderRadius:12,color:T.accent,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>
             {generating ? "⏳" : "📄 PDF"}
           </button>
         </div>
@@ -2825,7 +2825,7 @@ const GmailSyncScreen = ({ familyId }) => {
             <button className="btn-primary" onClick={syncEmails} disabled={syncing} style={{width:"100%",height:50,marginBottom:16}}>
               {syncing ? "🔄 Scanning..." : "🔍 Scan This Month"}
             </button>
-            <button onClick={()=>{try{sessionStorage.removeItem("gat");sessionStorage.removeItem("grt");}catch(e){}setConnected(false);}} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif",marginBottom:20}}>
+            <button onClick={()=>{try{sessionStorage.removeItem("gat");sessionStorage.removeItem("grt");}catch(e){}setConnected(false);}} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(125,157,124,0.08)",borderRadius:14,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif",marginBottom:20}}>
               Disconnect Gmail
             </button>
             {syncHistory.length > 0 && (
@@ -2850,7 +2850,7 @@ const GmailSyncScreen = ({ familyId }) => {
 
         {step === "review" && (
           <>
-            <div style={{padding:"12px 14px",background:"rgba(139,124,248,0.08)",border:"1px solid rgba(125,157,124,0.2)",borderRadius:12,marginBottom:14}}>
+            <div style={{padding:"12px 14px",background:"rgba(125,157,124,0.06)",border:"0.5px solid rgba(125,157,124,0.2)",borderRadius:12,marginBottom:14}}>
               <div style={{fontSize:13,fontWeight:700,color:T.accent}}>Found {transactions.length} new transactions</div>
               <div style={{fontSize:12,color:T.muted}}>{selected.size} selected</div>
             </div>
@@ -2866,7 +2866,7 @@ const GmailSyncScreen = ({ familyId }) => {
                           <div style={{fontSize:11,color:T.muted}}>{tx.category} · {tx.date}</div>
                         </div>
                         <div style={{fontSize:13,fontWeight:700,color:T.red,marginRight:8}}>-₹{tx.amount}</div>
-                        <div style={{width:20,height:20,borderRadius:6,background:selected.has(i)?"#6D9B6B":"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                        <div style={{width:20,height:20,borderRadius:6,background:selected.has(i)?"#6D9B6B":"#F8F7F4",display:"flex",alignItems:"center",justifyContent:"center"}}>
                           {selected.has(i) && <I n="check" s={11} c="white" w={3}/>}
                         </div>
                       </div>
@@ -2875,7 +2875,7 @@ const GmailSyncScreen = ({ familyId }) => {
                   <button className="btn-primary" onClick={importSelected} style={{width:"100%",height:50,marginBottom:10}}>
                     ✅ Import {selected.size} Transactions
                   </button>
-                  <button onClick={()=>setStep("connect")} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>
+                  <button onClick={()=>setStep("connect")} style={{width:"100%",padding:"12px",background:"transparent",border:"1px solid rgba(125,157,124,0.08)",borderRadius:14,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>
                     Cancel
                   </button>
                 </>
@@ -3295,7 +3295,7 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
                 </div>
                 <div style={{display:"flex",gap:8}}>
                   <button onClick={()=>onViewRecipe(r)}
-                    style={{flex:1,padding:"8px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.text,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                    style={{flex:1,padding:"8px",background:"#FAFAF8",border:"1px solid rgba(125,157,124,0.08)",borderRadius:10,color:T.text,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
                     👁 View
                   </button>
                   {alreadyPlanned(r.id)
@@ -3327,7 +3327,7 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
                 );
               })}
             </div>
-            <button onClick={()=>setAssignModal(null)} style={{marginTop:12,width:"100%",padding:"10px",background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Cancel</button>
+            <button onClick={()=>setAssignModal(null)} style={{marginTop:12,width:"100%",padding:"10px",background:"transparent",border:"1px solid rgba(125,157,124,0.08)",borderRadius:10,color:T.muted,fontSize:13,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Cancel</button>
           </div>
         </div>
       )}
@@ -3374,7 +3374,7 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
         <div className="card" style={{padding:"14px 16px",marginBottom:14}}>
           <div style={{fontSize:13,fontWeight:800,marginBottom:10,color:T.accent}}>🔥 Most Cooked This Month</div>
           {Object.entries(cookCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,count])=>(
-            <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+            <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid #FAFAF8"}}>
               <div style={{fontSize:13,fontWeight:500}}>{name}</div>
               <div style={{fontSize:12,color:T.accent,fontWeight:700,background:T.accentSoft,padding:"2px 8px",borderRadius:20}}>{count}x</div>
             </div>
@@ -3818,7 +3818,7 @@ const KitchenScreen = ({ familyId }) => {
         )}
       </div>
 
-      {/* SHOP EDIT MODAL */}{editShopItem && (<Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}><div style={{display:"flex",flexDirection:"column",gap:10}}><input className="input" placeholder="Item name" autoFocus defaultValue={editShopItem.item_name} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/><div style={{display:"flex",gap:8}}><input className="input" type="number" placeholder="Qty" defaultValue={editShopItem.quantity_needed} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/><select className="input" defaultValue={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>{["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}</select></div><select className="input" defaultValue={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>{["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}</select><button className="btn-primary" onClick={async()=>{if(!editShopItem.item_name) return;if(editShopItem.isNew){await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);}else{await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);}setEditShopItem(null);}}>{editShopItem.isNew?"Add to List":"Save Changes"}</button>{!editShopItem.isNew&&(<button onClick={async()=>{await supabase.from("shopping_list").delete().eq("id",editShopItem.id);setEditShopItem(null);}} style={{width:"100%",padding:"14px",background:"rgba(196,96,58,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#C4603A",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Delete Item</button>)}</div></Modal>)}
+      {/* SHOP EDIT MODAL */}{editShopItem && (<Modal title={editShopItem.isNew ? "Add Item" : "Edit Item"} onClose={()=>setEditShopItem(null)}><div style={{display:"flex",flexDirection:"column",gap:10}}><input className="input" placeholder="Item name" autoFocus defaultValue={editShopItem.item_name} onChange={e=>setEditShopItem(x=>({...x,item_name:e.target.value}))}/><div style={{display:"flex",gap:8}}><input className="input" type="number" placeholder="Qty" defaultValue={editShopItem.quantity_needed} onChange={e=>setEditShopItem(x=>({...x,quantity_needed:e.target.value}))} style={{flex:1}}/><select className="input" defaultValue={editShopItem.unit||"kg"} onChange={e=>setEditShopItem(x=>({...x,unit:e.target.value}))} style={{flex:1}}>{["kg","g","L","ml","pcs","pack","dozen"].map(u=><option key={u}>{u}</option>)}</select></div><select className="input" defaultValue={editShopItem.category||"Vegetables"} onChange={e=>setEditShopItem(x=>({...x,category:e.target.value}))}>{["Vegetables","Dairy","Grains","Pulses","Fruits","Snacks","Spices","Oils","Beverages","Other"].map(c=><option key={c}>{c}</option>)}</select><button className="btn-primary" onClick={async()=>{if(!editShopItem.item_name) return;if(editShopItem.isNew){await supabase.from("shopping_list").insert([{family_id:familyId,item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit||"kg",category:editShopItem.category||"Other",purchased:false,added_at:new Date().toISOString()}]);}else{await supabase.from("shopping_list").update({item_name:editShopItem.item_name,quantity_needed:Number(editShopItem.quantity_needed)||null,unit:editShopItem.unit,category:editShopItem.category}).eq("id",editShopItem.id);}setEditShopItem(null);}}>{editShopItem.isNew?"Add to List":"Save Changes"}</button>{!editShopItem.isNew&&(<button onClick={async()=>{await supabase.from("shopping_list").delete().eq("id",editShopItem.id);setEditShopItem(null);}} style={{width:"100%",padding:"14px",background:"rgba(196,96,58,0.12)",border:"1px solid rgba(248,113,113,0.25)",borderRadius:14,color:"#C4603A",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"Plus Jakarta Sans,sans-serif"}}>Delete Item</button>)}</div></Modal>)}
             {/* RECIPE DETAIL MODAL */}
       {selectedRecipe && (
         <div className="modal-bg" onClick={()=>setSelectedRecipe(null)}>
