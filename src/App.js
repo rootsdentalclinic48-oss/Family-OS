@@ -3481,6 +3481,7 @@ const KitchenScreen = ({ familyId }) => {
   const [cooking, setCooking] = useState(null);
   const [addMealModal, setAddMealModal] = useState(null);
   const [showAddPantry, setShowAddPantry] = useState(false);
+  const [restocking, setRestocking] = useState(false);
   const [editPantryItem, setEditPantryItem] = useState(null);
   const [editShopItem, setEditShopItem] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -3494,7 +3495,7 @@ const KitchenScreen = ({ familyId }) => {
   const { rows: pantry, refresh: refreshPantry } = useTable("pantry", familyId, { order: "name", asc: true });
   const { rows: recipes } = useTable("recipes", familyId, { order: "name", asc: true });
   const { rows: mealPlan, refresh: refreshMeal } = useTable("meal_plan", familyId, { order: "plan_date", asc: true });
-  const { rows: shopping, update: updShopping, remove: removeShopping } = useTable("shopping_list", familyId, { order: "added_at" });
+  const { rows: shopping, update: updShopping, remove: removeShopping, refresh: refreshShopping } = useTable("shopping_list", familyId, { order: "added_at" });
 
   useEffect(() => {
     if (!seeded && familyId) { seedRecipes(familyId).then(() => setSeeded(true)); }
@@ -3845,7 +3846,61 @@ const KitchenScreen = ({ familyId }) => {
         {/* SHOP */}
         {tab==="shop" && (
           <>
-            <button onClick={()=>setEditShopItem({isNew:true,item_name:"",quantity_needed:"",unit:"kg",category:"Vegetables"})} className="btn-primary" style={{marginBottom:14,height:44,fontSize:14}}>+ Add Item</button>
+            <div style={{display:"flex",gap:8,marginBottom:14}}>
+              <button onClick={()=>setEditShopItem({isNew:true,item_name:"",quantity_needed:"",unit:"kg",category:"Vegetables"})} className="btn-primary" style={{flex:1,height:44,fontSize:14}}>+ Add Item</button>
+              <button onClick={async()=>{
+                setRestocking(true);
+                const lowItems = pantry.filter(p=>Number(p.quantity)<=Number(p.par_level));
+                const emptyItems = pantry.filter(p=>Number(p.quantity)===0);
+                let added = 0;
+                for (const item of [...new Set([...emptyItems,...lowItems])]) {
+                  const exists = shopping.find(s=>s.item_name.toLowerCase()===item.name.toLowerCase()&&!s.purchased);
+                  if (!exists) {
+                    await supabase.from("shopping_list").insert([{
+                      family_id:familyId, item_name:item.name,
+                      quantity_needed: item.par_level>0 ? item.par_level : 1,
+                      unit:item.unit, category:item.category||"Other", purchased:false,
+                      added_at:new Date().toISOString()
+                    }]);
+                    added++;
+                  }
+                }
+                await refreshShopping();
+                setRestocking(false);
+                showToast({title:"🛒 Restock Updated",body:`${added} low/empty items added to list.`,icon:"🛒",color:T.amber});
+              }} disabled={restocking}
+                style={{height:44,padding:"0 14px",background:T.amberSoft,border:`0.5px solid ${T.amber}44`,borderRadius:14,color:T.amber,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",whiteSpace:"nowrap"}}>
+                {restocking ? "..." : "↻ Restock"}
+              </button>
+            </div>
+            {pantry.filter(p=>Number(p.quantity)<=Number(p.par_level)).length > 0 && (
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:11,fontWeight:700,color:T.amber,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>
+                  ⚠️ Low / Finished ({pantry.filter(p=>Number(p.quantity)<=Number(p.par_level)).length})
+                </div>
+                <div className="card" style={{padding:"2px 14px",borderColor:`${T.amber}44`}}>
+                  {pantry.filter(p=>Number(p.quantity)<=Number(p.par_level)).sort((a,b)=>Number(a.quantity)-Number(b.quantity)).map(item=>(
+                    <div key={item.id} className="list-row">
+                      <div style={{width:8,height:8,borderRadius:"50%",background:Number(item.quantity)===0?T.red:T.amber,flexShrink:0}}/>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13,fontWeight:600,color:T.text}}>{item.name}</div>
+                        <div style={{fontSize:11,color:T.muted}}>{Number(item.quantity)===0?"Empty":item.quantity+" "+item.unit+" remaining"}</div>
+                      </div>
+                      <button onClick={async()=>{
+                        const exists = shopping.find(s=>s.item_name.toLowerCase()===item.name.toLowerCase()&&!s.purchased);
+                        if (!exists) {
+                          await supabase.from("shopping_list").insert([{family_id:familyId,item_name:item.name,quantity_needed:item.par_level>0?item.par_level:1,unit:item.unit,category:item.category||"Other",purchased:false,added_at:new Date().toISOString()}]);
+                          await refreshShopping();
+                          showToast({title:"✓ Added",body:`${item.name} added to list`,icon:"🛒",color:T.green});
+                        }
+                      }} style={{fontSize:11,fontWeight:700,color:T.accent,background:T.accentSoft,border:"none",borderRadius:8,padding:"4px 10px",cursor:"pointer"}}>
+                        {shopping.find(s=>s.item_name.toLowerCase()===item.name.toLowerCase()&&!s.purchased)?"✓ Listed":"+ Add"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {shopping.filter(s=>!s.purchased).length === 0
               ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">Shopping list is empty!<br/>Mark meals as cooked to auto-populate.</div></div>
               : <>
