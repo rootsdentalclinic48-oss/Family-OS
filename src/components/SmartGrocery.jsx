@@ -78,7 +78,7 @@ export default function SmartGrocery({ familyId }) {
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: itms }, { data: hist }, { data: cfg }] = await Promise.all([
-      supabase.from('grocery_items').select('*').eq('is_active', true).order('name'),
+      supabase.from('grocery_items').select('*').eq('is_active', true).order('name').limit(500),
       supabase.from('grocery_price_history').select('*').order('logged_at', { ascending: false }).limit(200),
       supabase.from('grocery_api_config').select('*'),
     ]);
@@ -137,7 +137,7 @@ export default function SmartGrocery({ familyId }) {
   const saveFk = async () => { setSaving(true); await supabase.from('grocery_api_config').upsert({ provider: 'flipkart', access_key: fk.app_id, app_token: fk.app_token, is_active: !!(fk.app_id && fk.app_token), updated_at: new Date().toISOString() }, { onConflict: 'provider' }); setSaving(false); load(); showToast('Flipkart config saved ✓'); };
 
   const filteredHist = history.filter(h => (!hf.item_id || h.item_id === hf.item_id) && (!hf.platform || h.platform === hf.platform));
-  const lowStock = items.filter(i => (i.stock_pct ?? 100) < 25);
+  const lowStock = items.filter(i => (i.stock_pct ?? 100) < (i.low_threshold ?? 25));
 
   if (loading) return <div style={{ padding: '3rem', textAlign: 'center', color: C.text3, fontSize: 14 }}>Loading Smart Grocery...</div>;
 
@@ -188,8 +188,8 @@ export default function SmartGrocery({ familyId }) {
 
             {items.map(item => {
               const pct = item.stock_pct ?? 100;
-              const stockColor = pct < 25 ? C.red : pct < 50 ? '#d97706' : C.green;
-              const stockBg = pct < 25 ? C.redBg : pct < 50 ? C.amberBg : C.greenBg;
+              const lt = item.low_threshold ?? 25; const stockColor = pct < lt ? C.red : pct < lt * 2 ? '#d97706' : C.green;
+              const stockBg = pct < lt ? C.redBg : pct < lt * 2 ? C.amberBg : C.greenBg;
               return (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 8, background: C.cardBg, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                   <StockDot pct={pct} />
