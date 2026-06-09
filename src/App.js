@@ -1571,8 +1571,113 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   const [extractedItems, setExtractedItems] = React.useState([]);
   const [error, setError] = React.useState("");
   const [saving, setSaving] = React.useState(false);
-  const fileRef = React.useRef();
+  const [pasteText, setPasteText] = React.useState("");
   const UNITS = ["kg","g","L","ml","pcs","pack","dozen","box","bottle"];
+
+  // Indian item name normalizer
+  const NORMALIZE_MAP = {
+    "aashirvaad atta":"Atta","fortune atta":"Atta","pillsbury atta":"Atta",
+    "amul gold milk":"Milk","mother dairy milk":"Milk","toned milk":"Milk","full cream milk":"Milk","amul milk":"Milk",
+    "amul butter":"Butter","mother dairy butter":"Butter",
+    "amul paneer":"Paneer","mother dairy paneer":"Paneer","fresh paneer":"Paneer",
+    "amul ghee":"Ghee","patanjali ghee":"Ghee",
+    "red onion":"Onion","white onion":"Onion","yellow onion":"Onion",
+    "baby potato":"Potato","desi potato":"Potato",
+    "tomato":"Tomato","hybrid tomato":"Tomato",
+    "india gate rice":"Rice","kohinoor rice":"Rice","basmati rice":"Rice",
+    "tata salt":"Salt","catch salt":"Salt",
+    "brooke bond tea":"Tea","tata tea":"Tea","red label tea":"Tea",
+    "saffola oil":"Oil","fortune oil":"Oil","sunflower oil":"Oil","mustard oil":"Oil",
+    "amul curd":"Curd","mother dairy curd":"Curd","dahi":"Curd",
+    "moong dal":"Moong Dal","toor dal":"Toor Dal","chana dal":"Chana Dal",
+    "besan":"Besan","gram flour":"Besan",
+    "sooji":"Sooji","semolina":"Sooji","rava":"Sooji",
+  };
+
+  const normalizeName = (raw) => {
+    const lower = raw.toLowerCase().trim();
+    for (const [k,v] of Object.entries(NORMALIZE_MAP)) {
+      if (lower.includes(k)) return v;
+    }
+    // Capitalize first letter of each word
+    return raw.trim().replace(/\w/g, c => c.toUpperCase());
+  };
+
+  const parseBillText = (text) => {
+    if (!text.trim()) return;
+    setError("");
+    const lines = text.split(/
+/).map(l=>l.trim()).filter(l=>l.length>2);
+    const items = [];
+    // Patterns: "Atta 10kg", "Paneer 500 g", "Milk x6", "Onion 5 Kg", "2 kg Atta"
+    const unitPattern = /(\d+\.?\d*)\s*(kg|g|l|ltr|litre|liter|ml|pcs|pc|pack|packet|packets|dozen|box|bottle|nos|no|unit|units)/i;
+    const qtyFirst = /^(\d+\.?\d*)\s*(kg|g|l|ltr|ml|pcs|pc|pack|packet|packets|dozen|box|bottle)\s+(.+)/i;
+    const xPattern = /x\s*(\d+)/i;
+
+    for (const line of lines) {
+      // Skip lines that are clearly not items
+      if (/total|amount|price|rs\.|₹|discount|delivery|charges|tax|gst|mrp|saved|order|invoice|bill|date|address|payment|thank/i.test(line)) continue;
+      if (line.length < 3 || /^\d+$/.test(line)) continue;
+
+      let name = "", quantity = 1, unit = "pcs";
+
+      // Try "qty first" pattern: "2kg Atta"
+      const qf = line.match(qtyFirst);
+      if (qf) {
+        quantity = parseFloat(qf[1]);
+        unit = qf[2].toLowerCase();
+        name = qf[3];
+      } else {
+        // Try "name first" pattern: "Atta 10kg"
+        const um = line.match(unitPattern);
+        if (um) {
+          quantity = parseFloat(um[1]);
+          unit = um[2].toLowerCase();
+          name = line.replace(um[0],"").trim();
+        } else {
+          // Try x pattern: "Milk x6"
+          const xm = line.match(xPattern);
+          if (xm) {
+            quantity = parseInt(xm[1]);
+            name = line.replace(xm[0],"").trim();
+            unit = "pcs";
+          } else {
+            // Plain name line
+            name = line;
+          }
+        }
+      }
+
+      // Normalize units
+      if (/^l$|ltr|litre|liter/i.test(unit)) unit = "L";
+      else if (/pack|packet/i.test(unit)) unit = "pack";
+      else if (/pc$|nos|no$|unit/i.test(unit)) unit = "pcs";
+      else unit = unit.toLowerCase();
+
+      // Clean name - remove prices, numbers at end
+      name = name.replace(/₹\d+|\d+\.\d+|\s+\d+$|qty.*$/i,"").trim();
+      name = name.replace(/[-–—|]/g," ").trim();
+      if (name.length < 2) continue;
+
+      name = normalizeName(name);
+      if (!UNITS.includes(unit)) unit = "pcs";
+
+      // Avoid duplicates
+      const existing = items.find(i=>i.name.toLowerCase()===name.toLowerCase());
+      if (existing) { existing.quantity += quantity; }
+      else { items.push({ id:items.length, name, quantity, unit, selected:true,
+        existingQty: pantry.find(p=>p.name.toLowerCase()===name.toLowerCase())?.quantity||0,
+        existingUnit: pantry.find(p=>p.name.toLowerCase()===name.toLowerCase())?.unit||unit,
+      }); }
+    }
+
+    if (items.length === 0) {
+      setError("No items found. Make sure to paste item names with quantities.");
+      return;
+    }
+    setExtractedItems(items);
+    setStage("reviewing");
+  };
 
   const extractPdfText = async (file) => {
     return new Promise((resolve, reject) => {
@@ -1655,7 +1760,7 @@ Extract all purchased grocery items. Normalize brand names: "Aashirvaad Atta"→
         }];
       }
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/claude", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, messages })
@@ -1701,13 +1806,31 @@ Extract all purchased grocery items. Normalize brand names: "Aashirvaad Atta"→
   if (stage==="upload") return (
     <div>
       {error && <div style={{padding:"10px 12px",background:T.redSoft,borderRadius:12,color:T.red,fontSize:13,fontWeight:600,marginBottom:12}}>{error}</div>}
-      <div onClick={()=>fileRef.current.click()} style={{border:`2px dashed ${T.accent}`,borderRadius:20,padding:"36px 20px",textAlign:"center",cursor:"pointer",background:T.accentSoft,marginBottom:14}}>
-        <div style={{fontSize:40,marginBottom:10}}>📄</div>
-        <div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:4}}>Upload Grocery Bill</div>
-        <div style={{fontSize:12,color:T.muted}}>Blinkit · BigBasket · DMart · Instamart · Local store</div>
-        <div style={{marginTop:14,padding:"8px 22px",background:T.accent,borderRadius:20,display:"inline-block",color:"white",fontSize:13,fontWeight:700}}>Choose File</div>
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:6}}>Paste your grocery bill text</div>
+        <div style={{fontSize:12,color:T.muted,marginBottom:10,lineHeight:1.6}}>
+          Copy order details from Blinkit, BigBasket, Instamart, DMart app or any grocery bill and paste below.
+        </div>
+        <textarea
+          className="input"
+          placeholder={"Example:
+Aashirvaad Atta 10kg
+Amul Gold Milk 6 pcs
+Mother Dairy Paneer 500g
+Onion 5kg
+Tomato 2kg
+Ghee 1L"}
+          style={{minHeight:160,resize:"vertical",lineHeight:1.6,fontSize:13}}
+          value={pasteText}
+          onChange={e=>setPasteText(e.target.value)}
+        />
       </div>
-      <input ref={fileRef} type="file" accept="image/*,application/pdf" style={{display:"none"}} onChange={e=>{ if(e.target.files[0]) extractFromFile(e.target.files[0]); }}/>
+      <div style={{fontSize:11,color:T.muted,marginBottom:12,padding:"8px 12px",background:T.accentSoft,borderRadius:10,lineHeight:1.6}}>
+        💡 <strong>How to copy from Blinkit:</strong> Open order → Order Details → Select All text → Copy → Paste here
+      </div>
+      <button onClick={()=>parseBillText(pasteText)} disabled={!pasteText.trim()} className="btn-primary">
+        🔍 Extract Items
+      </button>
     </div>
   );
 
@@ -1858,7 +1981,7 @@ const AIScreen = ({ familyId }) => {
           <span style={{fontSize:22}}>📄</span>
           <div style={{flex:1}}>
             <div style={{fontSize:13,fontWeight:700,color:T.text}}>Import Grocery Bill</div>
-            <div style={{fontSize:11,color:T.muted}}>Upload bill → AI extracts items → Auto-stock pantry</div>
+            <div style={{fontSize:11,color:T.muted}}>Paste Blinkit/BigBasket text → Auto-stock pantry</div>
           </div>
           <span style={{fontSize:12,color:T.accent,fontWeight:700}}>→</span>
         </div>
