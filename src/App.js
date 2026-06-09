@@ -2860,6 +2860,61 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
 };
 
 
+
+// ─── MEAL PICKER SEARCH ───────────────────────────────────────────────────────
+const MealPickerSearch = ({ recipes, defaultMealType, onSelect }) => {
+  const [query, setQuery] = React.useState("");
+  const [filter, setFilter] = React.useState(defaultMealType || "all");
+  const mealTypes = ["all","breakfast","lunch","dinner","snack","dessert"];
+
+  const results = React.useMemo(() => {
+    let list = filter === "all" ? recipes : recipes.filter(r => r.meal_type === filter);
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter(r =>
+        r.name.toLowerCase().includes(q) ||
+        (r.tags||[]).some(t => t.toLowerCase().includes(q))
+      );
+    }
+    return list.sort((a,b) => a.name.localeCompare(b.name));
+  }, [recipes, query, filter]);
+
+  return (
+    <div>
+      <div style={{position:"relative",marginBottom:10}}>
+        <input
+          className="input"
+          placeholder="Search recipes..."
+          value={query}
+          onChange={e=>setQuery(e.target.value)}
+          autoFocus
+          style={{paddingLeft:34}}
+        />
+        <span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:14}}>🔍</span>
+        {query && <span onClick={()=>setQuery("")} style={{position:"absolute",right:11,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:12,color:T.muted}}>✕</span>}
+      </div>
+      <div className="scroll-x" style={{marginBottom:10,gap:6,display:"flex"}}>
+        {mealTypes.map(m=>(
+          <div key={m} className={`chip ${filter===m?"on":""}`} onClick={()=>setFilter(m)} style={{textTransform:"capitalize",fontSize:11,padding:"5px 11px"}}>{m}</div>
+        ))}
+      </div>
+      <div style={{fontSize:11,color:T.muted,marginBottom:8}}>{results.length} recipes</div>
+      <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:"50vh",overflowY:"auto"}}>
+        {results.map(r => (
+          <div key={r.id} onClick={()=>onSelect(r)}
+            className="card card-tap" style={{padding:"11px 13px",marginBottom:0}}>
+            <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
+            <div style={{fontSize:11,color:T.muted,marginTop:2}}>⏱ {r.prep_time_mins}min · 👥 {r.servings} · <span style={{textTransform:"capitalize"}}>{r.meal_type}</span></div>
+          </div>
+        ))}
+        {results.length === 0 && (
+          <div style={{textAlign:"center",color:T.muted,padding:"20px 0",fontSize:13}}>No recipes found</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── RECIPE SEARCH ────────────────────────────────────────────────────────────
 const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign, onViewRecipe }) => {
   const [query, setQuery] = React.useState("");
