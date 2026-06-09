@@ -1606,8 +1606,7 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   const parseBillText = (text) => {
     if (!text.trim()) return;
     setError("");
-    const lines = text.split(/
-/).map(l=>l.trim()).filter(l=>l.length>2);
+    const lines = text.split(/\n/).map(l=>l.trim()).filter(l=>l.length>2);
     const items = [];
     // Patterns: "Atta 10kg", "Paneer 500 g", "Milk x6", "Onion 5 Kg", "2 kg Atta"
     const unitPattern = /(\d+\.?\d*)\s*(kg|g|l|ltr|litre|liter|ml|pcs|pc|pack|packet|packets|dozen|box|bottle|nos|no|unit|units)/i;
