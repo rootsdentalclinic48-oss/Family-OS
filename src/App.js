@@ -1589,6 +1589,7 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
             fullText += textContent.items.map(item => item.str).join(' ') + '
+'// fixed
 ';
           }
           resolve(fullText);
