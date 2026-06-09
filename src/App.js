@@ -3339,12 +3339,26 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
 const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
   const [filter, setFilter] = React.useState("all");
   const [cookLogs, setCookLogs] = React.useState([]);
+  const [ingredients, setIngredients] = React.useState({}); // recipeId -> ingredients[]
+  const [loadingIngredients, setLoadingIngredients] = React.useState(true);
 
   React.useEffect(() => {
     const load = async () => {
+      // Load cook logs
       const start = new Date(); start.setDate(start.getDate()-30);
-      const { data } = await supabase.from("cook_logs").select("recipe_name,cooked_at").eq("family_id", familyId).gte("cooked_at", start.toISOString()).order("cooked_at", {ascending:false});
-      setCookLogs(data||[]);
+      const { data: logs } = await supabase.from("cook_logs").select("recipe_name,cooked_at").eq("family_id", familyId).gte("cooked_at", start.toISOString()).order("cooked_at", {ascending:false});
+      setCookLogs(logs||[]);
+      // Load all recipe ingredients in one query
+      const { data: ings } = await supabase.from("recipe_ingredients").select("*");
+      if (ings) {
+        const map = {};
+        ings.forEach(ing => {
+          if (!map[ing.recipe_id]) map[ing.recipe_id] = [];
+          map[ing.recipe_id].push(ing);
+        });
+        setIngredients(map);
+      }
+      setLoadingIngredients(false);
     };
     load();
   }, [familyId]);
@@ -3355,49 +3369,107 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
     return map;
   }, [cookLogs]);
 
-  const canCook = React.useMemo(() => {
+  // Calculate pantry match % for each recipe
+  const scoredRecipes = React.useMemo(() => {
     return recipes.map(recipe => {
-      // We don't have ingredients loaded here, so score by pantry name match
-      return recipe;
+      const ings = ingredients[recipe.id] || [];
+      if (ings.length === 0) return { ...recipe, matchPct: 50, haveCount: 0, totalCount: 0, missing: [] };
+      let have = 0;
+      const missing = [];
+      for (const ing of ings) {
+        const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase());
+        if (pantryItem && Number(pantryItem.quantity) >= Number(ing.quantity)) {
+          have++;
+        } else {
+          missing.push(ing.pantry_item_name);
+        }
+      }
+      const matchPct = Math.round((have / ings.length) * 100);
+      return { ...recipe, matchPct, haveCount: have, totalCount: ings.length, missing: missing.slice(0,3) };
     });
-  }, [recipes, pantry]);
+  }, [recipes, ingredients, pantry]);
 
   const mealTypes = ["all","breakfast","lunch","dinner","snack","dessert"];
-  const filtered = filter==="all" ? recipes : recipes.filter(r=>r.meal_type===filter);
+  const filtered = filter==="all" ? scoredRecipes : scoredRecipes.filter(r=>r.meal_type===filter);
 
-  // Sort: most cooked first
-  const sorted = [...filtered].sort((a,b)=>(cookCount[b.name]||0)-(cookCount[a.name]||0));
+  // Sort: 100% match first, then by match%, then by cook count
+  const canCookNow = filtered.filter(r=>r.matchPct===100).sort((a,b)=>(cookCount[b.name]||0)-(cookCount[a.name]||0));
+  const almostReady = filtered.filter(r=>r.matchPct>=60&&r.matchPct<100).sort((a,b)=>b.matchPct-a.matchPct);
+  const needsShopping = filtered.filter(r=>r.matchPct<60).sort((a,b)=>b.matchPct-a.matchPct);
+
+  const MatchBadge = ({pct}) => {
+    const bg = pct===100 ? T.greenSoft : pct>=60 ? T.amberSoft : T.redSoft;
+    const color = pct===100 ? T.green : pct>=60 ? T.amber : T.red;
+    return <div style={{fontSize:11,fontWeight:700,color,background:bg,padding:"3px 8px",borderRadius:20,flexShrink:0}}>{pct===100?"✓ Ready":pct+"%"}</div>;
+  };
+
+  const RecipeRow = ({r}) => (
+    <div key={r.id} onClick={()=>onSelectRecipe(r)}
+      className="card card-tap" style={{padding:"12px 14px",marginBottom:0,display:"flex",justifyContent:"space-between",alignItems:"center",borderColor:r.matchPct===100?T.green:T.border}}>
+      <div style={{flex:1}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+          <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
+          {cookCount[r.name] > 0 && <div style={{fontSize:10,color:T.muted}}>({cookCount[r.name]}x)</div>}
+        </div>
+        <div style={{fontSize:11,color:T.muted}}>⏱ {r.prep_time_mins}min · {r.meal_type}</div>
+        {r.missing.length > 0 && <div style={{fontSize:10,color:T.red,marginTop:2}}>Missing: {r.missing.join(", ")}</div>}
+      </div>
+      <MatchBadge pct={r.matchPct}/>
+    </div>
+  );
+
+  if (loadingIngredients) return (
+    <div style={{textAlign:"center",padding:"40px 20px"}}>
+      <div className="spinner" style={{width:28,height:28,margin:"0 auto 12px"}}/>
+      <div style={{fontSize:13,color:T.muted}}>Checking your pantry...</div>
+    </div>
+  );
 
   return (
     <div>
-      {cookLogs.length > 0 && (
-        <div className="card" style={{padding:"14px 16px",marginBottom:14}}>
-          <div style={{fontSize:13,fontWeight:800,marginBottom:10,color:T.accent}}>🔥 Most Cooked This Month</div>
-          {Object.entries(cookCount).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,count])=>(
-            <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid #FAFAF8"}}>
-              <div style={{fontSize:13,fontWeight:500}}>{name}</div>
-              <div style={{fontSize:12,color:T.accent,fontWeight:700,background:T.accentSoft,padding:"2px 8px",borderRadius:20}}>{count}x</div>
-            </div>
-          ))}
+      <div className="card" style={{padding:"12px 14px",marginBottom:12,display:"flex",gap:12}}>
+        <div style={{flex:1,textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:800,color:T.green}}>{canCookNow.length}</div>
+          <div style={{fontSize:11,color:T.muted,fontWeight:600}}>Ready Now</div>
         </div>
-      )}
+        <div style={{width:"0.5px",background:T.border}}/>
+        <div style={{flex:1,textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:800,color:T.amber}}>{almostReady.length}</div>
+          <div style={{fontSize:11,color:T.muted,fontWeight:600}}>Almost Ready</div>
+        </div>
+        <div style={{width:"0.5px",background:T.border}}/>
+        <div style={{flex:1,textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:800,color:T.muted}}>{needsShopping.length}</div>
+          <div style={{fontSize:11,color:T.muted,fontWeight:600}}>Need Shopping</div>
+        </div>
+      </div>
+
       <div className="scroll-x" style={{marginBottom:12,gap:6,display:"flex"}}>
         {mealTypes.map(m=>(
           <div key={m} className={`chip ${filter===m?"on":""}`} onClick={()=>setFilter(m)} style={{textTransform:"capitalize"}}>{m}</div>
         ))}
       </div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {sorted.map(r=>(
-          <div key={r.id} onClick={()=>onSelectRecipe(r)}
-            className="card card-tap" style={{padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div>
-              <div style={{fontSize:14,fontWeight:600}}>{r.name}</div>
-              <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>⏱ {r.prep_time_mins}min · 👥 {r.servings} · {r.meal_type}</div>
-            </div>
-            {cookCount[r.name] && <div style={{fontSize:11,color:T.accent,fontWeight:700,background:T.accentSoft,padding:"3px 8px",borderRadius:20,flexShrink:0}}>{cookCount[r.name]}x</div>}
-          </div>
-        ))}
-      </div>
+
+      {canCookNow.length > 0 && (
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.green,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>✅ Cook Right Now ({canCookNow.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>{canCookNow.map(r=><RecipeRow key={r.id} r={r}/>)}</div>
+        </div>
+      )}
+
+      {almostReady.length > 0 && (
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.amber,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>⚡ Almost Ready ({almostReady.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>{almostReady.map(r=><RecipeRow key={r.id} r={r}/>)}</div>
+        </div>
+      )}
+
+      {needsShopping.length > 0 && (
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>🛒 Need Shopping ({needsShopping.length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>{needsShopping.slice(0,10).map(r=><RecipeRow key={r.id} r={r}/>)}</div>
+        </div>
+      )}
     </div>
   );
 };
