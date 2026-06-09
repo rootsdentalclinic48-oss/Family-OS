@@ -3270,6 +3270,22 @@ const KitchenScreen = ({ familyId }) => {
         )}
 
         {/* PANTRY */}
+        {/* SEARCH */}
+        {tab==="search" && (
+          <RecipeSearch
+            recipes={recipes}
+            pantry={pantry}
+            familyId={familyId}
+            todayStr={todayStr}
+            mealPlan={mealPlan}
+            onAssign={assignRecipe}
+            onViewRecipe={(r) => {
+              setSelectedRecipe(r);
+              setTab("recipes");
+              supabase.from("recipe_ingredients").select("*").eq("recipe_id", r.id).then(({data}) => setRecipeIngredients(data||[]));
+            }}
+          />
+        )}
         {/* CAN COOK */}
         {tab==="suggest" && (
           <WhatCanICook
