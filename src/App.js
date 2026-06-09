@@ -2799,7 +2799,6 @@ const markMealCooked = async (familyId, mealPlanRow, recipes, pantryRows) => {
 
 // ─── COOK LOG FORM ────────────────────────────────────────────────────────────
 const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose }) => {
-  const T = THEME;
   const unitOptions = recipe?.meal_type === "breakfast"
     ? ["paranthas","idlis","dosas","chillas","portions","pieces","cups","plates"]
     : ["portions","bowls","servings","cups","plates","pieces"];
@@ -2862,7 +2861,6 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
 
 // ─── WHAT CAN I COOK ──────────────────────────────────────────────────────────
 const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
-  const T = THEME;
   const [filter, setFilter] = React.useState("all");
   const [cookLogs, setCookLogs] = React.useState([]);
 
