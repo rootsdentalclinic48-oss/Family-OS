@@ -887,7 +887,6 @@ export default function SmartGrocery({ familyId }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
 // QUICK LOG UI — 3-second price entry optimised for mobile shopping sessions
 // ══════════════════════════════════════════════════════════════════════════════
 function QuickLogUI({ pantry, priceLog, onLog }) {
