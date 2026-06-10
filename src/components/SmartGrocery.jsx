@@ -853,48 +853,24 @@ export default function SmartGrocery({ familyId }) {
           </>
         )}
 
-        {/* ══ TAB: HISTORY ══ */}
+        {/* ══ TAB: HISTORY — QUICK LOG UI ══ */}
         {tab==='history' && (
-          <>
-            <div style={S.card}>
-              <span style={S.lbl}>Log a price manually</span>
-              <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                <input style={{ ...S.inp, flex:1, minWidth:120 }} placeholder="Item name" value={plogForm.item_name} onChange={e=>setPlogForm(p=>({...p,item_name:e.target.value}))}/>
-                <select style={{ ...S.inp, width:130 }} value={plogForm.platform} onChange={e=>setPlogForm(p=>({...p,platform:e.target.value}))}>
-                  {Object.entries(PLATFORMS).map(([slug,p])=><option key={slug} value={slug}>{p.label}</option>)}
-                </select>
-                <input style={{ ...S.inp, width:80 }} type="number" placeholder="₹" value={plogForm.price} onChange={e=>setPlogForm(p=>({...p,price:e.target.value}))}/>
-                <input style={{ ...S.inp, width:80 }} type="number" placeholder="Del ₹" value={plogForm.delivery_fee} onChange={e=>setPlogForm(p=>({...p,delivery_fee:e.target.value}))}/>
-                <button onClick={logPrice} style={S.btn}>Log</button>
-              </div>
-            </div>
-
-            <div style={{ fontSize:12, color:C.text3, margin:'10px 0 8px', fontWeight:600 }}>
-              {priceLog.length} price logs · {priceLog.filter(h=>h.source==='google_shopping').length} from Google · {priceLog.filter(h=>h.source==='manual').length} manual
-            </div>
-
-            {priceLog.length===0
-              ? <div style={S.empty}>No price logs yet.<br/>Compare your cart and prices auto-save.</div>
-              : priceLog.slice(0,100).map(h=>(
-                <div key={h.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', borderRadius:10, border:`1px solid ${C.border}`, background:C.cardBg, marginBottom:8 }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:14, fontWeight:700, color:C.text1 }}>{h.item_name}</div>
-                    <div style={{ fontSize:11, color:C.text3, marginTop:2, display:'flex', gap:8 }}>
-                      <span>{new Date(h.logged_at).toLocaleDateString('en-IN')}</span>
-                      <span style={{ background:h.source==='google_shopping'?'#e0f2fe':'#f0fdf4', color:h.source==='google_shopping'?'#0369a1':'#15803d', padding:'0 6px', borderRadius:20, fontSize:10, fontWeight:700 }}>
-                        {h.source==='google_shopping'?'Google':'Manual'}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge slug={h.platform}/>
-                  <div style={{ fontSize:15, fontWeight:800, color:C.text1, marginLeft:8 }}>{fmt(h.price)}</div>
-                </div>
-              ))
-            }
-          </>
+          <QuickLogUI
+            pantry={pantry}
+            priceLog={priceLog}
+            onLog={async (entries) => {
+              for (const e of entries) {
+                await supabase.from('grocery_price_history').insert({
+                  item_name: e.item_name, platform: e.platform,
+                  price: parseFloat(e.price), delivery_fee: 0,
+                  source: 'manual', logged_at: new Date().toISOString(),
+                });
+              }
+              await load();
+              showToast(`✓ ${entries.length} prices logged!`);
+            }}
+          />
         )}
-      </div>
-
       {/* Sticky cart bar */}
       {cart.length>0 && tab!=='compare' && (
         <div style={{ position:'fixed', bottom:70, left:'50%', transform:'translateX(-50%)', width:'calc(100% - 32px)', maxWidth:400, background:C.accent, borderRadius:14, padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', zIndex:90, boxShadow:'0 4px 20px rgba(124,58,237,0.4)' }}>
@@ -906,6 +882,245 @@ export default function SmartGrocery({ familyId }) {
             ⚡ Compare
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// QUICK LOG UI — 3-second price entry optimised for mobile shopping sessions
+// ══════════════════════════════════════════════════════════════════════════════
+function QuickLogUI({ pantry, priceLog, onLog }) {
+  const [activePlatform, setActivePlatform] = useState('blinkit');
+  const [prices, setPrices] = useState({});
+  const [search, setSearch] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState({});
+  const [viewMode, setViewMode] = useState('log');
+  const [histFilter, setHistFilter] = useState('all');
+  const inputRefs = {};
+
+  const allItems = useMemo(() => {
+    const pantryNames = new Set(pantry.map(p => p.name.toLowerCase()));
+    const extra = [];
+    const seen = new Set();
+    priceLog.forEach(h => {
+      const key = h.item_name?.toLowerCase();
+      if (key && !pantryNames.has(key) && !seen.has(key)) {
+        seen.add(key);
+        extra.push({ id:key, name:h.item_name, category:'Other', fromLog:true });
+      }
+    });
+    return [...pantry, ...extra];
+  }, [pantry, priceLog]);
+
+  const latestPrices = useMemo(() => {
+    const map = {};
+    [...priceLog].reverse().forEach(h => {
+      const key = `${h.item_name?.toLowerCase()}__${h.platform}`;
+      if (!map[key]) map[key] = h;
+    });
+    return map;
+  }, [priceLog]);
+
+  const getLatest = (name, platform) => latestPrices[`${name?.toLowerCase()}__${platform}`]?.price || null;
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return allItems;
+    const q = search.toLowerCase();
+    return allItems.filter(i => i.name.toLowerCase().includes(q) || (i.category||'').toLowerCase().includes(q));
+  }, [allItems, search]);
+
+  const enteredCount = Object.values(prices).filter(v => v && String(v).trim() && parseFloat(v) > 0).length;
+
+  const saveAll = async () => {
+    const entries = Object.entries(prices)
+      .filter(([,v]) => v && parseFloat(v) > 0)
+      .map(([item_name, price]) => ({ item_name, platform: activePlatform, price }));
+    if (!entries.length) return;
+    setSaving(true);
+    await onLog(entries);
+    const newSaved = {};
+    entries.forEach(e => { newSaved[e.item_name] = true; });
+    setSaved(newSaved);
+    setPrices({});
+    setTimeout(() => setSaved({}), 2500);
+    setSaving(false);
+  };
+
+  const historyItems = useMemo(() => {
+    return histFilter === 'all' ? priceLog.slice(0,150) : priceLog.filter(h=>h.platform===histFilter).slice(0,150);
+  }, [priceLog, histFilter]);
+
+  return (
+    <div>
+      {/* Mode toggle */}
+      <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+        {[{id:'log',label:'⚡ Quick Log'},{id:'history',label:'📋 History'}].map(m=>(
+          <button key={m.id} onClick={()=>setViewMode(m.id)}
+            style={{ flex:1, padding:'11px', borderRadius:10, border:'none', background:viewMode===m.id?C.accent:C.accentL, color:viewMode===m.id?'#fff':C.accent, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+            {m.label}{m.id==='log'&&enteredCount>0?` (${enteredCount})`:''}
+          </button>
+        ))}
+      </div>
+
+      {viewMode==='log' && (
+        <>
+          {/* Tip */}
+          <div style={{ padding:'10px 14px', background:'#f0fdf4', border:'1px solid #86efac', borderRadius:10, marginBottom:14, fontSize:13, color:'#15803d', lineHeight:1.6 }}>
+            📱 Open Blinkit/Zepto on your phone → select platform below → type prices as you browse → Save All
+          </div>
+
+          {/* Platform selector */}
+          <div style={{ marginBottom:14 }}>
+            <span style={{ fontSize:11, fontWeight:700, color:C.text3, textTransform:'uppercase', letterSpacing:'.06em', display:'block', marginBottom:8 }}>You are browsing:</span>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+              {Object.entries(PLATFORMS).map(([slug,p])=>(
+                <button key={slug} onClick={()=>setActivePlatform(slug)}
+                  style={{ padding:'12px 6px', borderRadius:12, border:`2px solid ${activePlatform===slug?p.bg:'#e5e7eb'}`, background:activePlatform===slug?p.bg:'#fff', color:activePlatform===slug?'#fff':C.text2, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all .15s', lineHeight:1.4 }}>
+                  {p.label}
+                  {activePlatform===slug && <div style={{ fontSize:10, marginTop:2, opacity:0.85 }}>✓ Active</div>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Search */}
+          <div style={{ position:'relative', marginBottom:10 }}>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:16, pointerEvents:'none' }}>🔍</span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search item..." style={{ ...S.inp, paddingLeft:38 }}/>
+          </div>
+
+          {/* Sticky save bar */}
+          {enteredCount > 0 && (
+            <div style={{ position:'sticky', top:0, zIndex:10, background:C.green, borderRadius:12, padding:'12px 16px', marginBottom:12, display:'flex', alignItems:'center', justifyContent:'space-between', boxShadow:'0 4px 12px rgba(21,128,61,0.35)' }}>
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:'#fff' }}>{enteredCount} prices ready</div>
+                <div style={{ fontSize:11, color:'rgba(255,255,255,0.85)', marginTop:1 }}>{PLATFORMS[activePlatform].label} · tap to save</div>
+              </div>
+              <button onClick={saveAll} disabled={saving}
+                style={{ padding:'10px 20px', borderRadius:10, border:'none', background:'#fff', color:C.green, fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                {saving ? '...' : '💾 Save All'}
+              </button>
+            </div>
+          )}
+
+          <div style={{ fontSize:12, color:C.text3, marginBottom:10, fontWeight:600 }}>
+            {filtered.length} items · {PLATFORMS[activePlatform].label}
+          </div>
+
+          {/* Item rows */}
+          {filtered.map(item => {
+            const price = prices[item.name] || '';
+            const lastPrice = getLatest(item.name, activePlatform);
+            const isSaved = saved[item.name];
+            const low = isLow(item); const out = isOut(item);
+            return (
+              <div key={item.id||item.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', borderRadius:12, marginBottom:8, border:`1.5px solid ${isSaved?'#16a34a':price?C.accent:C.border}`, background:isSaved?'#f0fdf4':price?C.accentL:'#fff', transition:'all .2s' }}>
+                <div style={{ fontSize:20, flexShrink:0 }}>{getCatIcon(item.category)}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:C.text1 }}>{item.name}</div>
+                  <div style={{ fontSize:11, color:C.text3, marginTop:2, display:'flex', gap:6, flexWrap:'wrap' }}>
+                    {item.category && <span>{item.category}</span>}
+                    {out && <span style={{ color:C.red, fontWeight:600 }}>Out of stock</span>}
+                    {!out && low && <span style={{ color:'#d97706', fontWeight:600 }}>Low stock</span>}
+                    {lastPrice && <span style={{ background:'#f3f4f6', padding:'1px 6px', borderRadius:20 }}>Last: {fmt(lastPrice)}</span>}
+                  </div>
+                </div>
+                {isSaved ? (
+                  <div style={{ fontSize:15, fontWeight:800, color:C.green, minWidth:60, textAlign:'right' }}>✓ Saved</div>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                    <span style={{ fontSize:16, fontWeight:700, color:C.text3 }}>₹</span>
+                    <input
+                      type="number" inputMode="numeric"
+                      placeholder={lastPrice ? String(Math.round(lastPrice)) : '—'}
+                      value={price}
+                      onChange={e => setPrices(prev=>({...prev,[item.name]:e.target.value}))}
+                      onKeyDown={e => {
+                        if (e.key==='Enter') {
+                          const idx = filtered.findIndex(i=>i.name===item.name);
+                          const next = filtered[idx+1];
+                          if (next && inputRefs[next.name]) inputRefs[next.name].focus();
+                        }
+                      }}
+                      ref={el=>{ if(el) inputRefs[item.name]=el; }}
+                      style={{ width:80, padding:'10px 8px', borderRadius:10, border:`2px solid ${price?C.accent:'#d1d5db'}`, fontSize:16, fontWeight:700, color:C.text1, background:'#fff', fontFamily:'inherit', textAlign:'center', outline:'none' }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {enteredCount > 0 && (
+            <button onClick={saveAll} disabled={saving}
+              style={{ ...S.btn, width:'100%', padding:'14px', fontSize:15, marginTop:8, background:C.green }}>
+              {saving ? 'Saving...' : `💾 Save ${enteredCount} prices from ${PLATFORMS[activePlatform].label}`}
+            </button>
+          )}
+
+          {filtered.length===0 && (
+            <div style={{ textAlign:'center', padding:'2rem', color:C.text3, fontSize:14 }}>No items found.</div>
+          )}
+        </>
+      )}
+
+      {viewMode==='history' && (
+        <>
+          {/* Stats */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:14 }}>
+            {[
+              { l:'Total logs',     v:priceLog.length },
+              { l:'Manual',         v:priceLog.filter(h=>h.source==='manual').length },
+              { l:'Items tracked',  v:new Set(priceLog.map(h=>h.item_name?.toLowerCase())).size },
+            ].map(s=>(
+              <div key={s.l} style={{ background:C.cardBg, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px', textAlign:'center' }}>
+                <div style={{ fontSize:18, fontWeight:800, color:C.text1 }}>{s.v}</div>
+                <div style={{ fontSize:11, color:C.text3, marginTop:2 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Platform filter */}
+          <div style={{ display:'flex', gap:6, overflowX:'auto', marginBottom:12, paddingBottom:2 }}>
+            <button onClick={()=>setHistFilter('all')}
+              style={{ padding:'6px 14px', borderRadius:20, border:`1px solid ${histFilter==='all'?C.accent:C.border}`, background:histFilter==='all'?C.accent:'#fff', color:histFilter==='all'?'#fff':C.text2, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap' }}>
+              All
+            </button>
+            {Object.entries(PLATFORMS).map(([slug,p])=>(
+              <button key={slug} onClick={()=>setHistFilter(slug)}
+                style={{ padding:'6px 14px', borderRadius:20, border:`2px solid ${histFilter===slug?p.bg:C.border}`, background:histFilter===slug?p.bg:'#fff', color:histFilter===slug?'#fff':C.text2, fontSize:12, fontWeight:600, cursor:'pointer', fontFamily:'inherit', whiteSpace:'nowrap' }}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {historyItems.length===0 ? (
+            <div style={{ textAlign:'center', padding:'3rem', color:C.text3, fontSize:14, lineHeight:1.8 }}>
+              No prices logged yet.<br/>
+              Switch to <strong>⚡ Quick Log</strong> and start logging<br/>prices while you browse.
+            </div>
+          ) : historyItems.map(h => {
+            const daysAgo = Math.floor((Date.now()-new Date(h.logged_at))/86400000);
+            return (
+              <div key={h.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', borderRadius:10, border:`1px solid ${C.border}`, background:C.cardBg, marginBottom:8 }}>
+                <div style={{ fontSize:18 }}>{getCatIcon(pantry.find(p=>p.name.toLowerCase()===h.item_name?.toLowerCase())?.category)}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:C.text1 }}>{h.item_name}</div>
+                  <div style={{ fontSize:11, color:C.text3, marginTop:2, display:'flex', gap:6, alignItems:'center' }}>
+                    <span>{daysAgo===0?'Today':daysAgo===1?'Yesterday':`${daysAgo}d ago`}</span>
+                    <span style={{ background:h.source==='manual'?'#f0fdf4':'#e0f2fe', color:h.source==='manual'?C.green:'#0369a1', padding:'0 6px', borderRadius:20, fontSize:10, fontWeight:700 }}>
+                      {h.source==='manual'?'Manual':'Google'}
+                    </span>
+                  </div>
+                </div>
+                <Badge slug={h.platform}/>
+                <div style={{ fontSize:16, fontWeight:800, color:C.text1, marginLeft:6 }}>{fmt(h.price)}</div>
+              </div>
+            );
+          })}
+        </>
       )}
     </div>
   );
