@@ -274,8 +274,15 @@ export default function SmartGrocery({ familyId }) {
 
   const coverageDays = useMemo(() => {
     if (!pantry.length) return 0;
-    const avgRatio = pantry.reduce((a, i) => a + (i.par_level > 0 ? i.quantity / i.par_level : 1), 0) / pantry.length;
-    return Math.round(avgRatio * 7);
+    // Count how many items are well-stocked (above par) vs total
+    const wellStocked = pantry.filter(i => Number(i.quantity) > Number(i.par_level)).length;
+    const lowStock = pantry.filter(i => isLow(i)).length;
+    const outStock = pantry.filter(i => isOut(i)).length;
+    // Estimate: well-stocked = ~14d, low = ~3d, out = 0d
+    const estimated = Math.round(
+      (wellStocked * 14 + (pantry.length - wellStocked - lowStock - outStock) * 7 + lowStock * 3) / pantry.length
+    );
+    return Math.min(30, estimated);
   }, [pantry]);
 
   if (loading) return (
