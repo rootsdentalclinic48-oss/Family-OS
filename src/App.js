@@ -3090,6 +3090,18 @@ const SEED_RECIPES = [
     ingredients:[{name:"Potato",qty:200,unit:"g"},{name:"Paneer",qty:100,unit:"g"},{name:"Besan",qty:50,unit:"g"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Cream",qty:50,unit:"ml"}]},
 
   // ── Roti / Bread varieties ─────────────────────────────────────────────────
+  { name:"Roti / Chapati", meal_type:"dinner", servings:3, prep_time_mins:20, tags:["vegetarian","everyday","staple","child-friendly"],
+    ingredients:[{name:"Wheat Flour",qty:250,unit:"g"},{name:"Water",qty:150,unit:"ml"},{name:"Ghee",qty:15,unit:"ml"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Phulka", meal_type:"dinner", servings:3, prep_time_mins:20, tags:["vegetarian","healthy","no-oil","everyday"],
+    ingredients:[{name:"Wheat Flour",qty:250,unit:"g"},{name:"Water",qty:150,unit:"ml"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Butter Roti", meal_type:"dinner", servings:3, prep_time_mins:20, tags:["vegetarian","rich","child-friendly"],
+    ingredients:[{name:"Wheat Flour",qty:250,unit:"g"},{name:"Butter",qty:30,unit:"g"},{name:"Water",qty:150,unit:"ml"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Tandoori Roti", meal_type:"dinner", servings:3, prep_time_mins:25, tags:["vegetarian","restaurant-style"],
+    ingredients:[{name:"Wheat Flour",qty:200,unit:"g"},{name:"Maida",qty:50,unit:"g"},{name:"Curd",qty:30,unit:"g"},{name:"Butter",qty:20,unit:"g"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Makki di Roti", meal_type:"dinner", servings:3, prep_time_mins:25, tags:["vegetarian","winter","punjabi","gluten-free"],
+    ingredients:[{name:"Makki Atta",qty:250,unit:"g"},{name:"Water",qty:150,unit:"ml"},{name:"Butter",qty:20,unit:"g"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Bajra Roti", meal_type:"dinner", servings:3, prep_time_mins:20, tags:["vegetarian","healthy","gluten-free","rajasthani"],
+    ingredients:[{name:"Bajra Flour",qty:250,unit:"g"},{name:"Water",qty:150,unit:"ml"},{name:"Ghee",qty:15,unit:"ml"},{name:"Salt",qty:2,unit:"g"}]},
   { name:"Missi Roti", meal_type:"breakfast", servings:3, prep_time_mins:20, tags:["vegetarian","healthy","punjabi"],
     ingredients:[{name:"Wheat Flour",qty:150,unit:"g"},{name:"Besan",qty:50,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
   { name:"Stuffed Paratha", meal_type:"breakfast", servings:2, prep_time_mins:25, tags:["vegetarian","filling","punjabi"],
@@ -3158,7 +3170,8 @@ const seedRecipes = async (familyId) => {
   const { data: existing } = await supabase.from("recipes").select("id,name").eq("family_id", familyId);
   const hasEggs = existing?.some(r => r.name === "Boiled Eggs");
   const hasMunchies = existing?.some(r => r.name === "Maggi Noodles");
-  if (existing?.length && hasEggs && hasMunchies) return;
+  const hasRoti = existing?.some(r => r.name === "Roti / Chapati");
+  if (existing?.length && hasEggs && hasMunchies && hasRoti) return;
   for (const r of SEED_RECIPES) {
     const { data: rec } = await supabase.from("recipes").insert([{
       family_id: familyId, name: r.name, meal_type: r.meal_type,
