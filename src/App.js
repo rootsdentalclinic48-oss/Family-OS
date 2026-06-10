@@ -1573,6 +1573,9 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   const [error, setError] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   const [pasteText, setPasteText] = React.useState("");
+  const [billTotal, setBillTotal] = React.useState(0);
+  const [billVendor, setBillVendor] = React.useState("local");
+  const [billDate, setBillDate] = React.useState(new Date().toISOString().split('T')[0]);
   const UNITS = ["kg","g","L","ml","pcs","pack","dozen","box","bottle"];
 
   // Indian item name normalizer
@@ -1607,74 +1610,154 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   const parseBillText = (text) => {
     if (!text.trim()) return;
     setError("");
-    const lines = text.split(/\n/).map(l=>l.trim()).filter(l=>l.length>2);
+    let billTotalRef = 0;
+    let vendorRef = "local";
     const items = [];
-    // Patterns: "Atta 10kg", "Paneer 500 g", "Milk x6", "Onion 5 Kg", "2 kg Atta"
-    const unitPattern = /(\d+\.?\d*)\s*(kg|g|l|ltr|litre|liter|ml|pcs|pc|pack|packet|packets|dozen|box|bottle|nos|no|unit|units)/i;
-    const qtyFirst = /^(\d+\.?\d*)\s*(kg|g|l|ltr|ml|pcs|pc|pack|packet|packets|dozen|box|bottle)\s+(.+)/i;
-    const xPattern = /x\s*(\d+)/i;
 
-    for (const line of lines) {
-      // Skip lines that are clearly not items
-      if (/total|amount|price|rs\.|₹|discount|delivery|charges|tax|gst|mrp|saved|order|invoice|bill|date|address|payment|thank/i.test(line)) continue;
-      if (line.length < 3 || /^\d+$/.test(line)) continue;
+    if (/flipkart/i.test(text)) vendorRef = "flipkart";
+    else if (/blinkit|grofers/i.test(text)) vendorRef = "blinkit";
+    else if (/instamart|swiggy/i.test(text)) vendorRef = "instamart";
+    else if (/zepto/i.test(text)) vendorRef = "zepto";
+    else if (/bigbasket/i.test(text)) vendorRef = "bigbasket";
+    else if (/amazon/i.test(text)) vendorRef = "amazon";
 
-      let name = "", quantity = 1, unit = "pcs";
+    const ITEM_NORMALIZER = [
+      [/hen.*egg|white.*egg|egg.*white|brown.*egg/i, "Eggs"],
+      [/idly.*dosa.*batter|dosa.*idly.*batter|idli.*dosa/i, "Idli Dosa Batter"],
+      [/maggi.*pazzta|pazzta|macaroni.*pasta/i, "Maggi Pasta"],
+      [/maggi.*noodles|2.minute.*noodles|instant noodles/i, "Maggi Noodles"],
+      [/coriander.*seeds|dhaniya.*seeds/i, "Coriander Seeds"],
+      [/broken.*wheat|dalia|daliya/i, "Daliya"],
+      [/brinjal.*bharta|baingan.*bharta/i, "Brinjal Bharta"],
+      [/capsicum.*green|green.*capsicum/i, "Capsicum"],
+      [/mushroom.*button|button.*mushroom/i, "Mushroom"],
+      [/mint.*leaves|pudina/i, "Mint Leaves"],
+      [/coriander.*leaves|dhaniya.*patta/i, "Coriander Leaves"],
+      [/carrot.*ooty|ooty.*carrot/i, "Carrot"],
+      [/sooji|bombay rava|semolina/i, "Sooji"],
+      [/aashirvaad.*atta|fortune.*atta/i, "Atta"],
+      [/amul.*milk|mother dairy.*milk|toned.*milk/i, "Milk"],
+      [/amul.*butter|mother dairy.*butter/i, "Butter"],
+      [/amul.*paneer|mother dairy.*paneer/i, "Paneer"],
+      [/amul.*ghee|patanjali.*ghee/i, "Ghee"],
+      [/basmati.*rice|india gate.*rice/i, "Basmati Rice"],
+    ];
 
-      // Try "qty first" pattern: "2kg Atta"
-      const qf = line.match(qtyFirst);
-      if (qf) {
-        quantity = parseFloat(qf[1]);
-        unit = qf[2].toLowerCase();
-        name = qf[3];
-      } else {
-        // Try "name first" pattern: "Atta 10kg"
-        const um = line.match(unitPattern);
-        if (um) {
-          quantity = parseFloat(um[1]);
-          unit = um[2].toLowerCase();
-          name = line.replace(um[0],"").trim();
-        } else {
-          // Try x pattern: "Milk x6"
-          const xm = line.match(xPattern);
-          if (xm) {
-            quantity = parseInt(xm[1]);
-            name = line.replace(xm[0],"").trim();
-            unit = "pcs";
+    const BRAND_STRIP = [
+      /^delish by flipkart\s*/i, /^flipkart grocery\s*/i,
+      /^classic\s+/i, /^rajdhani\s*/i, /^aashirvaad\s*/i,
+      / by flipkart grocery$/i, / by flipkart$/i,
+    ];
+
+    const cleanName = (raw) => {
+      let n = raw.trim();
+      for (const p of BRAND_STRIP) n = n.replace(p, "");
+      n = n.trim();
+      for (const [pat, norm] of ITEM_NORMALIZER) {
+        if (pat.test(n)) return norm;
+      }
+      return n.replace(/\b\w/g, c => c.toUpperCase()).trim();
+    };
+
+    const rawLines = text.split("\n").map(l => l.trim());
+
+    // Detect total
+    for (const line of rawLines) {
+      const tm = line.match(/(?:order total|total amount|amount paid|grand total)[^\d]*[\d,]+/i);
+      if (tm) {
+        const nums = tm[0].match(/[\d,]+\.?\d*/g);
+        if (nums) billTotalRef = parseFloat(nums[nums.length-1].replace(/,/g,""));
+      }
+    }
+
+    const JUNK = /^(order #|placed on|delivery|dispatch|invoice|address|payment|thank|rated|review|feedback|mrp|saved|discount|coupon|tip|convenience|\+$)/i;
+    const PURE_NUM = /^[\d]+x[\d]*$|^[\d]+xs?$|^\+$|^\d+\.\d+$|^\d+$/;
+    const PRICE_RE = /^\u20b9\s*([\d,]+\.?\d*)$/;
+    const QTY_RE = /^(\d+)\s*x\s*([\d.]+)\s*[-\u2013]?\s*(?:[\d.]+)?\s*(kg|g|l|ltr|ml|pcs?|pack|units?|gm)?/i;
+
+    let i = 0;
+    while (i < rawLines.length) {
+      const line = rawLines[i];
+      if (!line || line.length < 2 || JUNK.test(line) || PURE_NUM.test(line) || PRICE_RE.test(line)) {
+        i++; continue;
+      }
+
+      // This looks like an item name
+      let name = line;
+      let qty = 1;
+      let unit = "pcs";
+      let price = 0;
+      let j = i + 1;
+
+      // Skip blanks
+      while (j < rawLines.length && (!rawLines[j] || rawLines[j] === "+")) j++;
+
+      // Qty line?
+      if (j < rawLines.length) {
+        const qm = rawLines[j].match(QTY_RE);
+        const simpleN = rawLines[j].match(/^(\d+)$/);
+        if (qm) {
+          const n = parseInt(qm[1]) || 1;
+          const size = parseFloat(qm[2]) || 1;
+          const u = (qm[3] || "pcs").toLowerCase();
+          if (/^(kg|g|l|ltr|ml|gm)$/i.test(u)) {
+            qty = n * size;
+            unit = u === "ltr" ? "L" : u === "gm" ? "g" : u;
           } else {
-            // Plain name line
-            name = line;
+            qty = n;
+            unit = "pcs";
           }
+          j++;
+        } else if (simpleN && parseInt(simpleN[1]) < 100) {
+          qty = parseInt(simpleN[1]);
+          j++;
         }
       }
 
-      // Normalize units
-      if (/^l$|ltr|litre|liter/i.test(unit)) unit = "L";
-      else if (/pack|packet/i.test(unit)) unit = "pack";
-      else if (/pc$|nos|no$|unit/i.test(unit)) unit = "pcs";
-      else unit = unit.toLowerCase();
+      // Skip blanks
+      while (j < rawLines.length && (!rawLines[j] || rawLines[j] === "+")) j++;
 
-      // Clean name - remove prices, numbers at end
-      name = name.replace(/₹\d+|\d+\.\d+|\s+\d+$|qty.*$/i,"").trim();
-      name = name.replace(/[-–—|]/g," ").trim();
-      if (name.length < 2) continue;
+      // Price line?
+      if (j < rawLines.length) {
+        const pm = rawLines[j].match(/^\u20b9\s*([\d,]+\.?\d*)/);
+        if (pm) {
+          price = parseFloat(pm[1].replace(/,/g,""));
+          j++;
+          // Skip MRP (second price line)
+          if (j < rawLines.length && /^\u20b9/.test(rawLines[j])) j++;
+        }
+      }
 
-      name = normalizeName(name);
-      if (!UNITS.includes(unit)) unit = "pcs";
-
-      // Avoid duplicates
-      const existing = items.find(i=>i.name.toLowerCase()===name.toLowerCase());
-      if (existing) { existing.quantity += quantity; }
-      else { items.push({ id:items.length, name, quantity, unit, selected:true,
-        existingQty: pantry.find(p=>p.name.toLowerCase()===name.toLowerCase())?.quantity||0,
-        existingUnit: pantry.find(p=>p.name.toLowerCase()===name.toLowerCase())?.unit||unit,
-      }); }
+      name = cleanName(name);
+      if (name.length >= 2 && !/^\d/.test(name) && !JUNK.test(name)) {
+        const existing = items.find(it => it.name.toLowerCase() === name.toLowerCase());
+        const pantryMatch = pantry.find(p => p.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          existing.quantity += qty;
+          existing.lineTotal += price;
+        } else {
+          items.push({
+            id: items.length, name, quantity: qty, unit, selected: true,
+            unitPrice: qty > 0 && price > 0 ? Math.round((price / qty) * 100) / 100 : 0,
+            lineTotal: price,
+            existingQty: pantryMatch ? pantryMatch.quantity : 0,
+            existingUnit: pantryMatch ? pantryMatch.unit : unit,
+          });
+        }
+        i = j;
+        continue;
+      }
+      i++;
     }
 
     if (items.length === 0) {
-      setError("No items found. Make sure to paste item names with quantities.");
+      setError("No items found. Make sure to paste the full order details text.");
       return;
     }
+
+    const itemsTotal = items.reduce((a, it) => a + (it.lineTotal || 0), 0);
+    setBillTotal(billTotalRef > 0 ? billTotalRef : itemsTotal);
+    setBillVendor(vendorRef);
     setExtractedItems(items);
     setStage("reviewing");
   };
@@ -1684,18 +1767,31 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
 
   const saveToStock = async () => {
     setSaving(true);
-    for (const item of extractedItems.filter(i=>i.selected)) {
-      const existing = pantry.find(p=>p.name.toLowerCase()===item.name.toLowerCase());
+    const selectedItems = extractedItems.filter(i => i.selected);
+    const vendorLabels = { blinkit:"Blinkit", instamart:"Instamart", zepto:"Zepto", bigbasket:"BigBasket", amazon:"Amazon Fresh", flipkart:"Flipkart", local:"Local Store" };
+    const vendorLabel = vendorLabels[billVendor] || "Local Store";
+    const finalTotal = billTotal > 0 ? billTotal : selectedItems.reduce((a,i) => a + (i.lineTotal||0), 0);
+
+    for (const item of selectedItems) {
+      const existing = pantry.find(p => p.name.toLowerCase() === item.name.toLowerCase());
       if (existing) {
-        await supabase.from("pantry").update({ quantity: Number(existing.quantity)+Number(item.quantity), updated_at:new Date().toISOString() }).eq("id",existing.id);
+        await supabase.from("pantry").update({ quantity: Number(existing.quantity)+Number(item.quantity), updated_at:new Date().toISOString() }).eq("id", existing.id);
       } else {
         await supabase.from("pantry").insert([{ family_id:familyId, name:item.name, category:"Other", quantity:Number(item.quantity), unit:item.unit, par_level:0, updated_at:new Date().toISOString() }]);
       }
-      await supabase.from("inventory_transactions").insert([{ family_id:familyId, item_name:item.name, transaction_type:"stock_in", quantity:Number(item.quantity), unit:item.unit, source_document:"grocery_bill" }]);
+      await supabase.from("inventory_transactions").insert([{ family_id:familyId, item_name:item.name, transaction_type:"stock_in", quantity:Number(item.quantity), unit:item.unit, source_document:"grocery_bill", vendor:billVendor, unit_price:item.unitPrice||0, line_total:item.lineTotal||0 }]);
+      if (item.unitPrice > 0) {
+        await supabase.from("grocery_price_history").insert([{ item_name:item.name, platform:billVendor, price:item.unitPrice, delivery_fee:0, source:"bill_import", logged_at:new Date().toISOString() }]).then(()=>{}).catch(()=>{});
+      }
     }
+
+    if (finalTotal > 0) {
+      await supabase.from("transactions").insert([{ family_id:familyId, description:"Grocery Bill — "+vendorLabel, amount:-Math.abs(finalTotal), category:"Groceries", added_by:"Mayank", date:billDate, emoji:"🛒" }]);
+    }
+
     setSaving(false);
     setStage("done");
-    setTimeout(()=>onDone(), 1800);
+    setTimeout(() => onDone(), 1800);
   };
 
   if (stage==="upload") return (
@@ -1735,8 +1831,9 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   if (stage==="done") return (
     <div style={{textAlign:"center",padding:"48px 20px"}}>
       <div style={{fontSize:48,marginBottom:12}}>✅</div>
-      <div style={{fontSize:17,fontWeight:700,color:T.green,marginBottom:6}}>Pantry Updated!</div>
-      <div style={{fontSize:13,color:T.muted}}>{extractedItems.filter(i=>i.selected).length} items added to stock</div>
+      <div style={{fontSize:17,fontWeight:700,color:T.green,marginBottom:6}}>Bill Imported!</div>
+      <div style={{fontSize:13,color:T.muted,marginBottom:8}}>{extractedItems.filter(i=>i.selected).length} items added to pantry</div>
+      {billTotal > 0 && <div style={{fontSize:13,color:T.green,fontWeight:700,padding:"8px 16px",background:T.greenSoft,borderRadius:10,display:"inline-block"}}>💸 ₹{billTotal.toLocaleString("en-IN")} expense created</div>}
     </div>
   );
 
