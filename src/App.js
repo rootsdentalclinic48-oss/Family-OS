@@ -233,7 +233,7 @@ const NotificationsScreen = ({ familyId, onClose }) => {
           </div>
         </div>
         {notifs.length === 0 ? (
-          <div className="empty"><div className="empty-icon">🔔</div><div className="empty-text">No notifications yet</div></div>
+          <div className="empty"><div className="empty-icon">🔔</div><div className="empty-text">No notifications yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Alerts for expenses, tasks & low stock appear here.</span></div></div>
         ) : (
           <div className="card" style={{ padding: "0 0" }}>
             {notifs.map(n => (
@@ -280,11 +280,11 @@ const Styles = () => (
     .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};position:relative;}
     .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-    .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;}
+    .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;box-shadow:0 1px 4px rgba(0,0,0,0.12);}
     .card-tap{cursor:pointer;}
     .card-tap:active{transform:scale(0.982);background:${T.cardHover};}
     .btn{border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
-    .btn-primary{background:${T.accent};color:#fff;border-radius:14px;padding:0 22px;height:52px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:52px;}
+    .btn-primary{background:${T.accent};color:#fff !important;border-radius:14px;padding:0 22px;height:52px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:52px;}
     .btn-primary:active{transform:scale(0.97);opacity:0.9;}
     .btn-primary:disabled{opacity:0.45;cursor:not-allowed;}
     .input{width:100%;background:#FAFAF8;border:0.5px solid ${T.border};border-radius:14px;padding:0 16px;height:52px;color:${T.text};font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;outline:none;transition:all .18s;-webkit-appearance:none;appearance:none;}
@@ -296,7 +296,7 @@ const Styles = () => (
     .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 8px;border-radius:12px;transition:all .18s;flex:1;min-height:44px;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .nav-btn.on{background:rgba(125,157,124,0.12);}
     .nav-btn:active{transform:scale(0.88);}
-    .nav-lbl{font-size:9px;font-weight:600;letter-spacing:.01em;margin-top:1px;}
+    .nav-lbl{font-size:11px;font-weight:700;letter-spacing:.01em;margin-top:2px;}
     .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
     .modal{width:100%;max-width:430px;background:#0D0D1C;border:1px solid ${T.border};border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px calc(32px + env(safe-area-inset-bottom, 0px));animation:slideUp .3s cubic-bezier(.16,1,.3,1);max-height:92dvh;overflow-y:auto;}
@@ -306,14 +306,14 @@ const Styles = () => (
     .pt{font-size:22px;font-weight:800;letter-spacing:-.3px;}
     .ps{font-size:12.5px;color:${T.muted};margin-top:3px;}
     .row{display:flex;justify-content:space-between;align-items:center;}
-    .sec-title{font-size:14px;font-weight:700;}
+    .sec-title{font-size:15px;font-weight:700;}
     .sec-link{font-size:12.5px;color:${T.accent};font-weight:600;cursor:pointer;padding:4px 0;min-height:44px;display:flex;align-items:center;}
     .chip{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:100px;background:#FAFAF8;border:0.5px solid ${T.border};font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap;min-height:36px;-webkit-tap-highlight-color:transparent;}
     .chip.on{background:#7D9D7C;border-color:#7D9D7C;color:white;}
     .chip:active{transform:scale(0.94);}
     .scroll-x{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
     .scroll-x::-webkit-scrollbar{display:none;}
-    .list-row{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid ${T.border};cursor:pointer;transition:opacity .15s;min-height:56px;}
+    .list-row{display:flex;align-items:center;gap:13px;padding:16px 0;border-bottom:1px solid ${T.border};cursor:pointer;transition:opacity .15s;min-height:60px;}
     .list-row:last-child{border-bottom:none;}
     .list-row:active{opacity:.6;}
     .progress{height:5px;background:rgba(125,157,124,0.08);border-radius:100px;overflow:hidden;}
@@ -329,9 +329,9 @@ const Styles = () => (
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(0.75);}}
     @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
     .spinner{width:20px;height:20px;border:2px solid rgba(125,157,124,0.2);border-top-color:#7D9D7C;border-radius:50%;animation:spin .7s linear infinite;}
-    .empty{text-align:center;padding:48px 20px;color:${T.muted};}
-    .empty-icon{font-size:40px;margin-bottom:12px;}
-    .empty-text{font-size:14px;line-height:1.5;}
+    .empty{text-align:center;padding:56px 24px;color:${T.muted};}
+    .empty-icon{font-size:48px;margin-bottom:16px;}
+    .empty-text{font-size:15px;line-height:1.7;}
     .alert-bar{padding:12px 15px;border-radius:14px;display:flex;gap:10px;align-items:center;margin-bottom:8px;}
     .fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
     .fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom, 0px));right:max(16px, calc(50vw - 199px));width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow},0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
@@ -355,9 +355,9 @@ const Styles = () => (
     .toast.out{animation:toastOut .28s cubic-bezier(.4,0,1,1) forwards;}
     @keyframes toastOut{to{opacity:0;transform:translateY(-10px) scale(0.96);}}
     .toast-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
-    .toast-title{font-size:13px;font-weight:700;color:#EEECf8;line-height:1.3;}
+    .toast-title{font-size:14px;font-weight:700;color:#EEECf8;line-height:1.3;}
     .toast-body{font-size:11.5px;color:rgba(238,236,248,0.5);margin-top:2px;line-height:1.4;}
-    .notif-badge{position:absolute;top:-5px;right:-5px;background:#C4603A;color:white;border-radius:100px;font-size:9px;font-weight:800;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #F8F7F4;}
+    .notif-badge{position:absolute;top:-5px;right:-5px;background:#C4603A;color:white;border-radius:100px;font-size:11px;font-weight:800;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #F8F7F4;}
     .notif-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #FFFFFF;cursor:pointer;transition:background .15s;position:relative;min-height:60px;align-items:center;}
     .notif-item:last-child{border-bottom:none;}
     .notif-item:active{background:#F8F7F4;}
@@ -370,7 +370,7 @@ const Styles = () => (
     .priority-btn{flex:1;height:44px;border-radius:12px;border:1px solid ${T.border};background:transparent;cursor:pointer;transition:all .18s;font-size:12px;font-weight:700;text-transform:capitalize;-webkit-tap-highlight-color:transparent;}
     .priority-btn:active{transform:scale(0.95);}
     .sec-header{display:flex;justify-content:space-between;align-items:center;padding:0 18px;margin-bottom:10px;}
-    .icon-btn{width:40px;height:40px;border-radius:12px;background:${T.card};border:1px solid ${T.border};display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;}
+    .icon-btn{width:44px;height:44px;border-radius:12px;background:${T.card};border:1px solid ${T.border};display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0;}
     .icon-btn:active{transform:scale(0.9);}
     .balance-card{margin:12px 18px 0;background:linear-gradient(135deg,rgba(125,157,124,0.08),rgba(125,157,124,0.04));border:1px solid rgba(109,155,107,0.2);border-radius:20px;padding:18px;cursor:pointer;transition:all .18s;}
     .balance-card:active{transform:scale(0.985);}
@@ -378,7 +378,7 @@ const Styles = () => (
     .quick-action{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .quick-action-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:all .18s;}
     .quick-action-icon:active{transform:scale(0.88);}
-    .quick-action-label{font-size:10.5px;font-weight:600;color:${T.muted};}
+    .quick-action-label{font-size:12px;font-weight:600;color:${T.muted};}
   `}</style>
 );
 
@@ -415,7 +415,7 @@ const Modal = ({ title, onClose, children }) => (
       <div className="modal-handle"/>
       <div className="row" style={{marginBottom:16}}>
         <span style={{fontSize:19,fontWeight:700,color:T.text}}>{title}</span>
-        <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+        <div onClick={onClose} style={{width:44,height:44,borderRadius:12,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
           <I n="x" s={15} c={T.muted}/>
         </div>
       </div>
@@ -493,7 +493,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
         <div className="modal-handle"/>
         <div className="row" style={{marginBottom:14}}>
           <span style={{fontSize:19,fontWeight:700}}>Quick Add</span>
-          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <div onClick={onClose} style={{width:30,height:30,borderRadius:10,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
             <I n="x" s={15} c={T.muted}/>
           </div>
         </div>
@@ -725,7 +725,7 @@ const BellButton = ({ familyId }) => {
   const unread = notifs.filter(n => !n.read).length;
   return (
     <>
-      <div style={{width:38,height:38,borderRadius:11,background:"#FFFFFF",border:"1px solid #E8E4DE",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}} onClick={()=>setOpen(true)}>
+      <div style={{width:38,height:38,borderRadius:12,background:"#FFFFFF",border:"1px solid #E8E4DE",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",position:"relative"}} onClick={()=>setOpen(true)}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9E9488" strokeWidth="1.8" strokeLinecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         {unread > 0 && <div className="notif-badge">{unread > 9 ? "9+" : unread}</div>}
       </div>
@@ -740,7 +740,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
   return (
     <div style={{padding:"12px 20px 0"}}>
       <div style={{background:"linear-gradient(135deg,rgba(109,155,107,0.12),rgba(139,124,248,0.10))",border:`1px solid rgba(52,211,153,0.22)`,borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer"}} onClick={()=>navigate("finance")}>
-        <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
+        <div style={{fontSize:12,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
         <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
           {bal.available<0?"-":""}₹{Math.abs(bal.available).toLocaleString("en-IN")}
         </div>
@@ -753,7 +753,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
             {l:"✅ Tasks",v:`${pendingTasks.length} left`,c:T.accent},
           ].map((s)=>(
             <div key={s.l} style={{background:"#FAFAF8",borderRadius:10,padding:"8px 10px"}}>
-              <div style={{fontSize:10,color:T.muted,fontWeight:600}}>{s.l}</div>
+              <div style={{fontSize:12,color:T.muted,fontWeight:600}}>{s.l}</div>
               <div style={{fontSize:14,fontWeight:700,color:s.c,marginTop:2}}>{s.v}</div>
             </div>
           ))}
@@ -825,7 +825,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
       <div style={{padding:"calc(44px + env(safe-area-inset-top,0px)) 18px 0"}}>
         <div className="row">
           <div>
-            <div style={{fontSize:12,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em"}}>Good morning ☀️</div>
+            <div style={{fontSize:12,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:".04em"}}>{new Date().getHours()<12?"Good morning ☀️":new Date().getHours()<17?"Good afternoon 🌤":"Good evening 🌙"}</div>
             <div style={{fontSize:20,fontWeight:900,letterSpacing:"-.4px",marginTop:2}}>Mayank & Simmi</div>
             <div style={{fontSize:12,color:T.dim,marginTop:2}}>📍 Sector 48, Gurgaon</div>
           </div>
@@ -884,7 +884,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
           : <div className="card" style={{padding:"2px 14px"}}>
               {pendingTasks.slice(0,4).map(t=>(
                 <div key={t.id} className="list-row">
-                  <div style={{width:21,height:21,borderRadius:7,border:`2px solid ${t.priority==="high"?T.red:t.priority==="medium"?T.amber:T.green}`,flexShrink:0}}/>
+                  <div style={{width:21,height:21,borderRadius:8,border:`2px solid ${t.priority==="high"?T.red:t.priority==="medium"?T.amber:T.green}`,flexShrink:0}}/>
                   <div style={{flex:1}}>
                     <div style={{fontSize:14,fontWeight:500}}>{t.title}</div>
                     <div style={{fontSize:11.5,color:T.muted}}>{t.assignee==="Mayank"?"👨‍⚕️":"👩"} {t.assignee} · {t.due_date||"No date"}</div>
@@ -906,7 +906,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
           : <div className="card" style={{padding:"2px 14px"}}>
               {txns.slice(0,4).map(tx=>(
                 <div key={tx.id} className="list-row">
-                  <div style={{width:38,height:38,borderRadius:11,background:Number(tx.amount)>0?T.greenSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{tx.emoji||"💸"}</div>
+                  <div style={{width:38,height:38,borderRadius:12,background:Number(tx.amount)>0?T.greenSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{tx.emoji||"💸"}</div>
                   <div style={{flex:1}}>
                     <div style={{fontSize:14,fontWeight:500}}>{tx.description}</div>
                     <div style={{fontSize:11.5,color:T.muted}}>{tx.added_by==="Mayank"?"👨‍⚕️":"👩"} {tx.added_by} · {tx.date}</div>
@@ -971,7 +971,7 @@ const FinanceScreen = ({ familyId }) => {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             {[{l:"Income",v:inr(income),c:T.green},{l:"Spent",v:inr(spent),c:T.red},{l:"Net",v:inr(income-spent),c:T.accent}].map(s=>(
               <div key={s.l} style={{textAlign:"center"}}>
-                <div style={{fontSize:10,color:T.muted,fontWeight:600,textTransform:"uppercase"}}>{s.l}</div>
+                <div style={{fontSize:12,color:T.muted,fontWeight:600,textTransform:"uppercase"}}>{s.l}</div>
                 <div style={{fontSize:16,fontWeight:800,color:s.c,marginTop:3}} className="mono">{s.v}</div>
               </div>
             ))}
@@ -987,11 +987,11 @@ const FinanceScreen = ({ familyId }) => {
         {tab==="transactions" && (
           loading ? <div style={{textAlign:"center",padding:40,color:T.muted}}>Loading...</div>
           : txns.length===0
-            ? <div className="empty"><div className="empty-icon">💸</div><div className="empty-text">No transactions yet.</div></div>
+            ? <div className="empty"><div className="empty-icon">💸</div><div className="empty-text">No transactions yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Add income or an expense to get started.</span></div></div>
             : <div className="card" style={{padding:"2px 14px"}}>
                 {txns.map(tx=>(
                   <div key={tx.id} className="list-row" onClick={()=>setEditTx({...tx})}>
-                    <div style={{width:38,height:38,borderRadius:11,background:Number(tx.amount)>0?T.greenSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{tx.emoji||"💸"}</div>
+                    <div style={{width:38,height:38,borderRadius:12,background:Number(tx.amount)>0?T.greenSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{tx.emoji||"💸"}</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:14,fontWeight:500}}>{tx.description}</div>
                       <div style={{fontSize:11.5,color:T.muted}}>{tx.category} · {tx.date}</div>
@@ -1030,11 +1030,11 @@ const FinanceScreen = ({ familyId }) => {
         {tab==="advisor" && <FinanceAdvisorScreen familyId={familyId}/>}
         {tab==="bills" && (
           bills.length===0
-            ? <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">No bills added yet</div></div>
+            ? <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">No bills added yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Tap + to track upcoming payments.</span></div></div>
             : <div className="card" style={{padding:"2px 14px"}}>
                 {bills.map(b=>(
                   <div key={b.id} className="list-row">
-                    <div style={{width:38,height:38,borderRadius:11,background:b.is_urgent?T.redSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{b.emoji||"📋"}</div>
+                    <div style={{width:38,height:38,borderRadius:12,background:b.is_urgent?T.redSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{b.emoji||"📋"}</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:14,fontWeight:500}}>{b.name}</div>
                       <div style={{fontSize:11.5,color:b.is_urgent?T.red:T.muted}}>Due {b.due_date}{b.is_urgent?" 🔴":""}</div>
@@ -1049,7 +1049,7 @@ const FinanceScreen = ({ familyId }) => {
         )}
         {tab==="budgets" && (
           budgets.length===0
-            ? <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No budgets set yet.</div></div>
+            ? <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No budgets set yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Set monthly limits for groceries, dining & more.</span></div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {budgets.map(b=>{
                   const spent_ = txns.filter(t=>t.category===b.category&&Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
@@ -1063,7 +1063,7 @@ const FinanceScreen = ({ familyId }) => {
                         </div>
                         <div style={{textAlign:"right"}}>
                           <div style={{fontSize:13,fontWeight:700}} className="mono">{inr(spent_)}</div>
-                          <div style={{fontSize:10,color:T.muted}}>/ {inr(b.monthly_limit)}</div>
+                          <div style={{fontSize:12,color:T.muted}}>/ {inr(b.monthly_limit)}</div>
                         </div>
                       </div>
                       <div className="progress">
@@ -1253,7 +1253,7 @@ const HouseholdScreen = ({ familyId }) => {
                   <div className="card" style={{padding:"2px 14px"}}>
                     {mine.map(task=>(
                       <div key={task.id} className="list-row" onClick={()=>toggleTask(task.id,!task.done)}>
-                        <div style={{width:22,height:22,borderRadius:7,border:`2px solid ${task.done?T.green:task.priority==="high"?T.red:task.priority==="medium"?T.amber:T.green}`,display:"flex",alignItems:"center",justifyContent:"center",background:task.done?T.green:"transparent",flexShrink:0,transition:"all .2s"}}>
+                        <div style={{width:22,height:22,borderRadius:8,border:`2px solid ${task.done?T.green:task.priority==="high"?T.red:task.priority==="medium"?T.amber:T.green}`,display:"flex",alignItems:"center",justifyContent:"center",background:task.done?T.green:"transparent",flexShrink:0,transition:"all .2s"}}>
                           {task.done && <I n="check" s={12} c="white" w={2.5}/>}
                         </div>
                         <div style={{flex:1,opacity:task.done?0.45:1}}>
@@ -1268,7 +1268,7 @@ const HouseholdScreen = ({ familyId }) => {
                 </div>
               );
             })}
-            {tasks.length===0 && <div className="empty"><div className="empty-icon">✅</div><div className="empty-text">No tasks yet.</div></div>}
+            {tasks.length===0 && <div className="empty"><div className="empty-icon">✅</div><div className="empty-text">No tasks yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Tap + to add your first task.</span></div></div>}
           </>
         )}
         {tab==="grocery" && (
@@ -1279,7 +1279,7 @@ const HouseholdScreen = ({ familyId }) => {
               </div>
             )}
             {grocery.length===0
-              ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">No grocery items.</div></div>
+              ? <div className="empty"><div className="empty-icon">🛒</div><div className="empty-text">No grocery items.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Tap + to add items to your shopping list.</span></div></div>
               : <div className="card" style={{padding:"2px 14px"}}>
                   {grocery.map(item=>(
                     <div key={item.id} className="list-row">
@@ -1290,7 +1290,7 @@ const HouseholdScreen = ({ familyId }) => {
                       </div>
                       <div style={{textAlign:"right"}}>
                         <div style={{fontSize:14,fontWeight:600}}>{item.quantity} {item.unit}</div>
-                        {Number(item.quantity)<=Number(item.par_level) && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock</div>}
+                        {Number(item.quantity)<=Number(item.par_level) && <div style={{fontSize:12,color:T.red,fontWeight:600}}>Restock</div>}
                       </div>
                     </div>
                   ))}
@@ -1300,13 +1300,13 @@ const HouseholdScreen = ({ familyId }) => {
         )}
         {tab==="maintenance" && (
           maint.length===0
-            ? <div className="empty"><div className="empty-icon">🔧</div><div className="empty-text">No maintenance schedules yet</div></div>
+            ? <div className="empty"><div className="empty-icon">🔧</div><div className="empty-text">No maintenance schedules yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Track AC service, car maintenance & more.</span></div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {maint.map(m=>(
                   <div key={m.id} className="card" style={{padding:"15px",borderColor:m.overdue?"rgba(248,113,113,0.3)":T.border}}>
                     <div className="row">
                       <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                        <div style={{width:42,height:42,borderRadius:13,background:m.overdue?T.redSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{m.emoji||"🔧"}</div>
+                        <div style={{width:42,height:42,borderRadius:12,background:m.overdue?T.redSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{m.emoji||"🔧"}</div>
                         <div>
                           <div style={{fontSize:14,fontWeight:600}}>{m.name}</div>
                           <div style={{fontSize:11.5,color:T.muted}}>Last: {m.last_done||"Never"}</div>
@@ -1326,11 +1326,11 @@ const HouseholdScreen = ({ familyId }) => {
         )}
         {tab==="documents" && (
           docs.length===0
-            ? <div className="empty"><div className="empty-icon">📁</div><div className="empty-text">No documents yet.</div></div>
+            ? <div className="empty"><div className="empty-icon">📁</div><div className="empty-text">No documents yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Store Aadhaar, PAN, insurance & more.</span></div></div>
             : <div className="card" style={{padding:"2px 14px"}}>
                 {docs.map(doc=>(
                   <div key={doc.id} className="list-row">
-                    <div style={{width:38,height:38,borderRadius:11,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{doc.emoji||"📄"}</div>
+                    <div style={{width:38,height:38,borderRadius:12,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{doc.emoji||"📄"}</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:14,fontWeight:500}}>{doc.name}</div>
                       <div style={{fontSize:11.5,color:T.muted}}>{doc.category} · {doc.date||""}</div>
@@ -1452,7 +1452,7 @@ const PlannerScreen = ({ familyId }) => {
 
         {tab==="goals" && (
           goals.length===0
-            ? <div className="empty"><div className="empty-icon">🎯</div><div className="empty-text">No goals yet.</div></div>
+            ? <div className="empty"><div className="empty-icon">🎯</div><div className="empty-text">No goals yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Set a savings goal to track your progress.</span></div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 {goals.map(g=>{
                   const p=pct(g.saved_amount,g.target_amount);
@@ -1499,11 +1499,11 @@ const PlannerScreen = ({ familyId }) => {
               })}
             </div>
             {events.length===0
-              ? <div className="empty"><div className="empty-icon">📅</div><div className="empty-text">No events yet</div></div>
+              ? <div className="empty"><div className="empty-icon">📅</div><div className="empty-text">No events yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Add birthdays, anniversaries & appointments.</span></div></div>
               : <div className="card" style={{padding:"2px 14px"}}>
                   {events.map(ev=>(
                     <div key={ev.id} className="list-row">
-                      <div style={{width:38,height:38,borderRadius:11,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{ev.emoji||"📅"}</div>
+                      <div style={{width:38,height:38,borderRadius:12,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{ev.emoji||"📅"}</div>
                       <div style={{flex:1}}>
                         <div style={{fontSize:14,fontWeight:500}}>{ev.title}</div>
                         <div style={{fontSize:11.5,color:T.muted,textTransform:"capitalize"}}>{ev.type}</div>
@@ -1517,7 +1517,7 @@ const PlannerScreen = ({ familyId }) => {
         )}
         {tab==="health" && (
           health.length===0
-            ? <div className="empty"><div className="empty-icon">💊</div><div className="empty-text">No health records yet.</div></div>
+            ? <div className="empty"><div className="empty-icon">💊</div><div className="empty-text">No health records yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Track weight, BP and medications for the family.</span></div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 {health.map(h=>(
                   <div key={h.id} className="card" style={{padding:"18px"}}>
@@ -1534,7 +1534,7 @@ const PlannerScreen = ({ familyId }) => {
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
                       {[{l:"Weight",v:h.weight||"—"},{l:"BP",v:h.blood_pressure||"—"},{l:"Sugar",v:h.blood_sugar||"—"}].map(m=>(
                         <div key={m.l} style={{padding:"9px 11px",background:"#FAFAF8",borderRadius:10}}>
-                          <div style={{fontSize:10,color:T.muted}}>{m.l}</div>
+                          <div style={{fontSize:12,color:T.muted}}>{m.l}</div>
                           <div style={{fontSize:13,fontWeight:600,marginTop:2}}>{m.v}</div>
                         </div>
                       ))}
@@ -1894,7 +1894,7 @@ const AIScreen = ({ familyId }) => {
       </div>
       <div style={{padding:"10px 20px 16px",display:"flex",gap:9}}>
         <input className="input" style={{flex:1}} placeholder="Ask about your family data..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
-        <div onClick={()=>send()} style={{width:46,height:46,borderRadius:13,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,boxShadow:`0 4px 16px ${T.accentGlow}`,transition:"all .2s"}}>
+        <div onClick={()=>send()} style={{width:46,height:46,borderRadius:12,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,boxShadow:`0 4px 16px ${T.accentGlow}`,transition:"all .2s"}}>
           <I n="send" s={17} c="white"/>
         </div>
       </div>
@@ -1908,7 +1908,7 @@ const AIScreen = ({ familyId }) => {
                 <div style={{fontSize:17,fontWeight:800,color:T.text}}>📄 Import Grocery Bill</div>
                 <div style={{fontSize:12,color:T.muted,marginTop:2}}>AI will extract and stock your pantry</div>
               </div>
-              <div onClick={()=>setShowBillImporter(false)} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <div onClick={()=>setShowBillImporter(false)} style={{width:44,height:44,borderRadius:12,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
@@ -2412,7 +2412,7 @@ const ServiceReminders = ({ familyId }) => {
   const done = reminders.filter(r => r.done);
 
   if (!pending.length && !done.length) {
-    return <div className="empty"><div className="empty-icon">🔔</div><div className="empty-text">No service reminders yet.</div></div>;
+    return <div className="empty"><div className="empty-icon">🔔</div><div className="empty-text">No service reminders yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Add reminders for AC, car, appliance servicing.</span></div></div>;
   }
 
   return (
@@ -2927,7 +2927,7 @@ const AlexaCommandCenter = ({ onClose }) => {
             <div style={{fontSize:19,fontWeight:800}}>🎤 Munshi Jee Commands</div>
             <div style={{fontSize:12,color:T.muted,marginTop:2}}>Say "Alexa, open munshi jee" first</div>
           </div>
-          <div onClick={onClose} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <div onClick={onClose} style={{width:30,height:30,borderRadius:10,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
             <I n="x" s={15} c={T.muted}/>
           </div>
         </div>
@@ -2948,11 +2948,11 @@ const AlexaCommandCenter = ({ onClose }) => {
               <div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:8}}>{cmd.icon} {cmd.en}</div>
               <div style={{display:"flex",flexDirection:"column",gap:5}}>
                 <div style={{display:"flex",gap:8}}>
-                  <span style={{fontSize:10,fontWeight:700,color:T.accent,minWidth:55}}>HINDI</span>
+                  <span style={{fontSize:12,fontWeight:700,color:T.accent,minWidth:55}}>HINDI</span>
                   <span style={{fontSize:12,color:T.muted,flex:1}}>{cmd.hi}</span>
                 </div>
                 <div style={{display:"flex",gap:8}}>
-                  <span style={{fontSize:10,fontWeight:700,color:T.teal,minWidth:55}}>HINGLISH</span>
+                  <span style={{fontSize:12,fontWeight:700,color:T.teal,minWidth:55}}>HINGLISH</span>
                   <span style={{fontSize:12,color:T.muted,flex:1}}>{cmd.hinglish}</span>
                 </div>
               </div>
@@ -3442,7 +3442,7 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
                     <div style={{fontSize:11.5,color:T.muted,marginTop:2}}>⏱ {r.prep_time_mins}min · 👥 {r.servings} · <span style={{textTransform:"capitalize"}}>{r.meal_type}</span></div>
                     <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>
                       {(r.tags||[]).map(tag=>(
-                        <span key={tag} style={{fontSize:10,background:T.accentSoft,color:T.accent,padding:"2px 7px",borderRadius:20,fontWeight:600}}>{tag}</span>
+                        <span key={tag} style={{fontSize:12,background:T.accentSoft,color:T.accent,padding:"2px 7px",borderRadius:20,fontWeight:600}}>{tag}</span>
                       ))}
                     </div>
                   </div>
@@ -3572,10 +3572,10 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
       <div style={{flex:1}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
           <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
-          {cookCount[r.name] > 0 && <div style={{fontSize:10,color:T.muted}}>({cookCount[r.name]}x)</div>}
+          {cookCount[r.name] > 0 && <div style={{fontSize:12,color:T.muted}}>({cookCount[r.name]}x)</div>}
         </div>
         <div style={{fontSize:11,color:T.muted}}>⏱ {r.prep_time_mins}min · {r.meal_type}</div>
-        {r.missing.length > 0 && <div style={{fontSize:10,color:T.red,marginTop:2}}>Missing: {r.missing.join(", ")}</div>}
+        {r.missing.length > 0 && <div style={{fontSize:12,color:T.red,marginTop:2}}>Missing: {r.missing.join(", ")}</div>}
       </div>
       <MatchBadge pct={r.matchPct}/>
     </div>
@@ -3843,7 +3843,7 @@ const KitchenScreen = ({ familyId }) => {
                         </div>
                       )}
                       <div onClick={()=>setAddMealModal({date:todayStr,meal_type:mealType})}
-                        style={{width:32,height:32,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                        style={{width:32,height:32,borderRadius:10,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                         <I n="edit" s={14} c={T.accent}/>
                       </div>
                     </div>
@@ -3900,9 +3900,9 @@ const KitchenScreen = ({ familyId }) => {
                       const rec = m ? recipes.find(r => r.id === m.recipe_id) : null;
                       return (
                         <div key={mt} onClick={()=>setAddMealModal({date,meal_type:mt})}
-                          style={{padding:"7px 9px",borderRadius:9,cursor:"pointer",background:m?.cooked?T.greenSoft:rec?T.accentSoft:"rgba(125,157,124,0.04)",border:`0.5px solid ${m?.cooked?T.green:rec?T.accent:T.border}`,transition:"all .15s"}}>
+                          style={{padding:"7px 9px",borderRadius:10,cursor:"pointer",background:m?.cooked?T.greenSoft:rec?T.accentSoft:"rgba(125,157,124,0.04)",border:`0.5px solid ${m?.cooked?T.green:rec?T.accent:T.border}`,transition:"all .15s"}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                            <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"capitalize"}}>{MEAL_EMOJI[mt]} {mt}</div>
+                            <div style={{fontSize:12,color:T.muted,fontWeight:700,textTransform:"capitalize"}}>{MEAL_EMOJI[mt]} {mt}</div>
                             {m?.cooked && <span style={{fontSize:9,color:T.green,fontWeight:800}}>✓</span>}
                             {m && !m.cooked && <span style={{fontSize:9,color:T.dim}}>○</span>}
                           </div>
@@ -3999,7 +3999,7 @@ const KitchenScreen = ({ familyId }) => {
                     <div key={f.id} onClick={()=>setPantryStockFilter(f.id)}
                       style={{display:"inline-flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:20,border:`1px solid ${pantryStockFilter===f.id?T.accent:T.border}`,background:pantryStockFilter===f.id?T.accentSoft:"transparent",color:pantryStockFilter===f.id?T.accent:T.muted,fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>
                       {f.label}
-                      <span style={{background:pantryStockFilter===f.id?T.accent:"rgba(255,255,255,0.1)",color:pantryStockFilter===f.id?"#fff":T.muted,borderRadius:20,padding:"0 6px",fontSize:10,fontWeight:700}}>{f.count}</span>
+                      <span style={{background:pantryStockFilter===f.id?T.accent:"rgba(255,255,255,0.1)",color:pantryStockFilter===f.id?"#fff":T.muted,borderRadius:20,padding:"0 6px",fontSize:12,fontWeight:700}}>{f.count}</span>
                     </div>
                   ))}
                 </div>
@@ -4067,8 +4067,8 @@ const KitchenScreen = ({ familyId }) => {
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
                           <div style={{textAlign:"right",minWidth:60}}>
                             <div style={{fontSize:14,fontWeight:700,color:isLow?T.red:T.text}}>{item.quantity} {item.unit}</div>
-                            {(()=>{ const d=calcDaysRemaining(item.quantity,item.unit,item.name); return d!==null ? <div style={{fontSize:10,color:d<=3?"#C4603A":d<=7?"#C4883A":"#6D9B6B",fontWeight:600}}>{d}d left</div> : null; })()}
-                            {isLow && <div style={{fontSize:10,color:T.red,fontWeight:600}}>Restock!</div>}
+                            {(()=>{ const d=calcDaysRemaining(item.quantity,item.unit,item.name); return d!==null ? <div style={{fontSize:12,color:d<=3?"#C4603A":d<=7?"#C4883A":"#6D9B6B",fontWeight:600}}>{d}d left</div> : null; })()}
+                            {isLow && <div style={{fontSize:12,color:T.red,fontWeight:600}}>Restock!</div>}
                           </div>
                           <div style={{opacity:0.4}}><I n="edit" s={14} c={T.accent}/></div>
                         </div>
@@ -4146,7 +4146,7 @@ const KitchenScreen = ({ familyId }) => {
                     {shopping.filter(s=>!s.purchased).map(item=>(
                       <div key={item.id} className="list-row">
                         <div onClick={()=>updShopping(item.id,{purchased:true})}
-                          style={{width:22,height:22,borderRadius:7,border:`2px solid ${T.green}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}/>
+                          style={{width:22,height:22,borderRadius:8,border:`2px solid ${T.green}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}/>
                         <div style={{flex:1}}>
                           <div style={{fontSize:14,fontWeight:500}}>{item.item_name}</div>
                           <div style={{fontSize:11.5,color:T.muted}}>{item.category}{item.quantity_needed ? ` · ${item.quantity_needed} ${item.unit}` : ""}</div>
@@ -4164,7 +4164,7 @@ const KitchenScreen = ({ familyId }) => {
                       <div className="card" style={{padding:"2px 14px",opacity:0.55}}>
                         {shopping.filter(s=>s.purchased).map(item=>(
                           <div key={item.id} className="list-row">
-                            <div style={{width:22,height:22,borderRadius:7,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                            <div style={{width:22,height:22,borderRadius:8,background:T.green,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                               <I n="check" s={12} c="white" w={2.5}/>
                             </div>
                             <div style={{flex:1,textDecoration:"line-through"}}>
@@ -4227,7 +4227,7 @@ const KitchenScreen = ({ familyId }) => {
               ].map(s=>(
                 <div key={s.l} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"8px",textAlign:"center"}}>
                   <div style={{fontSize:15,fontWeight:800,color:T.text}}>{s.v}</div>
-                  <div style={{fontSize:10,color:T.muted,marginTop:2}}>{s.l}</div>
+                  <div style={{fontSize:12,color:T.muted,marginTop:2}}>{s.l}</div>
                 </div>
               ))}
             </div>
@@ -4260,7 +4260,7 @@ const KitchenScreen = ({ familyId }) => {
                             {pantryItem ? `${pantryItem.quantity} ${pantryItem.unit}` : "Not in pantry"}
                           </div>
                           {pantryItem && !hasEnough && (
-                            <div style={{fontSize:10,color:T.amber,fontWeight:600,marginTop:2}}>
+                            <div style={{fontSize:12,color:T.amber,fontWeight:600,marginTop:2}}>
                               Need {Math.max(0, scaledQty - Number(pantryItem.quantity)).toFixed(1)} more
                             </div>
                           )}
@@ -4314,7 +4314,7 @@ const KitchenScreen = ({ familyId }) => {
               <span style={{fontSize:18,fontWeight:700,color:T.text}}>
                 {MEAL_EMOJI[addMealModal.meal_type]} Replace {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)}
               </span>
-              <div onClick={()=>setAddMealModal(null)} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <div onClick={()=>setAddMealModal(null)} style={{width:44,height:44,borderRadius:12,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
@@ -4391,7 +4391,7 @@ const KitchenScreen = ({ familyId }) => {
                 <div style={{fontSize:17,fontWeight:800}}>✏️ Edit Meal Log</div>
                 <div style={{fontSize:13,color:T.muted,marginTop:2}}>{editCookLog.recipe?.name || "Unknown Recipe"}</div>
               </div>
-              <div onClick={()=>setEditCookLog(null)} style={{width:30,height:30,borderRadius:9,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <div onClick={()=>setEditCookLog(null)} style={{width:44,height:44,borderRadius:12,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
@@ -4469,7 +4469,7 @@ const KitchenScreen = ({ familyId }) => {
                 <div style={{fontSize:17,fontWeight:800}}>🍽 Log Meal</div>
                 <div style={{fontSize:13,color:T.muted,marginTop:2}}>{cookLogModal.recipe?.name || "Unknown Recipe"}</div>
               </div>
-              <div onClick={()=>setCookLogModal(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+              <div onClick={()=>setCookLogModal(null)} style={{width:30,height:30,borderRadius:10,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
@@ -4494,7 +4494,7 @@ const Nav = ({ active, go }) => (
       {id:"grocery", icon:"kitchen", lbl:"Grocery"},
       {id:"planner", icon:"plan",    lbl:"Plan"},
       {id:"ai",      icon:"ai",      lbl:"AI"},
-      {id:"profile", icon:"profile", lbl:"You"},
+      {id:"profile", icon:"profile", lbl:"Me"},
     ].map(it=>(
       <div key={it.id} className={`nav-btn ${active===it.id?"on":""}`} onClick={()=>go(it.id)}>
         <I n={it.icon} s={19} c={active===it.id?T.accent:T.muted}/>

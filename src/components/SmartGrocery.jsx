@@ -656,7 +656,7 @@ export default function SmartGrocery({ familyId }) {
         <div style={{ position: 'fixed', bottom: 70, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 400, background: C.accent, borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 90, boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>🛒 {cart.length} items in cart</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 1 }}>Tap to compare prices</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.9)', marginTop: 1, fontSize: 12 }}>Tap to compare prices</div>
           </div>
           <button onClick={compareAll} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: '#fff', color: C.accent, fontSize: 13, fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
             ⚡ Compare
