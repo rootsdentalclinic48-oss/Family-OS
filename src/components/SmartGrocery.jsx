@@ -146,11 +146,12 @@ export default function SmartGrocery({ familyId }) {
   const load = useCallback(async () => {
     setLoading(true);
     const today = new Date().toISOString().split('T')[0];
+    const threeDaysAgo = new Date(Date.now() - 3*86400000).toISOString().split('T')[0];
     const weekLater = new Date(Date.now() + 7*86400000).toISOString().split('T')[0];
     const [{ data: pan }, { data: plog }, { data: mp }, { data: rec }, { data: ri }] = await Promise.all([
       supabase.from('pantry').select('*').eq('family_id', fid).order('category').order('name'),
       supabase.from('grocery_price_history').select('*').order('logged_at', { ascending: false }).limit(500),
-      supabase.from('meal_plan').select('*').eq('family_id', fid).gte('plan_date', today).lte('plan_date', weekLater).eq('cooked', false),
+      supabase.from('meal_plan').select('*').eq('family_id', fid).gte('plan_date', threeDaysAgo).lte('plan_date', weekLater).eq('cooked', false),
       supabase.from('recipes').select('id,name').eq('family_id', fid),
       supabase.from('recipe_ingredients').select('*'),
     ]);
