@@ -3034,12 +3034,131 @@ const SEED_RECIPES = [
     ingredients:[{name:"Eggs",qty:3,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Salt",qty:2,unit:"g"}]},
   { name:"Scrambled Eggs", meal_type:"breakfast", servings:2, prep_time_mins:8, tags:["non-veg","quick","child-friendly"],
     ingredients:[{name:"Eggs",qty:3,unit:"pcs"},{name:"Butter",qty:10,unit:"g"},{name:"Milk",qty:30,unit:"ml"},{name:"Salt",qty:2,unit:"g"}]},
+
+  // ── More Indian Breakfast ──────────────────────────────────────────────────
+  { name:"Besan Chilla", meal_type:"breakfast", servings:2, prep_time_mins:15, tags:["vegetarian","quick","healthy"],
+    ingredients:[{name:"Besan",qty:150,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Green Chilli",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Sabudana Khichdi", meal_type:"breakfast", servings:2, prep_time_mins:20, tags:["vegetarian","fasting"],
+    ingredients:[{name:"Sabudana",qty:150,unit:"g"},{name:"Potato",qty:1,unit:"pcs"},{name:"Peanuts",qty:50,unit:"g"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Vermicelli Upma", meal_type:"breakfast", servings:2, prep_time_mins:15, tags:["vegetarian","quick","child-friendly"],
+    ingredients:[{name:"Vermicelli",qty:150,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Moong Dal Chilla", meal_type:"breakfast", servings:2, prep_time_mins:20, tags:["vegetarian","healthy","high-protein"],
+    ingredients:[{name:"Moong Dal",qty:150,unit:"g"},{name:"Ginger",qty:10,unit:"g"},{name:"Green Chilli",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Bread Upma", meal_type:"breakfast", servings:2, prep_time_mins:10, tags:["vegetarian","quick","leftover"],
+    ingredients:[{name:"Bread",qty:4,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Pesarattu", meal_type:"breakfast", servings:3, prep_time_mins:25, tags:["vegetarian","healthy","south-indian"],
+    ingredients:[{name:"Moong Dal",qty:200,unit:"g"},{name:"Ginger",qty:10,unit:"g"},{name:"Green Chilli",qty:2,unit:"pcs"},{name:"Oil",qty:20,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+
+  // ── More Indian Lunch/Dinner ───────────────────────────────────────────────
+  { name:"Matar Paneer", meal_type:"lunch", servings:4, prep_time_mins:35, tags:["vegetarian","child-friendly"],
+    ingredients:[{name:"Paneer",qty:200,unit:"g"},{name:"Green Peas",qty:150,unit:"g"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Onion",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
+  { name:"Shahi Paneer", meal_type:"dinner", servings:4, prep_time_mins:40, tags:["vegetarian","rich","special"],
+    ingredients:[{name:"Paneer",qty:250,unit:"g"},{name:"Cream",qty:50,unit:"ml"},{name:"Cashews",qty:30,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"}]},
+  { name:"Kadai Paneer", meal_type:"dinner", servings:4, prep_time_mins:35, tags:["vegetarian","spicy"],
+    ingredients:[{name:"Paneer",qty:250,unit:"g"},{name:"Capsicum",qty:2,unit:"pcs"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Onion",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
+  { name:"Palak Paneer", meal_type:"dinner", servings:4, prep_time_mins:35, tags:["vegetarian","healthy"],
+    ingredients:[{name:"Paneer",qty:200,unit:"g"},{name:"Spinach",qty:300,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Oil",qty:25,unit:"ml"}]},
+  { name:"Aloo Matar", meal_type:"lunch", servings:4, prep_time_mins:25, tags:["vegetarian","quick"],
+    ingredients:[{name:"Potato",qty:300,unit:"g"},{name:"Green Peas",qty:150,unit:"g"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:25,unit:"ml"}]},
+  { name:"Baingan Bharta", meal_type:"dinner", servings:3, prep_time_mins:40, tags:["vegetarian","smoky"],
+    ingredients:[{name:"Baingan",qty:500,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Oil",qty:25,unit:"ml"},{name:"Garlic",qty:5,unit:"pcs"}]},
+  { name:"Methi Thepla", meal_type:"breakfast", servings:3, prep_time_mins:25, tags:["vegetarian","healthy","gujarati"],
+    ingredients:[{name:"Wheat Flour",qty:200,unit:"g"},{name:"Methi Leaves",qty:100,unit:"g"},{name:"Curd",qty:50,unit:"g"},{name:"Oil",qty:20,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Veg Pulao", meal_type:"lunch", servings:4, prep_time_mins:30, tags:["vegetarian","one-pot"],
+    ingredients:[{name:"Basmati Rice",qty:300,unit:"g"},{name:"Mixed Vegetables",qty:200,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Ghee",qty:20,unit:"ml"},{name:"Bay Leaf",qty:2,unit:"pcs"}]},
+  { name:"Vegetable Biryani", meal_type:"lunch", servings:4, prep_time_mins:60, tags:["vegetarian","special","festive"],
+    ingredients:[{name:"Basmati Rice",qty:300,unit:"g"},{name:"Mixed Vegetables",qty:250,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Curd",qty:100,unit:"g"},{name:"Ghee",qty:30,unit:"ml"}]},
+  { name:"Pav Bhaji", meal_type:"dinner", servings:4, prep_time_mins:40, tags:["vegetarian","street-food","child-friendly"],
+    ingredients:[{name:"Potato",qty:400,unit:"g"},{name:"Mixed Vegetables",qty:200,unit:"g"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Butter",qty:40,unit:"g"},{name:"Pav",qty:8,unit:"pcs"}]},
+  { name:"Misal Pav", meal_type:"lunch", servings:3, prep_time_mins:35, tags:["vegetarian","spicy","maharashtrian"],
+    ingredients:[{name:"Moong Sprouts",qty:200,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Oil",qty:25,unit:"ml"},{name:"Pav",qty:6,unit:"pcs"}]},
+  { name:"Sambar Rice", meal_type:"lunch", servings:4, prep_time_mins:35, tags:["vegetarian","south-indian","healthy"],
+    ingredients:[{name:"Rice",qty:300,unit:"g"},{name:"Toor Dal",qty:100,unit:"g"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tamarind",qty:20,unit:"g"}]},
+  { name:"Rasam Rice", meal_type:"dinner", servings:3, prep_time_mins:25, tags:["vegetarian","south-indian","comfort"],
+    ingredients:[{name:"Rice",qty:200,unit:"g"},{name:"Toor Dal",qty:50,unit:"g"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Tamarind",qty:15,unit:"g"},{name:"Ghee",qty:15,unit:"ml"}]},
+  { name:"Lemon Rice", meal_type:"lunch", servings:3, prep_time_mins:20, tags:["vegetarian","south-indian","quick"],
+    ingredients:[{name:"Rice",qty:200,unit:"g"},{name:"Lemon",qty:2,unit:"pcs"},{name:"Peanuts",qty:30,unit:"g"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Oil",qty:15,unit:"ml"}]},
+  { name:"Curd Rice", meal_type:"dinner", servings:3, prep_time_mins:15, tags:["vegetarian","cooling","south-indian","child-friendly"],
+    ingredients:[{name:"Rice",qty:200,unit:"g"},{name:"Curd",qty:200,unit:"g"},{name:"Milk",qty:50,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Kadhi Pakora", meal_type:"lunch", servings:4, prep_time_mins:40, tags:["vegetarian","comfort","north-indian"],
+    ingredients:[{name:"Besan",qty:100,unit:"g"},{name:"Curd",qty:300,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"}]},
+  { name:"Chana Masala", meal_type:"lunch", servings:4, prep_time_mins:40, tags:["vegetarian","protein-rich"],
+    ingredients:[{name:"Kabuli Chana",qty:250,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"},{name:"Garam Masala",qty:5,unit:"g"}]},
+  { name:"Matar Mushroom", meal_type:"dinner", servings:3, prep_time_mins:30, tags:["vegetarian"],
+    ingredients:[{name:"Mushroom",qty:200,unit:"g"},{name:"Green Peas",qty:100,unit:"g"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:25,unit:"ml"}]},
+  { name:"Veg Kofta Curry", meal_type:"dinner", servings:4, prep_time_mins:50, tags:["vegetarian","rich","special"],
+    ingredients:[{name:"Potato",qty:200,unit:"g"},{name:"Paneer",qty:100,unit:"g"},{name:"Besan",qty:50,unit:"g"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Cream",qty:50,unit:"ml"}]},
+
+  // ── Roti / Bread varieties ─────────────────────────────────────────────────
+  { name:"Missi Roti", meal_type:"breakfast", servings:3, prep_time_mins:20, tags:["vegetarian","healthy","punjabi"],
+    ingredients:[{name:"Wheat Flour",qty:150,unit:"g"},{name:"Besan",qty:50,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Stuffed Paratha", meal_type:"breakfast", servings:2, prep_time_mins:25, tags:["vegetarian","filling","punjabi"],
+    ingredients:[{name:"Wheat Flour",qty:200,unit:"g"},{name:"Potato",qty:200,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Butter",qty:20,unit:"g"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Puri Bhaji", meal_type:"breakfast", servings:3, prep_time_mins:30, tags:["vegetarian","festive","child-friendly"],
+    ingredients:[{name:"Wheat Flour",qty:200,unit:"g"},{name:"Potato",qty:300,unit:"g"},{name:"Oil",qty:200,unit:"ml"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Salt",qty:3,unit:"g"}]},
+
+  // ── Snacks & Munchies ──────────────────────────────────────────────────────
+  { name:"Masala Chai", meal_type:"snack", servings:2, prep_time_mins:8, tags:["vegetarian","quick","beverage"],
+    ingredients:[{name:"Tea",qty:10,unit:"g"},{name:"Milk",qty:300,unit:"ml"},{name:"Ginger",qty:5,unit:"g"},{name:"Sugar",qty:20,unit:"g"},{name:"Cardamom",qty:2,unit:"pcs"}]},
+  { name:"Cold Coffee", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","cold","beverage","child-friendly"],
+    ingredients:[{name:"Coffee",qty:10,unit:"g"},{name:"Milk",qty:400,unit:"ml"},{name:"Sugar",qty:30,unit:"g"},{name:"Ice",qty:100,unit:"g"}]},
+  { name:"Mango Lassi", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","cold","beverage","refreshing"],
+    ingredients:[{name:"Mango",qty:200,unit:"g"},{name:"Curd",qty:200,unit:"g"},{name:"Sugar",qty:20,unit:"g"},{name:"Milk",qty:100,unit:"ml"}]},
+  { name:"Nimbu Pani", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","cold","beverage","summer","quick"],
+    ingredients:[{name:"Lemon",qty:2,unit:"pcs"},{name:"Sugar",qty:30,unit:"g"},{name:"Salt",qty:2,unit:"g"},{name:"Mint",qty:5,unit:"g"}]},
+  { name:"Chaas (Buttermilk)", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","cooling","quick","summer"],
+    ingredients:[{name:"Curd",qty:200,unit:"g"},{name:"Jeera",qty:3,unit:"g"},{name:"Salt",qty:2,unit:"g"},{name:"Mint",qty:5,unit:"g"}]},
+  { name:"Banana Shake", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","child-friendly","quick"],
+    ingredients:[{name:"Banana",qty:2,unit:"pcs"},{name:"Milk",qty:400,unit:"ml"},{name:"Sugar",qty:20,unit:"g"}]},
+  { name:"Aloo Chaat", meal_type:"snack", servings:2, prep_time_mins:15, tags:["vegetarian","street-food","tangy"],
+    ingredients:[{name:"Potato",qty:300,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Chaat Masala",qty:5,unit:"g"},{name:"Lemon",qty:1,unit:"pcs"}]},
+  { name:"Bhel Puri", meal_type:"snack", servings:2, prep_time_mins:10, tags:["vegetarian","street-food","tangy","quick"],
+    ingredients:[{name:"Puffed Rice",qty:100,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Tamarind Chutney",qty:30,unit:"ml"},{name:"Sev",qty:30,unit:"g"}]},
+  { name:"Sev Puri", meal_type:"snack", servings:2, prep_time_mins:10, tags:["vegetarian","street-food","mumbai"],
+    ingredients:[{name:"Puri",qty:12,unit:"pcs"},{name:"Potato",qty:150,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Sev",qty:40,unit:"g"},{name:"Tamarind Chutney",qty:30,unit:"ml"}]},
+  { name:"Dahi Puri", meal_type:"snack", servings:2, prep_time_mins:10, tags:["vegetarian","street-food","chaat"],
+    ingredients:[{name:"Puri",qty:12,unit:"pcs"},{name:"Curd",qty:150,unit:"g"},{name:"Potato",qty:100,unit:"g"},{name:"Tamarind Chutney",qty:30,unit:"ml"},{name:"Sev",qty:30,unit:"g"}]},
+  { name:"Samosa", meal_type:"snack", servings:4, prep_time_mins:45, tags:["vegetarian","fried","street-food","tea-time"],
+    ingredients:[{name:"Maida",qty:200,unit:"g"},{name:"Potato",qty:300,unit:"g"},{name:"Green Peas",qty:50,unit:"g"},{name:"Oil",qty:200,unit:"ml"},{name:"Garam Masala",qty:5,unit:"g"}]},
+  { name:"Pakora", meal_type:"snack", servings:3, prep_time_mins:20, tags:["vegetarian","fried","monsoon","tea-time"],
+    ingredients:[{name:"Besan",qty:150,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Green Chilli",qty:2,unit:"pcs"},{name:"Oil",qty:200,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Bread Pakora", meal_type:"snack", servings:2, prep_time_mins:15, tags:["vegetarian","fried","quick","child-friendly"],
+    ingredients:[{name:"Bread",qty:4,unit:"pcs"},{name:"Besan",qty:100,unit:"g"},{name:"Potato",qty:100,unit:"g"},{name:"Oil",qty:150,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Dhokla", meal_type:"snack", servings:4, prep_time_mins:30, tags:["vegetarian","steamed","gujarati","healthy"],
+    ingredients:[{name:"Besan",qty:200,unit:"g"},{name:"Curd",qty:100,unit:"g"},{name:"Eno",qty:5,unit:"g"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Sugar",qty:10,unit:"g"}]},
+  { name:"Popcorn", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","quick","movie-snack","child-friendly"],
+    ingredients:[{name:"Corn Kernels",qty:100,unit:"g"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"},{name:"Butter",qty:10,unit:"g"}]},
+  { name:"Nachos with Salsa", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","quick","party","munchies"],
+    ingredients:[{name:"Nachos",qty:150,unit:"g"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Lemon",qty:1,unit:"pcs"},{name:"Cheese",qty:30,unit:"g"}]},
+  { name:"Chips & Dip", meal_type:"snack", servings:2, prep_time_mins:5, tags:["quick","munchies","party","no-cook"],
+    ingredients:[{name:"Potato Chips",qty:100,unit:"g"},{name:"Curd",qty:100,unit:"g"},{name:"Mint",qty:5,unit:"g"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Maggi Noodles", meal_type:"snack", servings:2, prep_time_mins:8, tags:["quick","child-friendly","comfort","munchies"],
+    ingredients:[{name:"Maggi Noodles",qty:2,unit:"pack"},{name:"Butter",qty:10,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"}]},
+  { name:"Masala Maggi", meal_type:"snack", servings:2, prep_time_mins:12, tags:["quick","spicy","child-friendly","munchies"],
+    ingredients:[{name:"Maggi Noodles",qty:2,unit:"pack"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Green Chilli",qty:1,unit:"pcs"},{name:"Butter",qty:10,unit:"g"}]},
+  { name:"Upma Poha Mix", meal_type:"snack", servings:2, prep_time_mins:15, tags:["vegetarian","quick","light"],
+    ingredients:[{name:"Poha",qty:100,unit:"g"},{name:"Rava",qty:50,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"}]},
+  { name:"Makhana Snack", meal_type:"snack", servings:2, prep_time_mins:8, tags:["vegetarian","healthy","roasted","munchies"],
+    ingredients:[{name:"Makhana",qty:100,unit:"g"},{name:"Ghee",qty:10,unit:"ml"},{name:"Salt",qty:2,unit:"g"},{name:"Black Pepper",qty:2,unit:"g"}]},
+  { name:"Roasted Chana", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","healthy","protein","no-cook"],
+    ingredients:[{name:"Roasted Chana",qty:100,unit:"g"},{name:"Lemon",qty:1,unit:"pcs"},{name:"Chaat Masala",qty:3,unit:"g"}]},
+  { name:"Fruit Chaat", meal_type:"snack", servings:2, prep_time_mins:8, tags:["vegetarian","healthy","refreshing","no-cook"],
+    ingredients:[{name:"Apple",qty:1,unit:"pcs"},{name:"Banana",qty:1,unit:"pcs"},{name:"Pomegranate",qty:100,unit:"g"},{name:"Chaat Masala",qty:3,unit:"g"},{name:"Lemon",qty:1,unit:"pcs"}]},
+  { name:"Cold Drink Float", meal_type:"snack", servings:1, prep_time_mins:3, tags:["cold","party","child-friendly","munchies"],
+    ingredients:[{name:"Cold Drink",qty:1,unit:"bottle"},{name:"Vanilla Ice Cream",qty:2,unit:"scoop"}]},
+  { name:"Shikanji", meal_type:"snack", servings:2, prep_time_mins:5, tags:["vegetarian","cold","summer","refreshing"],
+    ingredients:[{name:"Lemon",qty:3,unit:"pcs"},{name:"Sugar",qty:40,unit:"g"},{name:"Black Salt",qty:3,unit:"g"},{name:"Cumin Powder",qty:2,unit:"g"},{name:"Mint",qty:5,unit:"g"}]},
+  { name:"Aam Panna", meal_time:"snack", meal_type:"snack", servings:2, prep_time_mins:15, tags:["vegetarian","summer","cooling","raw-mango"],
+    ingredients:[{name:"Raw Mango",qty:200,unit:"g"},{name:"Sugar",qty:50,unit:"g"},{name:"Mint",qty:10,unit:"g"},{name:"Black Salt",qty:3,unit:"g"},{name:"Cumin Powder",qty:2,unit:"g"}]},
+  { name:"Thandai", meal_type:"snack", servings:2, prep_time_mins:10, tags:["vegetarian","festive","cold","holi"],
+    ingredients:[{name:"Milk",qty:400,unit:"ml"},{name:"Almonds",qty:20,unit:"g"},{name:"Sugar",qty:40,unit:"g"},{name:"Cardamom",qty:3,unit:"pcs"},{name:"Rose Water",qty:10,unit:"ml"}]},
 ];
 
 const seedRecipes = async (familyId) => {
   const { data: existing } = await supabase.from("recipes").select("id,name").eq("family_id", familyId);
   const hasEggs = existing?.some(r => r.name === "Boiled Eggs");
-  if (existing?.length && hasEggs) return;
+  const hasMunchies = existing?.some(r => r.name === "Maggi Noodles");
+  if (existing?.length && hasEggs && hasMunchies) return;
   for (const r of SEED_RECIPES) {
     const { data: rec } = await supabase.from("recipes").insert([{
       family_id: familyId, name: r.name, meal_type: r.meal_type,
@@ -3527,6 +3646,7 @@ const KitchenScreen = ({ familyId }) => {
   const [cookLogModal, setCookLogModal] = useState(null); // {meal, recipe}
   const [editCookLog, setEditCookLog] = useState(null); // {meal, recipe}
   const [recipeIngredients, setRecipeIngredients] = useState([]);
+  const [recipeServings, setRecipeServings] = useState(2);
   const [ef, setEf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
   const [pf, setPf] = useState({ name:"", category:"Grains", quantity:"", unit:"kg", par_level:"" });
 
@@ -3791,7 +3911,7 @@ const KitchenScreen = ({ familyId }) => {
               ? <div className="empty"><div className="empty-icon">🥘</div><div className="empty-text">Loading recipes...</div></div>
               : <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {recipes.map(r => (
-                    <div key={r.id} className="card card-tap" style={{padding:"14px 16px"}} onClick={async()=>{ setSelectedRecipe(r); const {data} = await supabase.from("recipe_ingredients").select("*").eq("recipe_id",r.id); setRecipeIngredients(data||[]); }}>
+                    <div key={r.id} className="card card-tap" style={{padding:"14px 16px"}} onClick={async()=>{ setSelectedRecipe(r); setRecipeServings(r.servings||2); const {data} = await supabase.from("recipe_ingredients").select("*").eq("recipe_id",r.id); setRecipeIngredients(data||[]); }}>
                       <div style={{fontSize:15,fontWeight:700}}>{r.name}</div>
                       <div style={{fontSize:12,color:T.muted,marginTop:3}}>
                         {MEAL_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min · 👥 {r.servings}
@@ -4053,56 +4173,122 @@ const KitchenScreen = ({ familyId }) => {
             {/* RECIPE DETAIL MODAL */}
       {selectedRecipe && (
         <div className="modal-bg" onClick={()=>setSelectedRecipe(null)}>
-          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto"}}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"90vh",overflowY:"auto"}}>
             <div className="modal-handle"/>
-            <div className="row" style={{marginBottom:16}}>
+            {/* Header */}
+            <div className="row" style={{marginBottom:12}}>
               <div style={{flex:1}}>
-                <div style={{fontSize:19,fontWeight:800}}>{selectedRecipe.name}</div>
+                <div style={{fontSize:20,fontWeight:800,color:T.text}}>{selectedRecipe.name}</div>
                 <div style={{fontSize:12,color:T.muted,marginTop:3}}>
-                  {MEAL_EMOJI[selectedRecipe.meal_type]} {selectedRecipe.meal_type} · ⏱ {selectedRecipe.prep_time_mins}min · 👥 {selectedRecipe.servings} servings
+                  {MEAL_EMOJI[selectedRecipe.meal_type]} {selectedRecipe.meal_type} · ⏱ {selectedRecipe.prep_time_mins}min
                 </div>
               </div>
-              <div onClick={()=>setSelectedRecipe(null)} style={{width:30,height:30,borderRadius:9,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+              <div onClick={()=>setSelectedRecipe(null)} style={{width:32,height:32,borderRadius:10,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
+            {/* Tags */}
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
               {(selectedRecipe.tags||[]).map(tag=>(
                 <span key={tag} className="tag" style={{background:T.accentSoft,color:T.accent,fontSize:11}}>{tag}</span>
               ))}
             </div>
-            <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>Ingredients</div>
+            {/* Serving scaler */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:T.accentSoft,borderRadius:14,marginBottom:16,border:`1px solid ${T.accent}33`}}>
+              <div>
+                <div style={{fontSize:13,fontWeight:700,color:T.accent}}>👥 Servings</div>
+                <div style={{fontSize:11,color:T.muted,marginTop:2}}>Quantities auto-scale</div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div onClick={()=>setRecipeServings(s=>Math.max(1,s-1))} style={{width:34,height:34,borderRadius:10,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18,color:"#fff",fontWeight:700,userSelect:"none"}}>−</div>
+                <div style={{fontSize:22,fontWeight:900,color:T.accent,minWidth:24,textAlign:"center"}}>{recipeServings}</div>
+                <div onClick={()=>setRecipeServings(s=>Math.min(20,s+1))} style={{width:34,height:34,borderRadius:10,background:T.accent,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18,color:"#fff",fontWeight:700,userSelect:"none"}}>+</div>
+              </div>
+            </div>
+            {/* Stats row */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
+              {[
+                {l:"Base servings", v:selectedRecipe.servings||2},
+                {l:"Your servings", v:recipeServings},
+                {l:"Scale factor", v:`×${(recipeServings/(selectedRecipe.servings||2)).toFixed(1)}`},
+              ].map(s=>(
+                <div key={s.l} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"8px",textAlign:"center"}}>
+                  <div style={{fontSize:15,fontWeight:800,color:T.text}}>{s.v}</div>
+                  <div style={{fontSize:10,color:T.muted,marginTop:2}}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+            {/* Ingredients */}
+            <div style={{fontSize:12,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".06em",marginBottom:10}}>
+              Ingredients for {recipeServings} serving{recipeServings!==1?"s":""}
+            </div>
             {recipeIngredients.length === 0
               ? <div style={{fontSize:13,color:T.muted,padding:"10px 0"}}>Loading ingredients...</div>
-              : <div className="card" style={{padding:"2px 14px",marginBottom:16}}>
+              : <div className="card" style={{padding:"2px 14px",marginBottom:14}}>
                   {recipeIngredients.map((ing,i) => {
+                    const scale = recipeServings / (selectedRecipe.servings || 2);
+                    const scaledQty = Math.round(Number(ing.quantity) * scale * 10) / 10;
                     const pantryItem = pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase());
-                    const hasEnough = pantryItem && Number(pantryItem.quantity) >= Number(ing.quantity);
+                    const hasEnough = pantryItem && Number(pantryItem.quantity) >= scaledQty;
+                    const statusIcon = hasEnough ? "✅" : pantryItem ? "⚠️" : "❌";
+                    const statusColor = hasEnough ? T.green : pantryItem ? T.amber : T.red;
                     return (
                       <div key={i} className="list-row" style={{cursor:"default"}}>
-                        <span style={{fontSize:16}}>{hasEnough ? "✅" : pantryItem ? "⚠️" : "❌"}</span>
+                        <span style={{fontSize:18,flexShrink:0}}>{statusIcon}</span>
                         <div style={{flex:1}}>
-                          <div style={{fontSize:14,fontWeight:500}}>{ing.pantry_item_name}</div>
-                          <div style={{fontSize:11.5,color:T.muted}}>Need: {ing.quantity} {ing.unit}</div>
-                        </div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontSize:12,color:hasEnough?T.green:pantryItem?T.amber:T.red,fontWeight:600}}>
-                            {pantryItem ? pantryItem.quantity+" "+pantryItem.unit : "Not in pantry"}
+                          <div style={{fontSize:14,fontWeight:600,color:T.text}}>{ing.pantry_item_name}</div>
+                          <div style={{fontSize:11.5,color:T.muted,marginTop:1}}>
+                            Need: <strong style={{color:T.text}}>{scaledQty} {ing.unit}</strong>
+                            {scale !== 1 && <span style={{color:T.dim}}> (base: {ing.quantity} {ing.unit})</span>}
                           </div>
+                        </div>
+                        <div style={{textAlign:"right",minWidth:80}}>
+                          <div style={{fontSize:13,fontWeight:700,color:statusColor}}>
+                            {pantryItem ? `${pantryItem.quantity} ${pantryItem.unit}` : "Not in pantry"}
+                          </div>
+                          {pantryItem && !hasEnough && (
+                            <div style={{fontSize:10,color:T.amber,fontWeight:600,marginTop:2}}>
+                              Need {Math.max(0, scaledQty - Number(pantryItem.quantity)).toFixed(1)} more
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
                   })}
                 </div>
             }
-            {recipeIngredients.filter(ing=>!pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase())).length > 0 && (
-              <div style={{padding:"12px 14px",background:T.amberSoft,border:"1px solid rgba(251,191,36,0.22)",borderRadius:12}}>
-                <div style={{fontSize:13,fontWeight:700,color:T.amber}}>🛒 Need to buy:</div>
-                <div style={{fontSize:12,color:T.muted,marginTop:4}}>
-                  {recipeIngredients.filter(ing=>!pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase())).map(i=>i.pantry_item_name).join(", ")}
+            {/* Need to buy */}
+            {(()=>{
+              const scale = recipeServings / (selectedRecipe.servings || 2);
+              const missing = recipeIngredients.filter(ing => {
+                const pantryItem = pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase());
+                return !pantryItem || Number(pantryItem.quantity) < Number(ing.quantity) * scale;
+              });
+              if (!missing.length) return (
+                <div style={{padding:"12px 14px",background:T.greenSoft,border:`1px solid ${T.green}33`,borderRadius:12}}>
+                  <div style={{fontSize:13,fontWeight:700,color:T.green}}>✅ You have everything!</div>
+                  <div style={{fontSize:12,color:T.muted,marginTop:3}}>All ingredients available in pantry for {recipeServings} servings.</div>
                 </div>
-              </div>
-            )}
+              );
+              return (
+                <div style={{padding:"12px 14px",background:T.amberSoft,border:"1px solid rgba(251,191,36,0.22)",borderRadius:12}}>
+                  <div style={{fontSize:13,fontWeight:700,color:T.amber}}>🛒 Need to buy ({missing.length} items):</div>
+                  <div style={{fontSize:12,color:T.muted,marginTop:6,lineHeight:1.8}}>
+                    {missing.map((ing,i) => {
+                      const scale2 = recipeServings / (selectedRecipe.servings || 2);
+                      const scaledQty = Math.round(Number(ing.quantity) * scale2 * 10) / 10;
+                      const pantryItem = pantry.find(p=>p.name.toLowerCase()===ing.pantry_item_name.toLowerCase());
+                      const shortfall = pantryItem ? Math.max(0, scaledQty - Number(pantryItem.quantity)).toFixed(1) : scaledQty;
+                      return (
+                        <span key={i} style={{display:"inline-flex",alignItems:"center",gap:4,marginRight:8,marginBottom:4,padding:"3px 10px",borderRadius:20,background:"rgba(251,191,36,0.15)",color:T.amber,fontWeight:600,fontSize:12}}>
+                          {ing.pantry_item_name} · {shortfall} {ing.unit}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
