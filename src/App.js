@@ -1837,7 +1837,7 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
               style={{width:90,padding:"6px 8px",borderRadius:8,border:`1px solid ${T.border}`,fontSize:15,fontWeight:800,color:T.green,background:"#fff",textAlign:"center",fontFamily:"inherit"}}/>
           </div>
         </div>
-        {billTotal > 0 && <div style={{fontSize:11,color:T.muted,marginTop:4}}>💸 Will create expense: Groceries · {["blinkit","Blinkit"],["instamart","Instamart"],["zepto","Zepto"],["bigbasket","BigBasket"],["amazon","Amazon"],["flipkart","Flipkart"],["local","Local Store"]].find(([v])=>v===billVendor)?.[1]||'Store'}</div>}
+        {billTotal > 0 && <div style={{fontSize:11,color:T.muted,marginTop:4}}>💸 Will create expense: Groceries · {billVendor==='blinkit'?'Blinkit':billVendor==='instamart'?'Instamart':billVendor==='zepto'?'Zepto':billVendor==='bigbasket'?'BigBasket':billVendor==='amazon'?'Amazon':billVendor==='flipkart'?'Flipkart':'Local Store'}</div>}
       </div>
       <div style={{maxHeight:"50vh",overflowY:"auto",marginBottom:12}}>
         {extractedItems.map(item=>(
