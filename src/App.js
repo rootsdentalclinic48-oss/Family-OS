@@ -4779,10 +4779,8 @@ export default function App() {
     // Line 2: {n}x{size} {unit}  OR  {n}x{size}-{size2}{unit}  OR just qty
     // Line 3: ₹{price}  (our price)
     // Line 4: ₹{mrp}    (MRP - skip)
-    // Sometimes "+
-{n}" for multiples
-    const lines = text.split(/
-/).map(l => l.trim());
+    // Sometimes "+ n" for multiples
+    const lines = text.split(/\n|\r\n/).map(l => l.trim());
 
     // Detect total
     for (const line of lines) {
