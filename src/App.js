@@ -337,14 +337,14 @@ const Styles = () => (
     .fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom, 0px));right:max(16px, calc(50vw - 199px));width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow},0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .fab:active{transform:scale(0.91);}
     .fab.open{transform:rotate(45deg);background:linear-gradient(135deg,#C4603A,#E55);}
-    .fab-menu{position:fixed;bottom:calc(148px + env(safe-area-inset-bottom, 0px));right:max(12px, calc(50vw - 210px));z-index:149;display:flex;flex-direction:column;gap:10px;align-items:flex-end;animation:fabMenuIn .25s cubic-bezier(.16,1,.3,1);}
+    .fab-menu{position:fixed;bottom:calc(148px + env(safe-area-inset-bottom, 0px));right:max(16px, calc(50vw - 206px));z-index:149;display:flex;flex-direction:column;gap:8px;align-items:flex-end;animation:fabMenuIn .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fabMenuIn{from{opacity:0;transform:translateY(16px) scale(0.94);}to{opacity:1;transform:translateY(0) scale(1);}}
     .fab-item{display:flex;align-items:center;gap:10px;cursor:pointer;animation:fabItemIn .22s cubic-bezier(.16,1,.3,1) both;}
     @keyframes fabItemIn{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
     .fab-item-btn{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;border:1px solid rgba(125,157,124,0.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:transform .15s;-webkit-tap-highlight-color:transparent;}
     .fab-item-btn:active{transform:scale(0.88);}
-    .fab-item-label{background:rgba(12,12,22,0.94);border:1px solid ${T.border};border-radius:10px;padding:6px 12px;font-size:12.5px;font-weight:600;color:${T.text};backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);white-space:nowrap;}
-    .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);animation:fadeIn .2s ease;}
+    .fab-item-label{background:rgba(255,255,255,0.96);border:1px solid rgba(0,0,0,0.08);border-radius:10px;padding:7px 14px;font-size:13px;font-weight:700;color:#111827;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+    .fab-overlay{position:fixed;inset:0;z-index:148;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px);animation:fadeIn .2s ease;}
     .type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
     .type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;cursor:pointer;transition:all .18s;border:1px solid transparent;min-height:68px;justify-content:center;-webkit-tap-highlight-color:transparent;}
     .type-btn.active{border-color:rgba(125,157,124,0.35);background:rgba(125,157,124,0.1);}
