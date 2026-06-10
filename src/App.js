@@ -1616,7 +1616,17 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
 
     for (const line of lines) {
       // Skip lines that are clearly not items
-      if (/total|amount|price|rs\.|₹|discount|delivery|charges|tax|gst|mrp|saved|order|invoice|bill|date|address|payment|thank/i.test(line)) continue;
+      // Capture total bill amount
+      const totalMatch = line.match(/(?:total|grand total|order total|amount|bill amount|net amount)[^\d]*₹?\s*(\d+(?:,\d+)?(?:\.\d+)?)/i);
+      if (totalMatch) { billTotalRef = parseFloat(totalMatch[1].replace(/,/g,'')); continue; }
+      // Capture vendor
+      if (/blinkit|grofers/i.test(line)) vendorRef = 'blinkit';
+      else if (/instamart|swiggy/i.test(line)) vendorRef = 'instamart';
+      else if (/zepto/i.test(line)) vendorRef = 'zepto';
+      else if (/bigbasket|big basket/i.test(line)) vendorRef = 'bigbasket';
+      else if (/amazon/i.test(line)) vendorRef = 'amazon';
+      else if (/flipkart/i.test(line)) vendorRef = 'flipkart';
+      if (/discount|delivery|charges|tax|gst|mrp|saved|order|invoice|date|address|payment|thank/i.test(line)) continue;
       if (line.length < 3 || /^\d+$/.test(line)) continue;
 
       let name = "", quantity = 1, unit = "pcs";
@@ -1662,10 +1672,16 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
       name = normalizeName(name);
       if (!UNITS.includes(unit)) unit = "pcs";
 
+      // Extract price from line
+      const priceMatch = line.match(/₹\s*(\d+(?:,\d+)?(?:\.\d+)?)/);
+      const linePrice = priceMatch ? parseFloat(priceMatch[1].replace(/,/g,'')) : 0;
+      const unitPrice = linePrice > 0 && quantity > 0 ? Math.round((linePrice/quantity)*100)/100 : 0;
+
       // Avoid duplicates
       const existing = items.find(i=>i.name.toLowerCase()===name.toLowerCase());
-      if (existing) { existing.quantity += quantity; }
+      if (existing) { existing.quantity += quantity; existing.lineTotal += linePrice; }
       else { items.push({ id:items.length, name, quantity, unit, selected:true,
+        unitPrice, lineTotal: linePrice,
         existingQty: pantry.find(p=>p.name.toLowerCase()===name.toLowerCase())?.quantity||0,
         existingUnit: pantry.find(p=>p.name.toLowerCase()===name.toLowerCase())?.unit||unit,
       }); }
@@ -1675,6 +1691,10 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
       setError("No items found. Make sure to paste item names with quantities.");
       return;
     }
+    // Calculate bill total from items if not found in text
+    const itemsTotal = items.reduce((a,i)=>a+(i.lineTotal||0),0);
+    setBillTotal(billTotalRef > 0 ? billTotalRef : itemsTotal);
+    setBillVendor(vendorRef);
     setExtractedItems(items);
     setStage("reviewing");
   };
@@ -1684,15 +1704,53 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
 
   const saveToStock = async () => {
     setSaving(true);
-    for (const item of extractedItems.filter(i=>i.selected)) {
+    const selectedItems = extractedItems.filter(i=>i.selected);
+    const finalTotal = billTotal > 0 ? billTotal : selectedItems.reduce((a,i)=>a+(i.lineTotal||0),0);
+    const vendorLabels = { blinkit:'Blinkit', instamart:'Instamart', zepto:'Zepto', bigbasket:'BigBasket', amazon:'Amazon Fresh', flipkart:'Flipkart', local:'Local Store' };
+    const vendorLabel = vendorLabels[billVendor] || 'Local Store';
+
+    for (const item of selectedItems) {
+      // 1. Update pantry stock
       const existing = pantry.find(p=>p.name.toLowerCase()===item.name.toLowerCase());
       if (existing) {
         await supabase.from("pantry").update({ quantity: Number(existing.quantity)+Number(item.quantity), updated_at:new Date().toISOString() }).eq("id",existing.id);
       } else {
         await supabase.from("pantry").insert([{ family_id:familyId, name:item.name, category:"Other", quantity:Number(item.quantity), unit:item.unit, par_level:0, updated_at:new Date().toISOString() }]);
       }
-      await supabase.from("inventory_transactions").insert([{ family_id:familyId, item_name:item.name, transaction_type:"stock_in", quantity:Number(item.quantity), unit:item.unit, source_document:"grocery_bill" }]);
+
+      // 2. Log inventory transaction
+      await supabase.from("inventory_transactions").insert([{
+        family_id:familyId, item_name:item.name, transaction_type:"stock_in",
+        quantity:Number(item.quantity), unit:item.unit, source_document:"grocery_bill",
+        vendor:billVendor, unit_price:item.unitPrice||0, line_total:item.lineTotal||0,
+        purchase_date:billDate,
+      }]);
+
+      // 3. Log to grocery_price_history (powers Smart Grocery compare)
+      if (item.unitPrice > 0) {
+        await supabase.from("grocery_price_history").insert([{
+          item_name: item.name, platform: billVendor,
+          price: item.unitPrice, delivery_fee: 0,
+          source: 'bill_import', logged_at: new Date().toISOString(),
+        }]).then(()=>{}).catch(()=>{});
+      }
     }
+
+    // 4. Create single expense transaction for total bill
+    if (finalTotal > 0) {
+      await supabase.from("transactions").insert([{
+        family_id: familyId,
+        description: `Grocery Bill — ${vendorLabel}`,
+        amount: -Math.abs(finalTotal),
+        category: "Groceries",
+        added_by: "Mayank",
+        date: billDate,
+        emoji: "🛒",
+        source: "bill_import",
+        vendor: billVendor,
+      }]);
+    }
+
     setSaving(false);
     setStage("done");
     setTimeout(()=>onDone(), 1800);
@@ -1735,20 +1793,51 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   if (stage==="done") return (
     <div style={{textAlign:"center",padding:"48px 20px"}}>
       <div style={{fontSize:48,marginBottom:12}}>✅</div>
-      <div style={{fontSize:17,fontWeight:700,color:T.green,marginBottom:6}}>Pantry Updated!</div>
-      <div style={{fontSize:13,color:T.muted}}>{extractedItems.filter(i=>i.selected).length} items added to stock</div>
+      <div style={{fontSize:17,fontWeight:700,color:T.green,marginBottom:6}}>Bill Imported!</div>
+      <div style={{fontSize:13,color:T.muted,marginBottom:8}}>{extractedItems.filter(i=>i.selected).length} items added to pantry</div>
+      {billTotal > 0 && <div style={{fontSize:13,color:T.green,fontWeight:700,padding:"8px 16px",background:T.greenSoft,borderRadius:10,display:"inline-block"}}>💸 ₹{billTotal.toLocaleString("en-IN")} expense created in Finance</div>}
+      {billTotal > 0 && <div style={{fontSize:12,color:T.muted,marginTop:6}}>Prices saved for Smart Grocery compare</div>}
     </div>
   );
 
   return (
     <div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
         <div>
-          <div style={{fontSize:15,fontWeight:700,color:T.text}}>Detected Items</div>
+          <div style={{fontSize:15,fontWeight:700,color:T.text}}>Review Bill Items</div>
           <div style={{fontSize:12,color:T.muted}}>{extractedItems.filter(i=>i.selected).length}/{extractedItems.length} selected</div>
         </div>
         <button onClick={()=>setExtractedItems(prev=>prev.map(i=>({...i,selected:true})))}
           style={{fontSize:11,color:T.accent,fontWeight:700,background:T.accentSoft,border:"none",borderRadius:8,padding:"5px 10px",cursor:"pointer"}}>Select All</button>
+      </div>
+
+      {/* Bill summary card */}
+      <div style={{background:T.greenSoft,border:`1px solid ${T.green}33`,borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+          <div>
+            <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase"}}>Vendor</div>
+            <select value={billVendor} onChange={e=>setBillVendor(e.target.value)}
+              style={{padding:"5px 8px",borderRadius:8,border:`1px solid ${T.border}`,fontSize:12,fontWeight:700,color:T.text,background:"#fff",fontFamily:"inherit",marginTop:3,width:"100%"}}>
+              {[["blinkit","Blinkit"],["instamart","Instamart"],["zepto","Zepto"],["bigbasket","BigBasket"],["amazon","Amazon Fresh"],["flipkart","Flipkart"],["local","Local Store"]].map(([v,l])=>(
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <div style={{fontSize:10,color:T.muted,fontWeight:700,textTransform:"uppercase"}}>Date</div>
+            <input type="date" value={billDate} onChange={e=>setBillDate(e.target.value)}
+              style={{padding:"5px 8px",borderRadius:8,border:`1px solid ${T.border}`,fontSize:12,color:T.text,background:"#fff",fontFamily:"inherit",marginTop:3,width:"100%"}}/>
+          </div>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{fontSize:13,fontWeight:600,color:T.text}}>Bill Total</div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:14,color:T.muted}}>₹</span>
+            <input type="number" value={billTotal} onChange={e=>setBillTotal(parseFloat(e.target.value)||0)}
+              style={{width:90,padding:"6px 8px",borderRadius:8,border:`1px solid ${T.border}`,fontSize:15,fontWeight:800,color:T.green,background:"#fff",textAlign:"center",fontFamily:"inherit"}}/>
+          </div>
+        </div>
+        {billTotal > 0 && <div style={{fontSize:11,color:T.muted,marginTop:4}}>💸 Will create expense: Groceries · {["blinkit","Blinkit"],["instamart","Instamart"],["zepto","Zepto"],["bigbasket","BigBasket"],["amazon","Amazon"],["flipkart","Flipkart"],["local","Local Store"]].find(([v])=>v===billVendor)?.[1]||'Store'}</div>}
       </div>
       <div style={{maxHeight:"50vh",overflowY:"auto",marginBottom:12}}>
         {extractedItems.map(item=>(
@@ -1763,7 +1852,7 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
                 <div style={{fontSize:14,fontWeight:600,color:T.text}}>{item.name}</div>
                 {item.existingQty>0 && <div style={{fontSize:11,color:T.muted}}>Stock: {item.existingQty} {item.existingUnit}</div>}
               </div>
-              <div style={{display:"flex",gap:5,alignItems:"center"}}>
+              <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
                 <span style={{fontSize:12,color:T.accent,fontWeight:700}}>+</span>
                 <input type="number" value={item.quantity} min={0.1} step={0.1}
                   onChange={e=>updateItem(item.id,"quantity",e.target.value)}
@@ -1772,6 +1861,14 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
                   style={{padding:"5px 6px",borderRadius:8,border:`0.5px solid ${T.border}`,fontSize:12,color:T.text,background:"#FAFAF8"}}>
                   {UNITS.map(u=><option key={u}>{u}</option>)}
                 </select>
+                <div style={{display:"flex",alignItems:"center",gap:3}}>
+                  <span style={{fontSize:11,color:T.muted}}>₹</span>
+                  <input type="number" value={item.unitPrice||""} min={0} step={0.5}
+                    placeholder="price"
+                    onChange={e=>updateItem(item.id,"unitPrice",parseFloat(e.target.value)||0)}
+                    style={{width:55,padding:"5px 6px",borderRadius:8,border:`0.5px solid ${T.border}`,fontSize:12,fontWeight:600,color:T.green,background:"#FAFAF8",textAlign:"center"}}/>
+                  <span style={{fontSize:10,color:T.muted}}>/{item.unit}</span>
+                </div>
               </div>
               <div onClick={()=>setExtractedItems(prev=>prev.filter(i=>i.id!==item.id))}
                 style={{cursor:"pointer",color:T.red,fontSize:14,flexShrink:0}}>✕</div>
