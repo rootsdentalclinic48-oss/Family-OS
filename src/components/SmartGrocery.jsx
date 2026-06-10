@@ -261,7 +261,7 @@ const TABS = [
   { id:'history', label:'📋 History' },
 ];
 
-// ════════════════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────────────────────
 export default function SmartGrocery({ familyId }) {
   const fid = familyId || FAMILY_ID;
   const [tab, setTab]           = useState('pantry');
@@ -888,7 +888,7 @@ export default function SmartGrocery({ familyId }) {
 }
 
 // QUICK LOG UI — 3-second price entry optimised for mobile shopping sessions
-// ══════════════════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────────────────────
 function QuickLogUI({ pantry, priceLog, onLog }) {
   const [activePlatform, setActivePlatform] = useState('blinkit');
   const [prices, setPrices] = useState({});
