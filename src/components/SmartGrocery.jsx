@@ -36,24 +36,130 @@ const extractPlatform = (url='') => {
   return null;
 };
 
+// Smart query builder — adds context for better results
+const buildQuery = (itemName) => {
+  const name = itemName.toLowerCase();
+  // Map common items to better search queries
+  const queryMap = {
+    'cream':            'fresh cream 200ml price india',
+    'dosa batter':      'dosa batter 1kg price bigbasket',
+    'idli batter':      'idli batter 1kg price online india',
+    'coriander leaves': 'fresh coriander 100g price india',
+    'green chutney':    'green chutney 200g price india',
+    'khoya':            'khoya mawa 200g price india',
+    'rose water':       'rose water kewra 200ml price india',
+    'tamarind chutney': 'tamarind chutney imli 200g price',
+    'chana dal':        'chana dal 500g price india online',
+    'maggi noodles':    'maggi noodles 560g price india',
+    'puri':             'puri ready made frozen price india',
+    'sev':              'haldirams sev 200g price india',
+    'tamarind':         'imli tamarind 200g price india',
+    'amchur':           'amchur powder 100g price india',
+    'cardamom powder':  'elaichi cardamom powder 50g price',
+    'chole masala':     'chole masala powder 100g price india',
+    'kadai masala':     'kadai masala powder 100g price india',
+    'saffron':          'kesar saffron 1g price india',
+    'sambar powder':    'sambar powder 100g price india',
+    'baingan':          'brinjal eggplant 500g price india',
+    'cabbage':          'cabbage 1kg price india vegetable',
+    'capsicum':         'capsicum shimla mirch 250g price india',
+    'carrot':           'carrot gajar 500g price india',
+    'karela':           'bitter gourd karela 500g price india',
+    'mooli':            'radish mooli 500g price india',
+    'mushroom':         'button mushroom 200g price india',
+    'spinach':          'palak spinach 250g price india',
+    'sweet potato':     'shakarkand sweet potato 500g price india',
+    'tomato puree':     'tomato puree 200g price india online',
+    'tori':             'ridge gourd tori 500g price india',
+    'grapes':           'grapes angoor 500g price india',
+    'papaya':           'papaya 1kg price india fresh',
+    'daliya':           'daliya broken wheat 500g price india',
+    'sooji':            'sooji rava semolina 500g price india',
+    'mustard oil':      'mustard oil sarson tel 1L price india',
+    'spring roll wrapper': 'spring roll wrapper sheets price india',
+  };
+  return queryMap[name] || `${itemName} 500g price india buy online grocery`;
+};
+
 const fetchGooglePrices = async (itemName) => {
-  const q = encodeURIComponent(`${itemName} grocery price india buy online`);
-  const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&q=${q}&num=10`;
+  const query = buildQuery(itemName);
+  const q = encodeURIComponent(query);
+  // Use num=10 and search across the whole web for price mentions
+  const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&q=${q}&num=10&gl=in&hl=en`;
   try {
     const res = await fetch(url);
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error('Google API error:', res.status, await res.text());
+      return [];
+    }
     const data = await res.json();
-    if (!data.items) return [];
+    if (!data.items?.length) return [];
+
     const seen = {};
     const results = [];
+
     for (const item of data.items) {
       const platform = extractPlatform(item.link||'');
-      if (!platform || seen[platform]) continue;
-      const price = extractPrice(item.snippet) || extractPrice(item.title) || extractPrice(item.pagemap?.metatags?.[0]?.['og:description']);
-      if (price) { seen[platform] = true; results.push({ platform, price, url: item.link, title: item.title }); }
+      // Try multiple price sources
+      const textSources = [
+        item.snippet,
+        item.title,
+        item.pagemap?.metatags?.[0]?.['og:description'],
+        item.pagemap?.metatags?.[0]?.['og:title'],
+        item.pagemap?.product?.[0]?.price,
+        item.pagemap?.offer?.[0]?.price,
+        item.pagemap?.aggregaterating?.[0]?.ratingvalue,
+      ].filter(Boolean).join(' ');
+
+      const price = extractPrice(textSources);
+
+      // Even if no specific platform detected, try to extract price
+      if (price && price > 0 && price < 10000) {
+        if (platform && !seen[platform]) {
+          seen[platform] = true;
+          results.push({ platform, price, url: item.link, title: item.title });
+        }
+        // If no platform detected but price found, assign to 'bigbasket' as fallback
+        if (!platform && !seen['_generic']) {
+          seen['_generic'] = true;
+          // Try URL-based platform detection more broadly
+          const url_lower = (item.link||'').toLowerCase();
+          const detectedPlat =
+            url_lower.includes('grofers') ? 'blinkit' :
+            url_lower.includes('jiomart') ? 'bigbasket' :
+            url_lower.includes('1mg') || url_lower.includes('pharmeasy') ? 'amazon' :
+            null;
+          if (detectedPlat && !seen[detectedPlat]) {
+            seen[detectedPlat] = true;
+            results.push({ platform: detectedPlat, price, url: item.link, title: item.title });
+          }
+        }
+      }
     }
+
+    // If still no results, try a simpler query
+    if (results.length === 0) {
+      const simpleQ = encodeURIComponent(`"${itemName}" price ₹ india`);
+      const simpleUrl = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${GOOGLE_CX}&q=${simpleQ}&num=5&gl=in`;
+      const res2 = await fetch(simpleUrl);
+      if (res2.ok) {
+        const data2 = await res2.json();
+        for (const item of (data2.items||[])) {
+          const platform = extractPlatform(item.link||'');
+          const price = extractPrice([item.snippet, item.title].join(' '));
+          if (platform && price && !seen[platform]) {
+            seen[platform] = true;
+            results.push({ platform, price, url: item.link, title: item.title });
+          }
+        }
+      }
+    }
+
     return results;
-  } catch(e) { console.error('Google fetch error:', e); return []; }
+  } catch(e) {
+    console.error('Google fetch error:', e);
+    return [];
+  }
 };
 
 // ── Platform config ───────────────────────────────────────────────────────────
