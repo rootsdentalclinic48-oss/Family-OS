@@ -3301,7 +3301,7 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
 
 // ─── MEAL PICKER SEARCH ───────────────────────────────────────────────────────
 const MEAL_TYPE_EMOJI = {breakfast:"🌅",lunch:"☀️",dinner:"🌙",snack:"🍎",dessert:"🍮"};
-const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId }) => {
+const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId, selectedRecipeIds = [], onDone }) => {
   const [query, setQuery] = React.useState("");
   const [recentNames, setRecentNames] = React.useState([]);
 
@@ -3352,16 +3352,19 @@ const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId }) => {
         <div style={{marginBottom:12}}>
           <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>⭐ Recently Cooked</div>
           <div style={{display:"flex",flexDirection:"column",gap:6}}>
-            {recentRecipes.map(r => (
-              <div key={r.id} onClick={()=>onSelect(r)}
-                className="card card-tap" style={{padding:"10px 13px",marginBottom:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div>
-                  <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
-                  <div style={{fontSize:11,color:T.muted,marginTop:1}}>{MEAL_TYPE_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min</div>
+            {recentRecipes.map(r => {
+              const isSelected = selectedRecipeIds.includes(r.id);
+              return (
+                <div key={r.id} onClick={()=>onSelect(r)}
+                  className="card card-tap" style={{padding:"10px 13px",marginBottom:0,display:"flex",justifyContent:"space-between",alignItems:"center",borderColor:isSelected?T.green:T.border,background:isSelected?"rgba(109,155,107,0.08)":"transparent"}}>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
+                    <div style={{fontSize:11,color:T.muted,marginTop:1}}>{MEAL_TYPE_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min</div>
+                  </div>
+                  <span style={{fontSize:13,color:isSelected?T.green:T.accent,fontWeight:700}}>{isSelected?"✓ Added":"+ Add"}</span>
                 </div>
-                <span style={{fontSize:11,color:T.accent,fontWeight:700}}>Select →</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -3370,16 +3373,19 @@ const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId }) => {
         <>
           <div style={{fontSize:11,color:T.muted,marginBottom:8}}>{results.length} recipes found</div>
           <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:"55vh",overflowY:"auto"}}>
-            {results.map(r => (
-              <div key={r.id} onClick={()=>onSelect(r)}
-                className="card card-tap" style={{padding:"11px 13px",marginBottom:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div>
-                  <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
-                  <div style={{fontSize:11,color:T.muted,marginTop:2}}>{MEAL_TYPE_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min · 👥 {r.servings}</div>
+            {results.map(r => {
+              const isSelected = selectedRecipeIds.includes(r.id);
+              return (
+                <div key={r.id} onClick={()=>onSelect(r)}
+                  className="card card-tap" style={{padding:"11px 13px",marginBottom:0,display:"flex",justifyContent:"space-between",alignItems:"center",borderColor:isSelected?T.green:T.border,background:isSelected?"rgba(109,155,107,0.08)":"transparent"}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:600,color:T.text}}>{r.name}</div>
+                    <div style={{fontSize:11,color:T.muted,marginTop:2}}>{MEAL_TYPE_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min · 👥 {r.servings}</div>
+                  </div>
+                  <span style={{fontSize:13,color:isSelected?T.green:T.accent,fontWeight:700,marginLeft:8,flexShrink:0}}>{isSelected?"✓ Added":"+ Add"}</span>
                 </div>
-                <span style={{fontSize:11,color:T.accent,fontWeight:700}}>Select →</span>
-              </div>
-            ))}
+              );
+            })}
             {results.length === 0 && (
               <div style={{textAlign:"center",color:T.muted,padding:"20px 0",fontSize:13}}>No recipes found for "{query}"</div>
             )}
@@ -3390,6 +3396,24 @@ const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId }) => {
       {!query.trim() && !showRecent && (
         <div style={{textAlign:"center",color:T.muted,padding:"24px 0",fontSize:13}}>
           Start typing to search all 145+ recipes
+        </div>
+      )}
+
+      {/* Selected items summary + Done button */}
+      {selectedRecipeIds.length > 0 && (
+        <div style={{position:"sticky",bottom:0,background:T.bg,paddingTop:12,marginTop:8}}>
+          <div style={{padding:"12px 16px",background:"rgba(109,155,107,0.12)",border:`1px solid ${T.green}44`,borderRadius:14,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontSize:14,fontWeight:700,color:T.green}}>✓ {selectedRecipeIds.length} recipe{selectedRecipeIds.length>1?"s":""} added</div>
+              <div style={{fontSize:11,color:T.muted,marginTop:2}}>Tap any recipe to remove it</div>
+            </div>
+            {onDone && (
+              <button onClick={onDone}
+                style={{padding:"10px 20px",borderRadius:12,border:"none",background:T.green,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                Done ✓
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -3748,15 +3772,24 @@ const KitchenScreen = ({ familyId }) => {
   };
 
   const assignRecipe = async (recipeId, date, mealType) => {
-    // Remove existing meal for this slot first
-    const existing = mealPlan.find(m => m.plan_date === date && m.meal_type === mealType);
-    if (existing) await supabase.from("meal_plan").delete().eq("id", existing.id);
-    await supabase.from("meal_plan").insert([{
-      family_id: familyId, plan_date: date, meal_type: mealType,
-      recipe_id: recipeId, cooked: false, servings_cooked: 3,
-    }]);
+    // Check if this recipe is already added for this slot
+    const alreadyAdded = mealPlan.find(m => m.plan_date === date && m.meal_type === mealType && m.recipe_id === recipeId);
+    if (alreadyAdded) {
+      // Remove it (toggle off)
+      await supabase.from("meal_plan").delete().eq("id", alreadyAdded.id);
+    } else {
+      // Add new recipe to this slot (multiple allowed)
+      await supabase.from("meal_plan").insert([{
+        family_id: familyId, plan_date: date, meal_type: mealType,
+        recipe_id: recipeId, cooked: false, servings_cooked: 3,
+      }]);
+    }
     await refreshMeal();
-    setAddMealModal(null);
+  };
+
+  const removeRecipeFromSlot = async (mealPlanId) => {
+    await supabase.from("meal_plan").delete().eq("id", mealPlanId);
+    await refreshMeal();
   };
 
   const savePantryItem = async () => {
@@ -3821,16 +3854,21 @@ const KitchenScreen = ({ familyId }) => {
         {tab==="today" && (
           <div style={{display:"flex",flexDirection:"column",gap:12}}>
             {MEAL_TYPES.map(mealType => {
-              const meal = todayMeals.find(m => m.meal_type === mealType);
+              const slotMeals = todayMeals.filter(m => m.meal_type === mealType);
+              const meal = slotMeals[0]; // for backward compat with cook button
               const recipe = meal ? recipes.find(r => r.id === meal.recipe_id) : null;
               return (
-                <div key={mealType} className="card" style={{padding:"14px 16px",borderColor:meal?.cooked?T.green:T.border,cursor:'pointer'}}>
-                  <div className="row" style={{marginBottom:recipe?10:0}}>
-                    <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                <div key={mealType} className="card" style={{padding:"14px 16px",borderColor:slotMeals.some(m=>m.cooked)?T.green:T.border,cursor:'pointer'}}>
+                  <div className="row" style={{marginBottom:slotMeals.length>0?10:0}}>
+                    <div style={{display:"flex",gap:10,alignItems:"center",flex:1,minWidth:0}}>
                       <span style={{fontSize:22}}>{MEAL_EMOJI[mealType]}</span>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:700,textTransform:"capitalize",color:T.muted}}>{mealType}</div>
-                        <div style={{fontSize:15,fontWeight:600,color:recipe?T.text:T.dim}}>{recipe ? recipe.name : "Not planned"}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:700,textTransform:"capitalize",color:T.muted}}>{mealType} {slotMeals.length>1?`(${slotMeals.length} items)`:""}</div>
+                        <div style={{fontSize:15,fontWeight:600,color:slotMeals.length>0?T.text:T.dim}}>
+                          {slotMeals.length===0 && "Not planned"}
+                          {slotMeals.length===1 && (recipes.find(r=>r.id===slotMeals[0].recipe_id)?.name||"Unknown")}
+                          {slotMeals.length>1 && slotMeals.map(m=>recipes.find(r=>r.id===m.recipe_id)?.name).filter(Boolean).join(" + ")}
+                        </div>
                       </div>
                     </div>
                     <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -4323,7 +4361,7 @@ const KitchenScreen = ({ familyId }) => {
             <div className="modal-handle"/>
             <div className="row" style={{marginBottom:14}}>
               <span style={{fontSize:18,fontWeight:700,color:T.text}}>
-                {MEAL_EMOJI[addMealModal.meal_type]} Replace {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)}
+                {MEAL_EMOJI[addMealModal.meal_type]} {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)} — Add Items
               </span>
               <div onClick={()=>setAddMealModal(null)} style={{width:44,height:44,borderRadius:12,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                 <I n="x" s={15} c={T.muted}/>
@@ -4333,7 +4371,9 @@ const KitchenScreen = ({ familyId }) => {
               recipes={recipes}
               defaultMealType={addMealModal.meal_type}
               familyId={familyId}
-              onSelect={(r) => { assignRecipe(r.id, addMealModal.date, addMealModal.meal_type); setAddMealModal(null); }}
+              onSelect={(r) => { assignRecipe(r.id, addMealModal.date, addMealModal.meal_type); }}
+              selectedRecipeIds={(mealPlan.filter(m=>m.plan_date===addMealModal.date&&m.meal_type===addMealModal.meal_type)).map(m=>m.recipe_id)}
+              onDone={()=>setAddMealModal(null)}
             />
           </div>
         </div>
