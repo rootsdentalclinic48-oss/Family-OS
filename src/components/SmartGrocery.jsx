@@ -274,8 +274,10 @@ export default function SmartGrocery({ familyId }) {
 
   const coverageDays = useMemo(() => {
     if (!pantry.length) return 0;
-    const avgRatio = pantry.reduce((a, i) => a + (i.par_level > 0 ? i.quantity / i.par_level : 1), 0) / pantry.length;
-    return Math.round(avgRatio * 7);
+    const well = pantry.filter(i => Number(i.quantity) > Number(i.par_level)).length;
+    const low  = pantry.filter(i => isLow(i)).length;
+    const out  = pantry.filter(i => isOut(i)).length;
+    return Math.min(30, Math.round((well*14 + (pantry.length-well-low-out)*7 + low*3) / pantry.length));
   }, [pantry]);
 
   if (loading) return (
