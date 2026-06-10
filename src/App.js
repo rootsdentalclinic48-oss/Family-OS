@@ -2986,6 +2986,12 @@ const SEED_RECIPES = [
     ingredients:[{name:"Oats",qty:150,unit:"g"},{name:"Milk",qty:400,unit:"ml"},{name:"Banana",qty:1,unit:"pcs"},{name:"Honey",qty:15,unit:"ml"}]},
   { name:"Masala Dosa", meal_type:"breakfast", servings:3, prep_time_mins:30, tags:["vegetarian"],
     ingredients:[{name:"Dosa Batter",qty:400,unit:"g"},{name:"Potato",qty:300,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"},{name:"Mustard Seeds",qty:5,unit:"g"}]},
+  { name:"Mix Dal", meal_type:"lunch", servings:4, prep_time_mins:35, tags:["vegetarian","healthy","protein-rich","everyday"],
+    ingredients:[{name:"Toor Dal",qty:75,unit:"g"},{name:"Moong Dal",qty:75,unit:"g"},{name:"Masoor Dal",qty:50,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Ghee",qty:20,unit:"ml"},{name:"Ginger",qty:10,unit:"g"},{name:"Garlic",qty:4,unit:"pcs"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Mix Dal Tadka", meal_type:"dinner", servings:4, prep_time_mins:35, tags:["vegetarian","dhaba-style","protein-rich"],
+    ingredients:[{name:"Toor Dal",qty:75,unit:"g"},{name:"Chana Dal",qty:50,unit:"g"},{name:"Urad Dal",qty:25,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Ghee",qty:25,unit:"ml"},{name:"Cumin Seeds",qty:5,unit:"g"},{name:"Red Chilli",qty:2,unit:"pcs"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Panchmel Dal", meal_type:"lunch", servings:4, prep_time_mins:40, tags:["vegetarian","rajasthani","protein-rich"],
+    ingredients:[{name:"Toor Dal",qty:50,unit:"g"},{name:"Moong Dal",qty:50,unit:"g"},{name:"Chana Dal",qty:50,unit:"g"},{name:"Urad Dal",qty:25,unit:"g"},{name:"Masoor Dal",qty:25,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Ghee",qty:25,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
   { name:"Rajma Chawal", meal_type:"lunch", servings:4, prep_time_mins:45, tags:["vegetarian","child-friendly"],
     ingredients:[{name:"Rajma",qty:250,unit:"g"},{name:"Rice",qty:300,unit:"g"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:3,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
   { name:"Dal Tadka with Rice", meal_type:"lunch", servings:4, prep_time_mins:30, tags:["vegetarian","quick"],
@@ -3182,7 +3188,8 @@ const seedRecipes = async (familyId) => {
   const hasMunchies = existing?.some(r => r.name === "Maggi Noodles");
   const hasRoti = existing?.some(r => r.name === "Roti / Chapati");
   const hasPaneerParatha = existing?.some(r => r.name === "Paneer Paratha");
-  if (existing?.length && hasEggs && hasMunchies && hasRoti && hasPaneerParatha) return;
+  const hasMixDal = existing?.some(r => r.name === "Mix Dal");
+  if (existing?.length && hasEggs && hasMunchies && hasRoti && hasPaneerParatha && hasMixDal) return;
   for (const r of SEED_RECIPES) {
     const { data: rec } = await supabase.from("recipes").insert([{
       family_id: familyId, name: r.name, meal_type: r.meal_type,
