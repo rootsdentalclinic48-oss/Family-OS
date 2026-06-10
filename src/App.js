@@ -3014,11 +3014,32 @@ const SEED_RECIPES = [
     ingredients:[{name:"Rice",qty:200,unit:"g"},{name:"Curd",qty:200,unit:"g"},{name:"Mustard Seeds",qty:5,unit:"g"},{name:"Curry Leaves",qty:5,unit:"g"},{name:"Oil",qty:10,unit:"ml"}]},
   { name:"Aloo Gobi", meal_type:"dinner", servings:4, prep_time_mins:30, tags:["vegetarian"],
     ingredients:[{name:"Potato",qty:300,unit:"g"},{name:"Cauliflower",qty:400,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
+  { name:"Boiled Eggs", meal_type:"breakfast", servings:2, prep_time_mins:10, tags:["non-veg","quick","healthy","high-protein"],
+    ingredients:[{name:"Eggs",qty:4,unit:"pcs"},{name:"Salt",qty:5,unit:"g"}]},
+  { name:"Omelette", meal_type:"breakfast", servings:2, prep_time_mins:10, tags:["non-veg","quick","high-protein"],
+    ingredients:[{name:"Eggs",qty:3,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Oil",qty:10,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Masala Omelette", meal_type:"breakfast", servings:2, prep_time_mins:12, tags:["non-veg","quick","spicy"],
+    ingredients:[{name:"Eggs",qty:3,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Green Chilli",qty:2,unit:"pcs"},{name:"Coriander Leaves",qty:10,unit:"g"},{name:"Oil",qty:10,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Egg Bhurji", meal_type:"breakfast", servings:2, prep_time_mins:15, tags:["non-veg","quick","spicy"],
+    ingredients:[{name:"Eggs",qty:3,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Green Chilli",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Egg Curry", meal_type:"lunch", servings:3, prep_time_mins:30, tags:["non-veg","protein-rich"],
+    ingredients:[{name:"Eggs",qty:6,unit:"pcs"},{name:"Onion",qty:2,unit:"pcs"},{name:"Tomato",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"},{name:"Garam Masala",qty:5,unit:"g"}]},
+  { name:"Egg Fried Rice", meal_type:"lunch", servings:3, prep_time_mins:20, tags:["non-veg","quick","child-friendly"],
+    ingredients:[{name:"Rice",qty:200,unit:"g"},{name:"Eggs",qty:2,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:20,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Egg Sandwich", meal_type:"breakfast", servings:2, prep_time_mins:10, tags:["non-veg","quick","child-friendly"],
+    ingredients:[{name:"Eggs",qty:2,unit:"pcs"},{name:"Bread",qty:4,unit:"pcs"},{name:"Butter",qty:10,unit:"g"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Egg Paratha", meal_type:"breakfast", servings:2, prep_time_mins:20, tags:["non-veg","filling","child-friendly"],
+    ingredients:[{name:"Eggs",qty:2,unit:"pcs"},{name:"Wheat Flour",qty:150,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Oil",qty:15,unit:"ml"},{name:"Salt",qty:3,unit:"g"}]},
+  { name:"Egg Salad", meal_type:"snack", servings:2, prep_time_mins:10, tags:["non-veg","healthy","quick"],
+    ingredients:[{name:"Eggs",qty:3,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Tomato",qty:1,unit:"pcs"},{name:"Salt",qty:2,unit:"g"}]},
+  { name:"Scrambled Eggs", meal_type:"breakfast", servings:2, prep_time_mins:8, tags:["non-veg","quick","child-friendly"],
+    ingredients:[{name:"Eggs",qty:3,unit:"pcs"},{name:"Butter",qty:10,unit:"g"},{name:"Milk",qty:30,unit:"ml"},{name:"Salt",qty:2,unit:"g"}]},
 ];
 
 const seedRecipes = async (familyId) => {
-  const { data: existing } = await supabase.from("recipes").select("id").eq("family_id", familyId).limit(1);
-  if (existing?.length) return;
+  const { data: existing } = await supabase.from("recipes").select("id,name").eq("family_id", familyId);
+  const hasEggs = existing?.some(r => r.name === "Boiled Eggs");
+  if (existing?.length && hasEggs) return;
   for (const r of SEED_RECIPES) {
     const { data: rec } = await supabase.from("recipes").insert([{
       family_id: familyId, name: r.name, meal_type: r.meal_type,
@@ -3820,7 +3841,7 @@ const KitchenScreen = ({ familyId }) => {
         {tab==="pantry" && (
           <>
             <div style={{display:"flex",gap:8,marginBottom:12}}>
-              <button onClick={()=>setShowAddPantry(true)} className="btn-primary" style={{flex:1,height:44,fontSize:14}}>+ Add Item</button>
+              <button onClick={()=>setShowAddPantry(true)} className="btn-primary" style={{flex:1,height:44,fontSize:14,color:"#fff",fontWeight:700}}>+ Add Item</button>
             </div>
 
             {/* Search */}
