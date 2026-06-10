@@ -4910,8 +4910,4 @@ export default function App() {
     setBillVendor(vendorRef);
     setExtractedItems(items);
     setStage("reviewing");
-  };Ref, useCallback } from "react";
-import { createClient } from "@supabase/supabase-js";
-import SmartGrocery from "./components/SmartGrocery";
-
-// ─── SUPABASE CLIENT ──────────────────────────────────────────────────────────
+  };
