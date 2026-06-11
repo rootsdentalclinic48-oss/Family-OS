@@ -213,7 +213,6 @@ const NotificationsScreen = ({ familyId, onClose }) => {
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" style={{ maxHeight: "80vh", overflowY: "auto", paddingBottom: 24 }}
         onClick={e => e.stopPropagation()}>
-        <div className="modal-handle"/>
         <div className="row" style={{ marginBottom: 16 }}>
           <div>
             <span style={{ fontSize: 18, fontWeight: 700 }}>Notifications</span>
@@ -490,8 +489,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
   const currentType = QUICK_ADD_TYPES.find(t=>t.id===type);
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto",background:"#1E1E30"}}>
-        <div className="modal-handle"/>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto"}}>
         <div className="row" style={{marginBottom:14}}>
           <span style={{fontSize:19,fontWeight:700}}>Quick Add</span>
           <div onClick={onClose} style={{width:30,height:30,borderRadius:10,background:"rgba(125,157,124,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
@@ -749,12 +747,12 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
         <div style={{fontSize:11,color:T.muted,marginTop:3}}>{bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12,paddingTop:12,borderTop:`1px solid ${T.border}`}}>
           {[
-            {l:"🏥 Clinic",v:inr(bal.clinicIncome),c:T.green},
-            {l:"👩 Simmi",v:inr(bal.simmiIncome),c:T.blue},
-            {l:"💸 Spent",v:inr(bal.totalExpenses),c:T.red},
-            {l:"✅ Tasks",v:`${pendingTasks.length} left`,c:T.accent},
+            {l:"🏥 Clinic",v:inr(bal.clinicIncome),c:T.green,to:"finance"},
+            {l:"👩 Simmi",v:inr(bal.simmiIncome),c:T.blue,to:"finance"},
+            {l:"💸 Spent",v:inr(bal.totalExpenses),c:T.red,to:"finance"},
+            {l:"✅ Tasks",v:`${pendingTasks.length} left`,c:T.accent,to:"household"},
           ].map((s)=>(
-            <div key={s.l} style={{background:"#FAFAF8",borderRadius:10,padding:"8px 10px"}}>
+            <div key={s.l} onClick={e=>{e.stopPropagation();navigate(s.to);}} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"8px 10px",cursor:"pointer"}}>
               <div style={{fontSize:12,color:T.muted,fontWeight:600}}>{s.l}</div>
               <div style={{fontSize:14,fontWeight:700,color:s.c,marginTop:2}}>{s.v}</div>
             </div>
@@ -2072,8 +2070,7 @@ Keep responses under 150 words. Use ₹ for currency.`;
       {showBillImporter && (
         <div className="modal-overlay" onClick={()=>setShowBillImporter(false)}>
           <div className="modal-box" onClick={e=>e.stopPropagation()}>
-            <div className="modal-handle"/>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
               <div>
                 <div style={{fontSize:17,fontWeight:800,color:T.text}}>📄 Import Grocery Bill</div>
                 <div style={{fontSize:12,color:T.muted,marginTop:2}}>AI will extract and stock your pantry</div>
@@ -3089,7 +3086,6 @@ const AlexaCommandCenter = ({ onClose }) => {
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto",background:"#1E1E30"}}>
-        <div className="modal-handle"/>
         <div className="row" style={{marginBottom:14}}>
           <div>
             <div style={{fontSize:19,fontWeight:800}}>🎤 Munshi Jee Commands</div>
@@ -4566,8 +4562,7 @@ const KitchenScreen = ({ familyId }) => {
       {selectedRecipe && (
         <div className="modal-bg" onClick={()=>setSelectedRecipe(null)}>
           <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto",background:"#1E1E30"}}>
-            <div className="modal-handle"/>
-            {/* Header */}
+                {/* Header */}
             <div className="row" style={{marginBottom:12}}>
               <div style={{flex:1}}>
                 <div style={{fontSize:20,fontWeight:800,color:T.text}}>{selectedRecipe.name}</div>
@@ -4688,8 +4683,7 @@ const KitchenScreen = ({ familyId }) => {
       {addMealModal && (
         <div className="modal-overlay" onClick={()=>setAddMealModal(null)}>
           <div className="modal-box" onClick={e=>e.stopPropagation()} style={{maxHeight:"92vh",height:"92vh",overflowY:"auto",borderRadius:"24px 24px 0 0",paddingBottom:40}}>
-            <div className="modal-handle"/>
-            <div className="row" style={{marginBottom:14}}>
+                <div className="row" style={{marginBottom:14}}>
               <span style={{fontSize:18,fontWeight:700,color:T.text}}>
                 {MEAL_EMOJI[addMealModal.meal_type]} {addMealModal.meal_type.charAt(0).toUpperCase()+addMealModal.meal_type.slice(1)} — Add Items
               </span>
@@ -4766,8 +4760,7 @@ const KitchenScreen = ({ familyId }) => {
       {editCookLog && (
         <div className="modal-overlay" onClick={()=>setEditCookLog(null)}>
           <div className="modal-box" onClick={e=>e.stopPropagation()} style={{maxWidth:380}}>
-            <div className="modal-handle"/>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
               <div>
                 <div style={{fontSize:17,fontWeight:800}}>✏️ Edit Meal Log</div>
                 <div style={{fontSize:13,color:T.muted,marginTop:2}}>{editCookLog.recipe?.name || "Unknown Recipe"}</div>
