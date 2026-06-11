@@ -979,7 +979,7 @@ const FinanceScreen = ({ familyId }) => {
         </div>
       </div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
-        {["transactions","bills","budgets","gmail","advisor"].map(t=>(
+        {["transactions","categories","gmail","advisor"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
@@ -1028,52 +1028,44 @@ const FinanceScreen = ({ familyId }) => {
         )}
         {tab==="gmail" && <GmailSyncScreen familyId={familyId}/>}
         {tab==="advisor" && <FinanceAdvisorScreen familyId={familyId}/>}
-        {tab==="bills" && (
-          bills.length===0
-            ? <div className="empty"><div className="empty-icon">📋</div><div className="empty-text">No bills added yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Tap + to track upcoming payments.</span></div></div>
-            : <div className="card" style={{padding:"2px 14px"}}>
-                {bills.map(b=>(
-                  <div key={b.id} className="list-row">
-                    <div style={{width:38,height:38,borderRadius:12,background:b.is_urgent?T.redSoft:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>{b.emoji||"📋"}</div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:14,fontWeight:500}}>{b.name}</div>
-                      <div style={{fontSize:11.5,color:b.is_urgent?T.red:T.muted}}>Due {b.due_date}{b.is_urgent?" 🔴":""}</div>
-                    </div>
-                    <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:14,fontWeight:700}} className="mono">{inr(b.amount)}</div>
-                      <div style={{fontSize:11,color:b.paid?T.green:T.muted}}>{b.paid?"✓ Paid":"Pending"}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-        )}
-        {tab==="budgets" && (
-          budgets.length===0
-            ? <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No budgets set yet.<br/><span style={{fontSize:12,color:"rgba(238,236,248,0.4)"}}>Set monthly limits for groceries, dining & more.</span></div></div>
+        {tab==="categories" && (() => {
+          const catEmoji = {"Groceries":"🛒","Utilities":"⚡","Dining & Food":"🍽️","Transport":"🚗","Medical":"💊","Entertainment":"🎬","Education":"📚","Shopping":"🛍️","Home Loan EMI":"🏠","Other":"💸","Clinic Income":"🏥","Simmi Income":"👩"};
+          const cats = {};
+          txns.filter(t=>Number(t.amount)<0).forEach(t=>{
+            const c = t.category||"Other";
+            cats[c] = (cats[c]||0) + Math.abs(Number(t.amount));
+          });
+          const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+          const total = sorted.reduce((a,c)=>a+c[1],0);
+          return sorted.length===0
+            ? <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No expenses yet.</div></div>
             : <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {budgets.map(b=>{
-                  const spent_ = txns.filter(t=>t.category===b.category&&Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
-                  const p = pct(spent_, b.monthly_limit);
+                {sorted.map(([cat,amt])=>{
+                  const p = total>0?Math.round((amt/total)*100):0;
                   return (
-                    <div key={b.id} className="card" style={{padding:"14px 16px"}}>
+                    <div key={cat} className="card" style={{padding:"14px 16px"}}>
                       <div className="row" style={{marginBottom:9}}>
-                        <div style={{display:"flex",gap:9,alignItems:"center"}}>
-                          <span style={{fontSize:17}}>{b.emoji||"📊"}</span>
-                          <span style={{fontSize:14,fontWeight:600}}>{b.category}</span>
+                        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                          <div style={{width:38,height:38,borderRadius:12,background:T.card,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{catEmoji[cat]||"💸"}</div>
+                          <div>
+                            <div style={{fontSize:14,fontWeight:600}}>{cat}</div>
+                            <div style={{fontSize:11,color:T.muted}}>{p}% of total spend</div>
+                          </div>
                         </div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontSize:13,fontWeight:700}} className="mono">{inr(spent_)}</div>
-                          <div style={{fontSize:12,color:T.muted}}>/ {inr(b.monthly_limit)}</div>
-                        </div>
+                        <div style={{fontSize:15,fontWeight:800,color:T.red}} className="mono">{inr(amt)}</div>
                       </div>
                       <div className="progress">
-                        <div className="progress-fill" style={{width:`${p}%`,background:p>=100?T.red:p>=80?T.amber:b.color||T.green}}/>
+                        <div className="progress-fill" style={{width:`${p}%`,background:p>30?T.red:p>15?T.amber:T.accent}}/>
                       </div>
                     </div>
                   );
                 })}
-              </div>
-        )}
+                <div style={{padding:"12px 16px",background:T.card,borderRadius:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <span style={{fontSize:13,color:T.muted,fontWeight:600}}>Total Spent</span>
+                  <span style={{fontSize:16,fontWeight:800,color:T.red}} className="mono">{inr(total)}</span>
+                </div>
+              </div>;
+        })()}
       </div>
     </div>
   );
