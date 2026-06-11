@@ -2733,7 +2733,6 @@ const FinanceAdvisorScreen = ({ familyId }) => {
 
   return (
     <div className="screen">
-      <LiveClock/>
       <div style={{padding:"calc(env(safe-area-inset-top,0px) + 52px) 18px 100px"}}>
 
         {/* Header */}
