@@ -3348,6 +3348,16 @@ const SEED_RECIPES = [
     ingredients:[{name:"Raw Mango",qty:200,unit:"g"},{name:"Sugar",qty:50,unit:"g"},{name:"Mint",qty:10,unit:"g"},{name:"Black Salt",qty:3,unit:"g"},{name:"Cumin Powder",qty:2,unit:"g"}]},
   { name:"Thandai", meal_type:"snack", servings:2, prep_time_mins:10, tags:["vegetarian","festive","cold","holi"],
     ingredients:[{name:"Milk",qty:400,unit:"ml"},{name:"Almonds",qty:20,unit:"g"},{name:"Sugar",qty:40,unit:"g"},{name:"Cardamom",qty:3,unit:"pcs"},{name:"Rose Water",qty:10,unit:"ml"}]},
+  { name:"Veg Chowmein", meal_type:"lunch", servings:3, prep_time_mins:20, tags:["vegetarian","indo-chinese","quick"],
+    ingredients:[{name:"Noodles",qty:200,unit:"g"},{name:"Cabbage",qty:100,unit:"g"},{name:"Carrot",qty:1,unit:"pcs"},{name:"Capsicum",qty:1,unit:"pcs"},{name:"Soy Sauce",qty:30,unit:"ml"},{name:"Oil",qty:20,unit:"ml"}]},
+  { name:"Veg Noodles", meal_type:"dinner", servings:3, prep_time_mins:20, tags:["vegetarian","indo-chinese","quick"],
+    ingredients:[{name:"Noodles",qty:200,unit:"g"},{name:"Onion",qty:1,unit:"pcs"},{name:"Capsicum",qty:1,unit:"pcs"},{name:"Soy Sauce",qty:30,unit:"ml"},{name:"Vinegar",qty:10,unit:"ml"},{name:"Oil",qty:20,unit:"ml"}]},
+  { name:"Veg Fried Rice", meal_type:"lunch", servings:3, prep_time_mins:25, tags:["vegetarian","indo-chinese"],
+    ingredients:[{name:"Rice",qty:200,unit:"g"},{name:"Carrot",qty:1,unit:"pcs"},{name:"Peas",qty:50,unit:"g"},{name:"Capsicum",qty:1,unit:"pcs"},{name:"Soy Sauce",qty:20,unit:"ml"},{name:"Oil",qty:20,unit:"ml"}]},
+  { name:"Momos", meal_type:"snack", servings:4, prep_time_mins:45, tags:["vegetarian","indo-chinese"],
+    ingredients:[{name:"Maida",qty:200,unit:"g"},{name:"Cabbage",qty:150,unit:"g"},{name:"Carrot",qty:1,unit:"pcs"},{name:"Onion",qty:1,unit:"pcs"},{name:"Ginger",qty:10,unit:"g"},{name:"Oil",qty:10,unit:"ml"}]},
+  { name:"Manchurian", meal_type:"dinner", servings:4, prep_time_mins:35, tags:["vegetarian","indo-chinese"],
+    ingredients:[{name:"Cauliflower",qty:400,unit:"g"},{name:"Maida",qty:50,unit:"g"},{name:"Soy Sauce",qty:30,unit:"ml"},{name:"Garlic",qty:4,unit:"pcs"},{name:"Green Chilli",qty:2,unit:"pcs"},{name:"Oil",qty:30,unit:"ml"}]},
 ];
 
 const seedRecipes = async (familyId) => {
