@@ -775,7 +775,8 @@ const AddIncomeModal = ({ onClose, familyId }) => {
   const save = async () => {
     if (!f.amount) return;
     setLoading(true);
-    const bal = calcBalance(existingTxns || []);
+    const { data: txnData } = await supabase.from("transactions").select("amount").eq("family_id", familyId);
+    const bal = calcBalance(txnData || []);
     await supabase.from("transactions").insert([{
       description: f.description || source, amount: Math.abs(Number(f.amount)),
       category: source, added_by: source==="Clinic Income"?"Mayank":"Simmi",
@@ -2151,7 +2152,8 @@ const AddExpenseModal = ({ onClose, familyId }) => {
   const save = async () => {
     if (!f.description || !f.amount) return;
     setLoading(true);
-    const bal2 = calcBalance(existingTxns || []);
+    const { data: txnData2 } = await supabase.from("transactions").select("amount").eq("family_id", familyId);
+    const bal2 = calcBalance(txnData2 || []);
     await supabase.from("transactions").insert([{ ...f, amount: -Math.abs(Number(f.amount)), family_id: familyId, emoji: emojiMap[f.category]||"💸" }]);
     notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal2.available - Math.abs(Number(f.amount)), added_by: f.added_by });
     setLoading(false); onClose();
