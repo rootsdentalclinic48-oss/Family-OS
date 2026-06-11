@@ -490,7 +490,7 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
   const currentType = QUICK_ADD_TYPES.find(t=>t.id===type);
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"90vh",overflowY:"auto"}}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto",background:"#1E1E30"}}>
         <div className="modal-handle"/>
         <div className="row" style={{marginBottom:14}}>
           <span style={{fontSize:19,fontWeight:700}}>Quick Add</span>
@@ -3088,7 +3088,7 @@ const AlexaCommandCenter = ({ onClose }) => {
   });
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"90vh",overflowY:"auto"}}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto",background:"#1E1E30"}}>
         <div className="modal-handle"/>
         <div className="row" style={{marginBottom:14}}>
           <div>
@@ -3429,7 +3429,7 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
   const labelStyle = {fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:5,display:"block"};
 
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
       <div style={{display:"flex",gap:10}}>
         <div style={{flex:1}}>
           <label style={labelStyle}>Quantity Made</label>
@@ -3442,34 +3442,12 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
           </select>
         </div>
       </div>
-      <div>
-        <label style={labelStyle}>People Served</label>
-        <div style={{display:"flex",gap:8}}>
-          <div style={{flex:1,textAlign:"center"}}>
-            <div style={{fontSize:11,fontWeight:600,color:T.muted,marginBottom:4}}>Adults</div>
-            <input type="number" style={{...inputStyle,textAlign:"center"}} value={adults} min={0} onChange={e=>setAdults(Number(e.target.value))}/>
-          </div>
-          <div style={{flex:1,textAlign:"center"}}>
-            <div style={{fontSize:11,color:T.muted,marginBottom:4}}>Children</div>
-            <input type="number" style={{...inputStyle,textAlign:"center"}} value={children} min={0} onChange={e=>setChildren(Number(e.target.value))}/>
-          </div>
-          <div style={{flex:1,textAlign:"center"}}>
-            <div style={{fontSize:11,color:T.muted,marginBottom:4}}>Guests</div>
-            <input type="number" style={{...inputStyle,textAlign:"center"}} value={guests} min={0} onChange={e=>setGuests(Number(e.target.value))}/>
-          </div>
-        </div>
+      <div style={{padding:"8px 12px",background:T.greenSoft,borderRadius:10,fontSize:12,color:T.green,fontWeight:600}}>
+        📦 Pantry will auto-deduct based on {qty} {unit}
       </div>
-      <div>
-        <label style={labelStyle}>Leftovers (optional)</label>
-        <input type="number" style={inputStyle} value={leftovers} min={0} placeholder="0" onChange={e=>setLeftovers(Number(e.target.value))}/>
-      </div>
-      <div style={{padding:"10px 13px",background:T.greenSoft,borderRadius:12,border:`0.5px solid ${T.green}33`}}>
-        <div style={{fontSize:12,color:T.green,fontWeight:700,marginBottom:3}}>📦 Pantry will auto-deduct</div>
-        <div style={{fontSize:11.5,color:T.muted}}>Based on {qty} {unit} × per-serving ingredient ratios</div>
-      </div>
-      <button onClick={()=>onDone({quantityMade:qty,unitLabel:unit,adults,children,guests,leftovers})}
+      <button onClick={()=>onDone({quantityMade:qty,unitLabel:unit,adults:2,children:1,guests:0,leftovers:0})}
         className="btn-primary">
-        ✅ Confirm & Log Meal
+        ✅ Log Meal
       </button>
     </div>
   );
@@ -4573,7 +4551,7 @@ const KitchenScreen = ({ familyId }) => {
             {/* RECIPE DETAIL MODAL */}
       {selectedRecipe && (
         <div className="modal-bg" onClick={()=>setSelectedRecipe(null)}>
-          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"90vh",overflowY:"auto"}}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxHeight:"85vh",overflowY:"auto",background:"#1E1E30"}}>
             <div className="modal-handle"/>
             {/* Header */}
             <div className="row" style={{marginBottom:12}}>
