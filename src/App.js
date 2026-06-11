@@ -789,9 +789,9 @@ const AddIncomeModal = ({ onClose, familyId }) => {
     <Modal title="Add Income" onClose={onClose}>
       <div style={{display:"flex",gap:8,marginBottom:12}}>
         {Object.entries(sources).map(([key,cfg])=>(
-          <div key={key} onClick={()=>setSource(key)} style={{flex:1,minHeight:72,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,padding:"12px 8px",borderRadius:16,border:`1px solid ${source===key?cfg.color+"55":T.border}`,background:source===key?cfg.color+"12":T.card,cursor:"pointer",transition:"all .18s"}}>
-            <div style={{fontSize:24}}>{cfg.emoji}</div>
-            <div style={{fontSize:11.5,fontWeight:700,color:source===key?cfg.color:T.muted,textAlign:"center",lineHeight:1.2}}>{key}</div>
+          <div key={key} onClick={()=>setSource(key)} style={{flex:1,height:44,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"8px",borderRadius:12,border:`1px solid ${source===key?cfg.color+"55":T.border}`,background:source===key?cfg.color+"12":T.card,cursor:"pointer",transition:"all .18s"}}>
+            <div style={{fontSize:18}}>{cfg.emoji}</div>
+            <div style={{fontSize:12,fontWeight:700,color:source===key?cfg.color:T.muted}}>{key}</div>
           </div>
         ))}
       </div>
