@@ -3925,8 +3925,10 @@ const AutoPlanBar = ({ familyId, recipes, pantry, refreshMeal, weekDates }) => {
       const parathas       = shuffle(byType.breakfast.filter(r => /paratha/i.test(r.name)));
       const healthyBreak   = shuffle(byType.breakfast.filter(r => (r.tags||[]).some(t=>['healthy','high-protein'].includes(t)) && !/paratha/i.test(r.name)));
       const otherBreak     = shuffle(byType.breakfast.filter(r => !/paratha/i.test(r.name) && !(r.tags||[]).some(t=>t==='healthy')));
-      const allLunch       = shuffle(byType.lunch);
-      const allDinner      = shuffle(byType.dinner);
+      const allLunch = shuffle(byType.lunch.filter(r => !['roti','chapati','phulka'].some(n => r.name.toLowerCase().includes(n))));
+      // Exclude plain rotis as standalone dinner - they are sides not mains
+      const ROTI_NAMES = ['roti','chapati','phulka','makki','bajra','butter roti','tandoori roti'];
+      const allDinner = shuffle(byType.dinner.filter(r => !ROTI_NAMES.some(n => r.name.toLowerCase().includes(n))));
       const allSnack       = shuffle(byType.snack);
 
       const days = weekDates.slice(0,5);
