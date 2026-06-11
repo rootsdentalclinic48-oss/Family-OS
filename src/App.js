@@ -3283,7 +3283,7 @@ const seedRecipes = async (familyId) => {
   const { data: existing } = await supabase.from("recipes").select("id,name").eq("family_id", familyId);
   // Check all latest recipes present - if yes skip entirely
   const names = new Set((existing||[]).map(r => r.name));
-  const requiredRecipes = ["Boiled Eggs","Maggi Noodles","Roti / Chapati","Paneer Paratha","Mix Dal","Thandai","Panchmel Dal","Sprouts Salad","Turmeric Milk","Mango Shake"];
+  const requiredRecipes = ["Boiled Eggs","Maggi Noodles","Roti / Chapati","Paneer Paratha","Mix Dal","Thandai","Panchmel Dal","Sprouts Salad","Turmeric Milk","Mango Shake","Pasta Arrabiata","Hakka Noodles","Medu Vada","Pongal","Mac and Cheese"];
   const allPresent = requiredRecipes.every(n => names.has(n));
   if (allPresent) return;
   // Only seed recipes that don't already exist (no duplicates)
