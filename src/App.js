@@ -3531,13 +3531,48 @@ const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId, select
 const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign, onViewRecipe }) => {
   const [query, setQuery] = React.useState("");
   const [filter, setFilter] = React.useState("all");
-  const [assignModal, setAssignModal] = React.useState(null); // recipe to assign
+  const [cuisine, setCuisine] = React.useState("all");
+  const [assignModal, setAssignModal] = React.useState(null);
 
-  const mealTypes = ["all","healthy","breakfast","lunch","dinner","snack"];
+  const mealTypes = ["all","breakfast","lunch","dinner","snack","healthy"];
+
+  const CUISINE_MAP = {
+    "north-indian": ["rajma","chole","paneer","paratha","roti","chapati","dal","aloo","gobi","kadhi","puri","bhatura","halwa","kheer","lassi","nimbu","shahi","matar","palak","saag","makki","bajra","missi","stuffed","methi","butter","naan","tandoor","tikka","biryani","pulao","khichdi","poha","upma","idli","dosa","rasam","sambar"],
+    "south-indian": ["dosa","idli","sambar","rasam","vada","uttapam","pongal","chutney","appam","avial","bisibelebath","puliyodarai","curd rice","lemon rice","rava dosa","medu"],
+    "italian": ["pasta","macaroni","spaghetti","arrabiata","aglio","olio","white sauce","red sauce","pink sauce","mac and cheese","bake","pizza","risotto","pesto","carbonara"],
+    "indo-chinese": ["hakka","noodles","manchurian","spring roll","schezwan","fried rice","chilli","szechuan"],
+    "healthy": ["sprouts","quinoa","oats","soup","detox","turmeric milk","ragi","greek yogurt","cucumber","smoothie","salad","brown rice"],
+    "snacks-street": ["chaat","bhel","sev puri","dahi puri","aloo tikki","samosa","pakora","dhokla","vada pav","pav bhaji","misal"],
+  };
+
+  const CUISINE_LABELS = [
+    { id:"all",          label:"🍽 All",           },
+    { id:"north-indian", label:"🫓 North Indian",  },
+    { id:"south-indian", label:"🥥 South Indian",  },
+    { id:"italian",      label:"🍝 Italian",       },
+    { id:"indo-chinese", label:"🥢 Indo-Chinese",  },
+    { id:"healthy",      label:"🥗 Healthy",       },
+    { id:"snacks-street",label:"🛒 Street Food",   },
+  ];
+
+  const matchesCuisine = (r, cid) => {
+    if (cid === "all") return true;
+    const keywords = CUISINE_MAP[cid] || [];
+    const text = (r.name + " " + (r.tags||[]).join(" ")).toLowerCase();
+    return keywords.some(k => text.includes(k));
+  };
 
   const results = React.useMemo(() => {
     let list = recipes;
-    if (filter !== "all") list = list.filter(r => r.meal_type === filter);
+    if (filter !== "all") {
+      if (filter === "healthy") {
+        const HEALTHY_TAGS = ["healthy","weight-loss","high-protein","high-fiber","immunity","detox","anti-inflammatory","diabetic-friendly","iron-rich","calcium-rich","easy-digest","low-calorie"];
+        list = list.filter(r => (r.tags||[]).some(t => HEALTHY_TAGS.includes(t)));
+      } else {
+        list = list.filter(r => r.meal_type === filter);
+      }
+    }
+    if (cuisine !== "all") list = list.filter(r => matchesCuisine(r, cuisine));
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(r =>
@@ -3547,7 +3582,7 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
       );
     }
     return list.sort((a,b) => a.name.localeCompare(b.name));
-  }, [recipes, query, filter]);
+  }, [recipes, query, filter, cuisine]);
 
   const alreadyPlanned = (recipeId) => mealPlan.some(m => m.recipe_id === recipeId && m.plan_date === todayStr);
 
@@ -3567,9 +3602,19 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
           <span onClick={()=>setQuery("")} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",cursor:"pointer",fontSize:13,color:T.muted}}>✕</span>
         )}
       </div>
-      <div className="scroll-x" style={{marginBottom:12,gap:6,display:"flex"}}>
+      {/* Meal type chips */}
+      <div className="scroll-x" style={{marginBottom:8,gap:6,display:"flex"}}>
         {mealTypes.map(m=>(
-          <div key={m} className={`chip ${filter===m?"on":""}`} onClick={()=>setFilter(m)} style={{textTransform:"capitalize"}}>{m}</div>
+          <div key={m} className={`chip ${filter===m?"on":""}`} onClick={()=>setFilter(m)} style={{textTransform:"capitalize",fontSize:12}}>{m}</div>
+        ))}
+      </div>
+      {/* Cuisine chips */}
+      <div className="scroll-x" style={{marginBottom:12,gap:6,display:"flex"}}>
+        {CUISINE_LABELS.map(c=>(
+          <div key={c.id} onClick={()=>setCuisine(c.id)}
+            style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 12px",borderRadius:20,border:`1px solid ${cuisine===c.id?T.accent:T.border}`,background:cuisine===c.id?T.accent:"transparent",color:cuisine===c.id?"#fff":T.muted,fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0,transition:"all .15s"}}>
+            {c.label}
+          </div>
         ))}
       </div>
       <div style={{fontSize:12,color:T.muted,marginBottom:10}}>{results.length} recipe{results.length!==1?"s":""} found</div>
