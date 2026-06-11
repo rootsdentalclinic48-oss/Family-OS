@@ -3835,6 +3835,10 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
   const canCookNow = filtered.filter(r=>r.matchPct===100).sort((a,b)=>(cookCount[b.name]||0)-(cookCount[a.name]||0));
   const almostReady = filtered.filter(r=>r.matchPct>=60&&r.matchPct<100).sort((a,b)=>b.matchPct-a.matchPct);
   const needsShopping = filtered.filter(r=>r.matchPct<60).sort((a,b)=>b.matchPct-a.matchPct);
+  const [cookFilter, setCookFilter] = useState(null);
+  const visibleReady = cookFilter===null||cookFilter==="ready" ? canCookNow : [];
+  const visibleAlmost = cookFilter===null||cookFilter==="almost" ? almostReady : [];
+  const visibleShopping = cookFilter===null||cookFilter==="shopping" ? needsShopping : [];
 
   const MatchBadge = ({pct}) => {
     const bg = pct===100 ? T.greenSoft : pct>=60 ? T.amberSoft : T.redSoft;
@@ -3871,17 +3875,17 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
         <button onClick={loadData} style={{fontSize:11,fontWeight:700,color:T.accent,background:T.accentSoft,border:"none",borderRadius:8,padding:"5px 10px",cursor:"pointer"}}>↻ Refresh</button>
       </div>
       <div className="card" style={{padding:"12px 14px",marginBottom:12,display:"flex",gap:12}}>
-        <div style={{flex:1,textAlign:"center"}}>
+        <div onClick={()=>setCookFilter(cookFilter==="ready"?null:"ready")} style={{flex:1,textAlign:"center",cursor:"pointer",borderRadius:10,padding:"4px 0",background:cookFilter==="ready"?T.greenSoft:"transparent",transition:"all .18s"}}>
           <div style={{fontSize:22,fontWeight:800,color:T.green}}>{canCookNow.length}</div>
-          <div style={{fontSize:11,color:T.muted,fontWeight:600}}>Ready Now</div>
+          <div style={{fontSize:11,color:cookFilter==="ready"?T.green:T.muted,fontWeight:600}}>Ready Now</div>
         </div>
         <div style={{width:"0.5px",background:T.border}}/>
-        <div style={{flex:1,textAlign:"center"}}>
+        <div onClick={()=>setCookFilter(cookFilter==="almost"?null:"almost")} style={{flex:1,textAlign:"center",cursor:"pointer",borderRadius:10,padding:"4px 0",background:cookFilter==="almost"?T.amberSoft:"transparent",transition:"all .18s"}}>
           <div style={{fontSize:22,fontWeight:800,color:T.amber}}>{almostReady.length}</div>
-          <div style={{fontSize:11,color:T.muted,fontWeight:600}}>Almost Ready</div>
+          <div style={{fontSize:11,color:cookFilter==="almost"?T.amber:T.muted,fontWeight:600}}>Almost Ready</div>
         </div>
         <div style={{width:"0.5px",background:T.border}}/>
-        <div style={{flex:1,textAlign:"center"}}>
+        <div onClick={()=>setCookFilter(cookFilter==="shopping"?null:"shopping")} style={{flex:1,textAlign:"center",cursor:"pointer",borderRadius:10,padding:"4px 0",background:cookFilter==="shopping"?"rgba(255,255,255,0.06)":"transparent",transition:"all .18s"}}>
           <div style={{fontSize:22,fontWeight:800,color:T.muted}}>{needsShopping.length}</div>
           <div style={{fontSize:11,color:T.muted,fontWeight:600}}>Need Shopping</div>
         </div>
@@ -3893,24 +3897,24 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
         ))}
       </div>
 
-      {canCookNow.length > 0 && (
+      {visibleReady.length > 0 && (
         <div style={{marginBottom:14}}>
           <div style={{fontSize:11,fontWeight:700,color:T.green,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>✅ Cook Right Now ({canCookNow.length})</div>
-          <div style={{display:"flex",flexDirection:"column",gap:6}}>{canCookNow.map(r=><RecipeRow key={r.id} r={r}/>)}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>{visibleReady.map(r=><RecipeRow key={r.id} r={r}/>)}</div>
         </div>
       )}
 
-      {almostReady.length > 0 && (
+      {visibleAlmost.length > 0 && (
         <div style={{marginBottom:14}}>
           <div style={{fontSize:11,fontWeight:700,color:T.amber,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>⚡ Almost Ready ({almostReady.length})</div>
-          <div style={{display:"flex",flexDirection:"column",gap:6}}>{almostReady.map(r=><RecipeRow key={r.id} r={r}/>)}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>{visibleAlmost.map(r=><RecipeRow key={r.id} r={r}/>)}</div>
         </div>
       )}
 
-      {needsShopping.length > 0 && (
+      {visibleShopping.length > 0 && (
         <div style={{marginBottom:14}}>
           <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>🛒 Need Shopping ({needsShopping.length})</div>
-          <div style={{display:"flex",flexDirection:"column",gap:6}}>{needsShopping.slice(0,10).map(r=><RecipeRow key={r.id} r={r}/>)}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>{visibleShopping.slice(0,10).map(r=><RecipeRow key={r.id} r={r}/>)}</div>
         </div>
       )}
     </div>
