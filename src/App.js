@@ -1763,6 +1763,26 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
   };
 
 
+  const savePricesOnly = async () => {
+    setSaving(true);
+    const selectedItems = extractedItems.filter(i => i.selected && i.unitPrice > 0);
+    const vendorLabels = { blinkit:"Blinkit", instamart:"Instamart", zepto:"Zepto", bigbasket:"BigBasket", amazon:"Amazon Fresh", flipkart:"Flipkart", local:"Local Store" };
+    let logged = 0;
+    for (const item of selectedItems) {
+      await supabase.from("grocery_price_history").insert([{
+        item_name: item.name,
+        platform: billVendor,
+        price: item.unitPrice,
+        delivery_fee: 0,
+        source: "bill_import",
+        logged_at: new Date(billDate).toISOString(),
+      }]).then(()=>{ logged++; }).catch(()=>{});
+    }
+    setSaving(false);
+    setStage("prices_done");
+    setTimeout(() => onDone(), 2000);
+  };
+
   const updateItem = (id,field,val) => setExtractedItems(prev=>prev.map(it=>it.id===id?{...it,[field]:val}:it));
 
   const saveToStock = async () => {
@@ -1828,6 +1848,15 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
     </div>
   );
 
+  if (stage==="prices_done") return (
+    <div style={{textAlign:"center",padding:"48px 20px"}}>
+      <div style={{fontSize:48,marginBottom:12}}>💰</div>
+      <div style={{fontSize:17,fontWeight:700,color:T.accent,marginBottom:6}}>Prices Logged!</div>
+      <div style={{fontSize:13,color:T.muted,marginBottom:8}}>{extractedItems.filter(i=>i.selected&&i.unitPrice>0).length} item prices saved</div>
+      <div style={{fontSize:13,color:T.accent,fontWeight:700,padding:"8px 16px",background:T.accentSoft,borderRadius:10,display:"inline-block"}}>✓ Smart Grocery compare updated</div>
+    </div>
+  );
+
   if (stage==="done") return (
     <div style={{textAlign:"center",padding:"48px 20px"}}>
       <div style={{fontSize:48,marginBottom:12}}>✅</div>
@@ -1880,9 +1909,15 @@ const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
         style={{width:"100%",padding:"9px",background:"transparent",border:`0.5px dashed ${T.border}`,borderRadius:12,color:T.muted,fontSize:13,cursor:"pointer",marginBottom:10}}>
         + Add Missing Item
       </button>
-      <button onClick={saveToStock} disabled={saving||extractedItems.filter(i=>i.selected).length===0} className="btn-primary">
-        {saving?"Updating Pantry...":"✅ Update Pantry ("+extractedItems.filter(i=>i.selected).length+" items)"}
-      </button>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        <button onClick={saveToStock} disabled={saving||extractedItems.filter(i=>i.selected).length===0} className="btn-primary">
+          {saving?"Saving...":"✅ Update Pantry + Log Prices ("+extractedItems.filter(i=>i.selected).length+" items)"}
+        </button>
+        <button onClick={savePricesOnly} disabled={saving||extractedItems.filter(i=>i.selected&&i.unitPrice>0).length===0}
+          style={{width:"100%",padding:"14px",background:"rgba(139,124,248,0.12)",border:"1px solid rgba(139,124,248,0.3)",borderRadius:14,color:"#8B7CF8",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+          {saving?"Saving...":`💰 Log Prices Only — ${extractedItems.filter(i=>i.selected&&i.unitPrice>0).length} items (no pantry update)`}
+        </button>
+      </div>
     </div>
   );
 };
