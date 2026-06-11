@@ -3558,8 +3558,37 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
   const matchesCuisine = (r, cid) => {
     if (cid === "all") return true;
     const keywords = CUISINE_MAP[cid] || [];
-    const text = (r.name + " " + (r.tags||[]).join(" ")).toLowerCase();
-    return keywords.some(k => text.includes(k));
+    const name = r.name.toLowerCase();
+    const tags = (r.tags||[]).join(" ").toLowerCase();
+    const mealType = (r.meal_type||"").toLowerCase();
+    const combined = name + " " + tags + " " + mealType;
+
+    // Direct tag matches first
+    if (cid === "north-indian") {
+      const northTags = ["north-indian","punjabi","rajasthani","gujarati","mughlai","dhaba-style","street-food"];
+      if ((r.tags||[]).some(t => northTags.includes(t))) return true;
+    }
+    if (cid === "south-indian") {
+      const southTags = ["south-indian","kerala","karnataka","tamil","andhra"];
+      if ((r.tags||[]).some(t => southTags.includes(t))) return true;
+    }
+    if (cid === "italian") {
+      const italTags = ["italian"];
+      if ((r.tags||[]).some(t => italTags.includes(t))) return true;
+    }
+    if (cid === "indo-chinese") {
+      const indoTags = ["indo-chinese"];
+      if ((r.tags||[]).some(t => indoTags.includes(t))) return true;
+    }
+    if (cid === "healthy") {
+      const healthTags = ["healthy","weight-loss","high-protein","high-fiber","immunity","detox","anti-inflammatory","diabetic-friendly","iron-rich","calcium-rich","easy-digest","low-calorie"];
+      if ((r.tags||[]).some(t => healthTags.includes(t))) return true;
+    }
+    if (cid === "snacks-street") {
+      const streetTags = ["street-food","chaat","mumbai","maharashtrian"];
+      if ((r.tags||[]).some(t => streetTags.includes(t))) return true;
+    }
+    return keywords.some(k => combined.includes(k));
   };
 
   const results = React.useMemo(() => {
