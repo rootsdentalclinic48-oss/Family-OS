@@ -1935,46 +1935,47 @@ const AIScreen = ({ familyId }) => {
   const [showBillImporter, setShowBillImporter] = useState(false);
   const bottomRef = useRef(null);
   const suggestions = ["Summarise spending","Pending tasks?","Grocery restock?","Goals progress?","Bills due?","Pantry status?"];
-
-  const send = useCallback(async (text) => {
-    const q = (text || input).trim();
-    if (!q || loading) return;
-    setInput("");
-    setMsgs(m=>[...m,{role:"user",text:q}]);
-    setLoading(true);
-    try {
-      const ql=q.toLowerCase();
-      const income=txns.filter(t=>Number(t.amount)>0).reduce((a,t)=>a+Number(t.amount),0);
-      const spent=txns.filter(t=>Number(t.amount)<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0);
-      const pending=tasks.filter(t=>t.done===false);
-      const lowStock=grocery.filter(g=>Number(g.quantity)<=Number(g.par_level));
-      const lowPantryItems=pantry.filter(p=>Number(p.quantity)<=Number(p.par_level));
-      const dueBills=bills.filter(b=>b.paid===false);
-      let ans="";
-      if(ql.includes("hi")||ql.includes("hello")||ql.includes("namaste")){
-        ans="Namaste Mayank and Simmi! 🙏\n\nSaved: ₹"+(income-spent).toLocaleString("en-IN")+" | Tasks: "+pending.length+" | Restock: "+lowStock.length+" | Bills: "+dueBills.length;
-      } else if(ql.includes("spend")||ql.includes("expense")||ql.includes("money")||ql.includes("financ")){
-        ans="💰 This month:\n\nIncome: ₹"+income.toLocaleString("en-IN")+"\nSpent: ₹"+spent.toLocaleString("en-IN")+"\nSaved: ₹"+(income-spent).toLocaleString("en-IN");
-      } else if(ql.includes("task")||ql.includes("pending")||ql.includes("todo")){
-        ans=pending.length===0?"🎉 All tasks done!":"📋 "+pending.length+" pending:\n\n"+pending.slice(0,5).map(t=>"• "+t.title+" ("+t.assignee+")").join("\n");
-      } else if(ql.includes("grocery")||ql.includes("restock")||ql.includes("shopping")){
-        ans=lowStock.length===0?"🛒 All groceries stocked!":"🛒 Restock needed:\n\n"+lowStock.map(g=>"• "+g.name+" ("+g.quantity+" "+g.unit+")").join("\n");
-      } else if(ql.includes("pantry")){
-        ans=lowPantryItems.length===0?"🧺 Pantry fully stocked!":"🧺 Low pantry items:\n\n"+lowPantryItems.map(p=>"• "+p.name+" ("+p.quantity+" "+p.unit+")").join("\n");
-      } else if(ql.includes("bill")||ql.includes("pay")||ql.includes("due")){
-        ans=dueBills.length===0?"✅ No pending bills!":"📋 Unpaid bills:\n\n"+dueBills.map(b=>"• "+b.name+": ₹"+Number(b.amount).toLocaleString("en-IN")+" due "+b.due_date).join("\n");
-      } else if(ql.includes("goal")){
-        ans=goals.length===0?"🎯 No goals yet!":"🎯 Goals:\n\n"+goals.map(g=>"• "+g.title+": "+Math.round((g.saved_amount/g.target_amount)*100)+"%").join("\n");
-      } else {
-        ans="I can help with:\n\n💰 Spending & finances\n✅ Tasks\n🛒 Grocery\n🧺 Pantry\n📋 Bills\n🎯 Goals\n\nJust ask!";
-      }
-      setMsgs(m=>[...m,{role:"assistant",text:ans}]);
-    } catch(e) {
-      setMsgs(m=>[...m,{role:"assistant",text:"Something went wrong. Try again."}]);
-    }
-    setLoading(false);
-  },[input,loading,txns,tasks,grocery,pantry,goals,bills]);
-
+const send = useCallback(async (text) => {
+  const q = (text || input).trim();
+  if (!q || loading) return;
+  setInput("");
+  setMsgs(m => [...m, { role: "user", text: q }]);
+  setLoading(true);
+  try {
+    const income = txns.filter(t => Number(t.amount) > 0).reduce((a, t) => a + Number(t.amount), 0);
+    const spent = txns.filter(t => Number(t.amount) < 0).reduce((a, t) => a + Math.abs(Number(t.amount)), 0);
+    const pending = tasks.filter(t => t.done === false);
+    const lowStock = grocery.filter(g => Number(g.quantity) <= Number(g.par_level));
+    const lowPantry = pantry.filter(p => Number(p.quantity) <= Number(p.par_level));
+    const dueBills = bills.filter(b => b.paid === false);
+    const systemPrompt = `You are Munshi Jee, the smart AI assistant for the Gupta family's Family OS app. You are warm, helpful, and speak in a friendly Hinglish tone.
+FINANCES: Income ₹${income.toLocaleString("en-IN")}, Spent ₹${spent.toLocaleString("en-IN")}, Saved ₹${(income-spent).toLocaleString("en-IN")}
+TASKS: ${pending.length} pending - ${pending.slice(0,5).map(t=>`${t.title} (${t.assignee})`).join(", ")}
+LOW STOCK: ${[...lowStock,...lowPantry].map(i=>i.name).join(", ")||"All stocked"}
+BILLS: ${dueBills.length} unpaid - ${dueBills.slice(0,3).map(b=>`${b.name} ₹${Number(b.amount).toLocaleString("en-IN")}`).join(", ")}
+GOALS: ${goals.map(g=>`${g.title} ${Math.round((g.saved_amount/g.target_amount)*100)}%`).join(", ")||"None"}
+Keep responses under 150 words. Use ₹ for currency.`;
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.REACT_APP_GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        max_tokens: 300,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...msgs.slice(-6).map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })),
+          { role: "user", content: q }
+        ],
+      }),
+    });
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Sorry, try again!";
+    setMsgs(m => [...m, { role: "assistant", text: reply }]);
+  } catch(e) {
+    setMsgs(m => [...m, { role: "assistant", text: "Connection issue. Try again." }]);
+  }
+  setLoading(false);
+}, [input, loading, txns, tasks, grocery, pantry, goals, bills, msgs]);
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs,loading]);
 
   return (
