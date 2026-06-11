@@ -4150,26 +4150,15 @@ const KitchenScreen = ({ familyId }) => {
 
         {/* RECIPES */}
         {tab==="recipes" && (
-          <>
-            {recipes.length === 0
-              ? <div className="empty"><div className="empty-icon">🥘</div><div className="empty-text">Loading recipes...</div></div>
-              : <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {recipes.map(r => (
-                    <div key={r.id} className="card card-tap" style={{padding:"14px 16px"}} onClick={async()=>{ setSelectedRecipe(r); setRecipeServings(r.servings||2); const {data} = await supabase.from("recipe_ingredients").select("*").eq("recipe_id",r.id); setRecipeIngredients(data||[]); }}>
-                      <div style={{fontSize:15,fontWeight:700}}>{r.name}</div>
-                      <div style={{fontSize:12,color:T.muted,marginTop:3}}>
-                        {MEAL_EMOJI[r.meal_type]} {r.meal_type} · ⏱ {r.prep_time_mins}min · 👥 {r.servings}
-                      </div>
-                      <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>
-                        {(r.tags||[]).map(tag=>(
-                          <span key={tag} className="tag" style={{background:"#FAFAF8",color:T.muted,fontSize:10}}>{tag}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-            }
-          </>
+          <RecipeSearch
+            recipes={recipes}
+            pantry={pantry}
+            familyId={familyId}
+            todayStr={todayStr}
+            mealPlan={mealPlan}
+            onAssign={assignRecipe}
+            onViewRecipe={async(r)=>{ setSelectedRecipe(r); setRecipeServings(r.servings||2); const {data} = await supabase.from("recipe_ingredients").select("*").eq("recipe_id",r.id); setRecipeIngredients(data||[]); }}
+          />
         )}
 
         {/* PANTRY */}
