@@ -4172,18 +4172,25 @@ const KitchenScreen = ({ familyId }) => {
       </div>
       {showAlexaCommands && <AlexaCommandCenter onClose={()=>setShowAlexaCommands(false)}/>}
 
-      <div className="scroll-x" style={{padding:"10px 18px",marginBottom:4}}>
-        {[
-          {id:"today", label:"📅 Today"},
-          {id:"week",  label:"🗓 Week"},
-          {id:"recipes",label:"🥘 Recipes"},
-          {id:"search",label:"🔍 Search"},
-          {id:"suggest",label:"💡 Can Cook"},
-          {id:"pantry", label:"🧺 Pantry"},
-          {id:"shop",   label:"🛒 Shop"},
-        ].map(t => (
-          <div key={t.id} className={`chip ${tab===t.id?"on":""}`} onClick={()=>setTab(t.id)}>{t.label}</div>
-        ))}
+      <div style={{padding:"10px 18px 4px",display:"flex",flexDirection:"column",gap:8}}>
+        <div style={{display:"flex",gap:8}}>
+          {[
+            {id:"today", label:"📅 Today"},
+            {id:"week",  label:"🗓 Week"},
+            {id:"recipes",label:"🥘 Recipes"},
+          ].map(t => (
+            <div key={t.id} className={`chip ${tab===t.id?"on":""}`} onClick={()=>setTab(t.id)}>{t.label}</div>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          {[
+            {id:"suggest",label:"💡 Can Cook"},
+            {id:"pantry", label:"🧺 Pantry"},
+            {id:"shop",   label:"🛒 Shop"},
+          ].map(t => (
+            <div key={t.id} className={`chip ${tab===t.id?"on":""}`} onClick={()=>setTab(t.id)}>{t.label}</div>
+          ))}
+        </div>
       </div>
 
       <div style={{padding:"0 18px"}}>
