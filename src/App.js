@@ -3893,6 +3893,89 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
   );
 };
 
+// ─── AUTO PLAN BAR ───────────────────────────────────────────────────────────
+const AutoPlanBar = ({ familyId, recipes, pantry, refreshMeal, weekDates }) => {
+  const [autoPlanning, setAutoPlanning] = React.useState(false);
+
+  const shuffle = arr => [...arr].sort(() => Math.random()-0.5);
+
+  const autoSchedule = async () => {
+    setAutoPlanning(true);
+    try {
+      const { data: allIngs } = await supabase.from("recipe_ingredients").select("*");
+      const ingMap = {};
+      (allIngs||[]).forEach(ing => {
+        if (!ingMap[ing.recipe_id]) ingMap[ing.recipe_id] = [];
+        ingMap[ing.recipe_id].push(ing);
+      });
+
+      const scored = recipes.map(r => {
+        const ings = ingMap[r.id] || [];
+        if (!ings.length) return { ...r, pct:50 };
+        const have = ings.filter(ing => {
+          const p = pantry.find(p => p.name.toLowerCase()===ing.pantry_item_name.toLowerCase());
+          return p && Number(p.quantity) >= Number(ing.quantity);
+        }).length;
+        return { ...r, pct: Math.round((have/ings.length)*100) };
+      }).filter(r => r.pct >= 80);
+
+      const byType = { breakfast:[], lunch:[], dinner:[], snack:[] };
+      scored.forEach(r => { if (byType[r.meal_type]) byType[r.meal_type].push(r); });
+
+      const parathas       = shuffle(byType.breakfast.filter(r => /paratha/i.test(r.name)));
+      const healthyBreak   = shuffle(byType.breakfast.filter(r => (r.tags||[]).some(t=>['healthy','high-protein'].includes(t)) && !/paratha/i.test(r.name)));
+      const otherBreak     = shuffle(byType.breakfast.filter(r => !/paratha/i.test(r.name) && !(r.tags||[]).some(t=>t==='healthy')));
+      const allLunch       = shuffle(byType.lunch);
+      const allDinner      = shuffle(byType.dinner);
+      const allSnack       = shuffle(byType.snack);
+
+      const days = weekDates.slice(0,5);
+
+      await supabase.from("meal_plan").delete().eq("family_id",familyId).eq("cooked",false).gte("plan_date",days[0]);
+
+      const toInsert = [];
+      days.forEach((date,i) => {
+        const bPool = i%3===0 ? parathas : i%3===1 ? healthyBreak : otherBreak;
+        const b = bPool[i % Math.max(bPool.length,1)];
+        const l = allLunch[i % Math.max(allLunch.length,1)];
+        const d = allDinner[i % Math.max(allDinner.length,1)];
+        const s = allSnack[i % Math.max(allSnack.length,1)];
+        if (b) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"breakfast", recipe_id:b.id, cooked:false, servings_cooked:3 });
+        if (l) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"lunch",     recipe_id:l.id, cooked:false, servings_cooked:3 });
+        if (d) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"dinner",    recipe_id:d.id, cooked:false, servings_cooked:3 });
+        if (s) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"snack",     recipe_id:s.id, cooked:false, servings_cooked:3 });
+      });
+
+      if (toInsert.length) await supabase.from("meal_plan").insert(toInsert);
+      await refreshMeal();
+      showToast({ title:"📅 Meal Plan Updated!", body:`5 days planned from your pantry`, icon:"📅", color:"#6D9B6B" });
+    } catch(e) {
+      console.error(e);
+      showToast({ title:"Error", body:"Could not auto-plan meals", icon:"❌", color:"#C4603A" });
+    }
+    setAutoPlanning(false);
+  };
+
+  const clearPlan = async () => {
+    await supabase.from("meal_plan").delete().eq("family_id",familyId).eq("cooked",false).gte("plan_date",weekDates[0]);
+    await refreshMeal();
+    showToast({ title:"🗑 Cleared", body:"Future meals cleared", icon:"🗑", color:T.amber });
+  };
+
+  return (
+    <div style={{display:"flex",gap:8,marginBottom:10}}>
+      <button onClick={autoSchedule} disabled={autoPlanning}
+        style={{flex:1,padding:"12px 16px",background:autoPlanning?T.accentSoft:T.accent,border:`1px solid ${T.accent}`,borderRadius:14,color:autoPlanning?T.accent:"#fff",fontSize:14,fontWeight:700,cursor:autoPlanning?"not-allowed":"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        {autoPlanning ? <><div className="spinner" style={{width:16,height:16,borderTopColor:T.accent}}/> Planning...</> : <>🗓 Auto-Plan Next 5 Days</>}
+      </button>
+      <button onClick={clearPlan}
+        style={{padding:"12px 14px",background:T.accentSoft,border:`1px solid ${T.border}`,borderRadius:14,color:T.accent,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",whiteSpace:"nowrap"}}>
+        🗑 Clear
+      </button>
+    </div>
+  );
+};
+
 // ─── KITCHEN SCREEN ───────────────────────────────────────────────────────────
 const KitchenScreen = ({ familyId }) => {
   const [tab, setTab] = useState("today");
@@ -4134,111 +4217,7 @@ const KitchenScreen = ({ familyId }) => {
           <div style={{display:"flex",flexDirection:"column",gap:10}}>
 
             {/* Auto Plan Button */}
-            {(()=>{
-              const [autoPlanning, setAutoPlanning] = React.useState(false);
-              const autoSchedule = async () => {
-                setAutoPlanning(true);
-                try {
-                  // Get all recipe ingredients to calculate can-cook
-                  const { data: allIngs } = await supabase.from("recipe_ingredients").select("*");
-                  const ingMap = {};
-                  (allIngs||[]).forEach(ing => {
-                    if (!ingMap[ing.recipe_id]) ingMap[ing.recipe_id] = [];
-                    ingMap[ing.recipe_id].push(ing);
-                  });
-
-                  // Score recipes by pantry match
-                  const scored = recipes.map(r => {
-                    const ings = ingMap[r.id] || [];
-                    if (!ings.length) return { ...r, pct: 50 };
-                    const have = ings.filter(ing => {
-                      const p = pantry.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase());
-                      return p && Number(p.quantity) >= Number(ing.quantity);
-                    }).length;
-                    return { ...r, pct: Math.round((have/ings.length)*100) };
-                  }).filter(r => r.pct >= 80);
-
-                  // Separate by meal type
-                  const byType = { breakfast:[], lunch:[], dinner:[], snack:[] };
-                  scored.forEach(r => { if (byType[r.meal_type]) byType[r.meal_type].push(r); });
-
-                  // Shuffle helper
-                  const shuffle = arr => [...arr].sort(() => Math.random()-0.5);
-
-                  // Preferences: ensure parathas for breakfast, healthy for lunch/dinner
-                  const parathas = byType.breakfast.filter(r => /paratha/i.test(r.name));
-                  const healthyBreakfast = byType.breakfast.filter(r => (r.tags||[]).some(t => ['healthy','high-protein'].includes(t)) && !/paratha/i.test(r.name));
-                  const otherBreakfast = byType.breakfast.filter(r => !/(paratha)/i.test(r.name) && !(r.tags||[]).some(t=>t==='healthy'));
-                  const healthyLunch = byType.lunch.filter(r => (r.tags||[]).some(t=>['healthy','protein-rich'].includes(t)));
-                  const otherLunch = byType.lunch.filter(r => !(r.tags||[]).some(t=>['healthy','protein-rich'].includes(t)));
-                  const healthyDinner = byType.dinner.filter(r => (r.tags||[]).some(t=>['healthy','easy-digest'].includes(t)));
-                  const otherDinner = byType.dinner.filter(r => !(r.tags||[]).some(t=>['healthy','easy-digest'].includes(t)));
-
-                  // Build 5-day plan
-                  const shuffledParathas = shuffle(parathas);
-                  const shuffledHBreakfast = shuffle(healthyBreakfast);
-                  const shuffledOBreakfast = shuffle(otherBreakfast);
-                  const shuffledHLunch = shuffle([...healthyLunch,...otherLunch]);
-                  const shuffledDinner = shuffle([...healthyDinner,...otherDinner]);
-                  const shuffledSnack = shuffle(byType.snack);
-
-                  const today = new Date();
-                  const days = Array.from({length:5}, (_,i) => {
-                    const d = new Date(today); d.setDate(today.getDate()+i);
-                    return d.toISOString().split('T')[0];
-                  });
-
-                  // Clear existing uncooked future meals
-                  await supabase.from("meal_plan")
-                    .delete()
-                    .eq("family_id", familyId)
-                    .eq("cooked", false)
-                    .gte("plan_date", days[0]);
-
-                  // Insert new meal plan
-                  const toInsert = [];
-                  days.forEach((date, i) => {
-                    // Breakfast: alternate paratha (Veda) and healthy (Simmi) + variety (Mayank)
-                    const bPool = i%3===0 ? shuffledParathas : i%3===1 ? shuffledHBreakfast : shuffledOBreakfast;
-                    const breakfast = bPool[i % Math.max(bPool.length,1)];
-                    if (breakfast) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"breakfast", recipe_id:breakfast.id, cooked:false, servings_cooked:3 });
-
-                    // Lunch: mix healthy + variety
-                    const lunch = shuffledHLunch[i % Math.max(shuffledHLunch.length,1)];
-                    if (lunch) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"lunch", recipe_id:lunch.id, cooked:false, servings_cooked:3 });
-
-                    // Dinner: healthy + variety
-                    const dinner = shuffledDinner[i % Math.max(shuffledDinner.length,1)];
-                    if (dinner) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"dinner", recipe_id:dinner.id, cooked:false, servings_cooked:3 });
-
-                    // Snack: rotate
-                    const snack = shuffledSnack[i % Math.max(shuffledSnack.length,1)];
-                    if (snack) toInsert.push({ family_id:familyId, plan_date:date, meal_type:"snack", recipe_id:snack.id, cooked:false, servings_cooked:3 });
-                  });
-
-                  if (toInsert.length) await supabase.from("meal_plan").insert(toInsert);
-                  await refreshMeal();
-                  showToast({ title:"📅 Meal Plan Updated!", body:`${days.length} days planned from Can Cook list`, icon:"📅", color:"#6D9B6B" });
-                } catch(e) { console.error(e); showToast({ title:"Error", body:"Could not auto-plan meals", icon:"❌", color:"#C4603A" }); }
-                setAutoPlanning(false);
-              };
-              return (
-                <div style={{display:"flex",gap:8,marginBottom:4}}>
-                  <button onClick={autoSchedule} disabled={autoPlanning}
-                    style={{flex:1,padding:"12px 16px",background:autoPlanning?"rgba(109,155,107,0.1)":T.accent,border:`1px solid ${T.accent}`,borderRadius:14,color:autoPlanning?T.accent:"#fff",fontSize:14,fontWeight:700,cursor:autoPlanning?"not-allowed":"pointer",fontFamily:"'Plus Jakarta Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"center",gap:8,transition:"all .2s"}}>
-                    {autoPlanning ? (
-                      <><div className="spinner" style={{width:16,height:16,borderTopColor:T.accent}}/> Planning meals...</>
-                    ) : (
-                      <>🗓 Auto-Plan Next 5 Days</>
-                    )}
-                  </button>
-                  <div style={{padding:"12px",background:T.accentSoft,border:`1px solid ${T.border}`,borderRadius:14,cursor:"pointer",fontSize:13,color:T.accent,fontWeight:600,whiteSpace:"nowrap"}}
-                    onClick={()=>{ const d=new Date(); const ds=Array.from({length:5},(_,i)=>{const x=new Date(d);x.setDate(d.getDate()+i);return x.toISOString().split("T")[0];}); supabase.from("meal_plan").delete().eq("family_id",familyId).eq("cooked",false).gte("plan_date",ds[0]).then(()=>refreshMeal()); showToast({title:"🗑 Cleared",body:"Future meals cleared",icon:"🗑",color:T.amber}); }}>
-                    🗑 Clear
-                  </div>
-                </div>
-              );
-            })()}
+            <AutoPlanBar familyId={familyId} recipes={recipes} pantry={pantry} refreshMeal={refreshMeal} weekDates={weekDates}/>
 
             {weekDates.map(date => {
               const dayMeals = mealPlan.filter(m => m.plan_date === date);
