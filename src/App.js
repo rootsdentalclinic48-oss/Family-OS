@@ -591,18 +591,13 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
 const GlobalFAB = ({ screen, familyId }) => {
   const [open, setOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState(null);
-  useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") { setOpen(false); setQuickAddType(null); } };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
-  if (screen === "ai") return null;
   const openQuickAdd = (typeId) => { setOpen(false); setQuickAddType(typeId); };
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") { setOpen(false); setQuickAddType(null); } };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+  if (screen === "ai") return null;
   return (
     <>
       {open && <div className="fab-overlay" onClick={()=>setOpen(false)}/>}
