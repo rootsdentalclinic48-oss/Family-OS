@@ -591,7 +591,6 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
 const GlobalFAB = ({ screen, familyId }) => {
   const [open, setOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState(null);
-  const openQuickAdd = (typeId) => { setOpen(false); setQuickAddType(typeId); };
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") { setOpen(false); setQuickAddType(null); } };
     window.addEventListener("keydown", handler);
