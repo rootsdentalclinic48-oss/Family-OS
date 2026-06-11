@@ -776,8 +776,7 @@ const AddIncomeModal = ({ onClose, familyId }) => {
   const save = async () => {
     if (!f.amount) return;
     setLoading(true);
-    const allTxns = await supabase.from("transactions").select("amount").eq("family_id", familyId);
-    const bal = calcBalance(allTxns.data || []);
+    const bal = calcBalance(existingTxns || []);
     await supabase.from("transactions").insert([{
       description: f.description || source, amount: Math.abs(Number(f.amount)),
       category: source, added_by: source==="Clinic Income"?"Mayank":"Simmi",
@@ -1487,8 +1486,8 @@ const PlannerScreen = ({ familyId }) => {
               {["S","M","T","W","T","F","S"].map((d,i)=><div key={i} style={{textAlign:"center",fontSize:11,color:T.muted,fontWeight:700,padding:"4px 0"}}>{d}</div>)}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:20}}>
-              {[...Array(2)].map((_,i)=><div key={`g${i}`}/>)}
-              {Array.from({length:30},(_,i)=>i+1).map(d=>{
+              {[...Array(new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay())].map((_,i)=><div key={`g${i}`}/>)}
+              {Array.from({length:new Date(new Date().getFullYear(), new Date().getMonth()+1, 0).getDate()},(_,i)=>i+1).map(d=>{
                 const hasEv = events.some(e=>new Date(e.event_date).getDate()===d);
                 const isSel = d===sel;
                 return (
@@ -2118,8 +2117,7 @@ const AddExpenseModal = ({ onClose, familyId }) => {
   const save = async () => {
     if (!f.description || !f.amount) return;
     setLoading(true);
-    const allTxns2 = await supabase.from("transactions").select("amount").eq("family_id", familyId);
-    const bal2 = calcBalance(allTxns2.data || []);
+    const bal2 = calcBalance(existingTxns || []);
     await supabase.from("transactions").insert([{ ...f, amount: -Math.abs(Number(f.amount)), family_id: familyId, emoji: emojiMap[f.category]||"💸" }]);
     notifyExpenseAdded(familyId, { amount: f.amount, category: f.category, balance: bal2.available - Math.abs(Number(f.amount)), added_by: f.added_by });
     setLoading(false); onClose();
