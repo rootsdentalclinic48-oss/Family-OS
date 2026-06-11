@@ -3283,7 +3283,7 @@ const seedRecipes = async (familyId) => {
   const { data: existing } = await supabase.from("recipes").select("id,name").eq("family_id", familyId);
   // Check all latest recipes present - if yes skip entirely
   const names = new Set((existing||[]).map(r => r.name));
-  const requiredRecipes = ["Boiled Eggs","Maggi Noodles","Roti / Chapati","Paneer Paratha","Mix Dal","Thandai","Panchmel Dal"];
+  const requiredRecipes = ["Boiled Eggs","Maggi Noodles","Roti / Chapati","Paneer Paratha","Mix Dal","Thandai","Panchmel Dal","Sprouts Salad","Turmeric Milk","Mango Shake"];
   const allPresent = requiredRecipes.every(n => names.has(n));
   if (allPresent) return;
   // Only seed recipes that don't already exist (no duplicates)
@@ -3533,7 +3533,7 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
   const [filter, setFilter] = React.useState("all");
   const [assignModal, setAssignModal] = React.useState(null); // recipe to assign
 
-  const mealTypes = ["all","breakfast","lunch","dinner","snack","dessert"];
+  const mealTypes = ["all","healthy","breakfast","lunch","dinner","snack"];
 
   const results = React.useMemo(() => {
     let list = recipes;
@@ -3694,8 +3694,9 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
     });
   }, [recipes, ingredients, pantry]);
 
-  const mealTypes = ["all","breakfast","lunch","dinner","snack","dessert"];
-  const filtered = filter==="all" ? scoredRecipes : scoredRecipes.filter(r=>r.meal_type===filter);
+  const mealTypes = ["all","healthy","breakfast","lunch","dinner","snack"];
+  const HEALTHY_TAGS = ["healthy","weight-loss","high-protein","high-fiber","immunity","detox","anti-inflammatory","diabetic-friendly","iron-rich","calcium-rich","easy-digest","low-calorie","no-cook"];
+  const filtered = filter==="all" ? scoredRecipes : filter==="healthy" ? scoredRecipes.filter(r=>(r.tags||[]).some(t=>HEALTHY_TAGS.includes(t))) : scoredRecipes.filter(r=>r.meal_type===filter);
 
   // Sort: 100% match first, then by match%, then by cook count
   const canCookNow = filtered.filter(r=>r.matchPct===100).sort((a,b)=>(cookCount[b.name]||0)-(cookCount[a.name]||0));
