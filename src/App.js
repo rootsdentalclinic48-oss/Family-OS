@@ -3281,13 +3281,16 @@ const SEED_RECIPES = [
 
 const seedRecipes = async (familyId) => {
   const { data: existing } = await supabase.from("recipes").select("id,name").eq("family_id", familyId);
-  const hasEggs = existing?.some(r => r.name === "Boiled Eggs");
-  const hasMunchies = existing?.some(r => r.name === "Maggi Noodles");
-  const hasRoti = existing?.some(r => r.name === "Roti / Chapati");
-  const hasPaneerParatha = existing?.some(r => r.name === "Paneer Paratha");
-  const hasMixDal = existing?.some(r => r.name === "Mix Dal");
-  if (existing?.length && hasEggs && hasMunchies && hasRoti && hasPaneerParatha && hasMixDal) return;
+  // Check all latest recipes present - if yes skip entirely
+  const names = new Set((existing||[]).map(r => r.name));
+  const requiredRecipes = ["Boiled Eggs","Maggi Noodles","Roti / Chapati","Paneer Paratha","Mix Dal","Thandai","Panchmel Dal"];
+  const allPresent = requiredRecipes.every(n => names.has(n));
+  if (allPresent) return;
+  // Only seed recipes that don't already exist (no duplicates)
+  const existingNames = new Set((existing||[]).map(r => r.name.toLowerCase()));
   for (const r of SEED_RECIPES) {
+    // Skip if already exists
+    if (existingNames.has(r.name.toLowerCase())) continue;
     const { data: rec } = await supabase.from("recipes").insert([{
       family_id: familyId, name: r.name, meal_type: r.meal_type,
       servings: r.servings, prep_time_mins: r.prep_time_mins, tags: r.tags, instructions: "",
