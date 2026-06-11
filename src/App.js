@@ -979,7 +979,7 @@ const FinanceScreen = ({ familyId }) => {
         </div>
       </div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
-        {["transactions","categories","gmail","advisor"].map(t=>(
+        {["transactions","gmail","advisor"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
@@ -1072,6 +1072,46 @@ const FinanceScreen = ({ familyId }) => {
 };
 
 // ─── HOUSEHOLD SCREEN ─────────────────────────────────────────────────────────
+
+const seedHousehold = async (familyId) => {
+  const { data: existingTasks } = await supabase.from("tasks").select("id").eq("family_id", familyId).limit(1);
+  if (!existingTasks?.length) {
+    await supabase.from("tasks").insert([
+      { family_id: familyId, title: "Pay electricity bill", assignee: "Mayank", priority: "high", category: "Bills", due_date: today(), done: false },
+      { family_id: familyId, title: "Pay society maintenance", assignee: "Mayank", priority: "high", category: "Bills", due_date: today(), done: false },
+      { family_id: familyId, title: "Veda school fees", assignee: "Simmi", priority: "high", category: "Education", due_date: today(), done: false },
+      { family_id: familyId, title: "Grocery shopping", assignee: "Simmi", priority: "medium", category: "Grocery", due_date: today(), done: false },
+      { family_id: familyId, title: "Car wash", assignee: "Mayank", priority: "low", category: "Vehicle", due_date: today(), done: false },
+      { family_id: familyId, title: "House cleaning check", assignee: "Simmi", priority: "low", category: "Chores", due_date: today(), done: false },
+    ]);
+  }
+  const { data: existingMaint } = await supabase.from("maintenance").select("id").eq("family_id", familyId).limit(1);
+  if (!existingMaint?.length) {
+    await supabase.from("maintenance").insert([
+      { family_id: familyId, name: "AC Service", emoji: "❄️", last_done: "", next_due: "", notes: "Every 3 months" },
+      { family_id: familyId, name: "Car Service", emoji: "🚗", last_done: "", next_due: "", notes: "Every 6 months" },
+      { family_id: familyId, name: "Water Purifier Filter", emoji: "💧", last_done: "", next_due: "", notes: "Every 6 months" },
+      { family_id: familyId, name: "Inverter Battery Check", emoji: "🔋", last_done: "", next_due: "", notes: "Every 3 months" },
+      { family_id: familyId, name: "Geyser Service", emoji: "🚿", last_done: "", next_due: "", notes: "Every year" },
+      { family_id: familyId, name: "Pest Control", emoji: "🐛", last_done: "", next_due: "", notes: "Every 6 months" },
+    ]);
+  }
+  const { data: existingDocs } = await supabase.from("documents").select("id").eq("family_id", familyId).limit(1);
+  if (!existingDocs?.length) {
+    await supabase.from("documents").insert([
+      { family_id: familyId, name: "Aadhar Card - Mayank", category: "Identity", emoji: "🪪", date: "" },
+      { family_id: familyId, name: "Aadhar Card - Simmi", category: "Identity", emoji: "🪪", date: "" },
+      { family_id: familyId, name: "Aadhar Card - Veda", category: "Identity", emoji: "🪪", date: "" },
+      { family_id: familyId, name: "PAN Card - Mayank", category: "Identity", emoji: "💳", date: "" },
+      { family_id: familyId, name: "PAN Card - Simmi", category: "Identity", emoji: "💳", date: "" },
+      { family_id: familyId, name: "Passport - Mayank", category: "Travel", emoji: "📘", date: "" },
+      { family_id: familyId, name: "Passport - Simmi", category: "Travel", emoji: "📘", date: "" },
+      { family_id: familyId, name: "Car Insurance", category: "Insurance", emoji: "🚗", date: "" },
+      { family_id: familyId, name: "Health Insurance", category: "Insurance", emoji: "💊", date: "" },
+      { family_id: familyId, name: "Home Loan Documents", category: "Property", emoji: "🏠", date: "" },
+    ]);
+  }
+};
 const HouseholdScreen = ({ familyId }) => {
   const [tab, setTab] = useState("chores");
   const [showAddTask, setShowAddTask] = useState(false);
@@ -1089,6 +1129,10 @@ const HouseholdScreen = ({ familyId }) => {
   const { rows: docs } = useTable("documents", familyId);
   const { rows: maint } = useTable("maintenance", familyId);
   const toggleTask = (id, done) => updTask(id, { done, done_at: done ? new Date().toISOString() : null });
+  const [seededHH, setSeededHH] = useState(false);
+  useEffect(() => {
+    if (!seededHH && familyId) { seedHousehold(familyId).then(() => setSeededHH(true)); }
+  }, [familyId, seededHH]);
   return (
     <div className="screen">
       <div className="ph" style={{paddingTop:"calc(52px + env(safe-area-inset-top, 0px))"}}>
@@ -1096,7 +1140,7 @@ const HouseholdScreen = ({ familyId }) => {
         <div className="ps">{tasks.filter(t=>!t.done).length} tasks pending · {grocery.filter(g=>Number(g.quantity)<=Number(g.par_level)).length} grocery alerts</div>
       </div>
       <div className="scroll-x" style={{padding:"0 18px",marginBottom:12}}>
-        {["chores","grocery","maintenance","documents","reminders"].map(t=>(
+        {["chores","maintenance","documents","reminders"].map(t=>(
           <div key={t} className={`chip ${tab===t?"on":""}`} onClick={()=>setTab(t)} style={{textTransform:"capitalize"}}>{t}</div>
         ))}
       </div>
