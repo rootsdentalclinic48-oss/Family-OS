@@ -297,10 +297,11 @@ const Styles = () => (
     .nav-btn.on{background:rgba(125,157,124,0.12);}
     .nav-btn:active{transform:scale(0.88);}
     .nav-lbl{font-size:11px;font-weight:700;letter-spacing:.01em;margin-top:2px;}
-    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s ease;}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-    .modal{width:100%;max-width:430px;background:#0D0D1C;border:1px solid ${T.border};border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px calc(32px + env(safe-area-inset-bottom, 0px));animation:slideUp .3s cubic-bezier(.16,1,.3,1);max-height:92dvh;overflow-y:auto;}
+    .modal{width:100%;max-width:400px;background:#1C1C2E;border:1px solid ${T.borderBright};border-radius:24px;padding:24px 20px;animation:popIn .25s cubic-bezier(.16,1,.3,1);max-height:85dvh;overflow-y:auto;}
     @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    @keyframes popIn{from{opacity:0;transform:scale(0.94);}to{opacity:1;transform:scale(1);}}
     .modal-handle{width:40px;height:4px;background:#DDD9D2;border-radius:2px;margin:0 auto 18px;}
     .ph{padding:calc(52px + env(safe-area-inset-top, 0px)) 18px 0;}
     .pt{font-size:22px;font-weight:800;letter-spacing:-.3px;}
