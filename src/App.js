@@ -1605,14 +1605,14 @@ const getBillEmoji = (name) => {
 };
 
 const GroceryBillImporter = ({ familyId, pantry, onDone, onClose }) => {
-  const [stage, setStage] = React.useState("upload");
-  const [extractedItems, setExtractedItems] = React.useState([]);
-  const [error, setError] = React.useState("");
-  const [saving, setSaving] = React.useState(false);
-  const [pasteText, setPasteText] = React.useState("");
-  const [billTotal, setBillTotal] = React.useState(0);
-  const [billVendor, setBillVendor] = React.useState("local");
-  const [billDate, setBillDate] = React.useState(new Date().toISOString().split('T')[0]);
+  const [stage, setStage] = useState("upload");
+  const [extractedItems, setExtractedItems] = useState([]);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [billTotal, setBillTotal] = useState(0);
+  const [billVendor, setBillVendor] = useState("local");
+  const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
   const UNITS = ["kg","g","L","ml","pcs","pack","dozen","box","bottle"];
 
   // Indian item name normalizer
@@ -3428,12 +3428,12 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
   const unitOptions = recipe?.meal_type === "breakfast"
     ? ["paranthas","idlis","dosas","chillas","portions","pieces","cups","plates"]
     : ["portions","bowls","servings","cups","plates","pieces"];
-  const [qty, setQty] = React.useState(recipe?.servings || 3);
-  const [unit, setUnit] = React.useState(unitOptions[0]);
-  const [adults, setAdults] = React.useState(2);
-  const [children, setChildren] = React.useState(1);
-  const [guests, setGuests] = React.useState(0);
-  const [leftovers, setLeftovers] = React.useState(0);
+  const [qty, setQty] = useState(recipe?.servings || 3);
+  const [unit, setUnit] = useState(unitOptions[0]);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(1);
+  const [guests, setGuests] = useState(0);
+  const [leftovers, setLeftovers] = useState(0);
 
   const inputStyle = {width:"100%",padding:"11px 13px",borderRadius:12,border:`0.5px solid ${T.border}`,background:"#FAFAF8",color:T.text,fontSize:14,fontFamily:"'Plus Jakarta Sans',sans-serif",boxSizing:"border-box",fontWeight:500};
   const labelStyle = {fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:5,display:"block"};
@@ -3468,10 +3468,10 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
 // ─── MEAL PICKER SEARCH ───────────────────────────────────────────────────────
 const MEAL_TYPE_EMOJI = {breakfast:"🌅",lunch:"☀️",dinner:"🌙",snack:"🍎",dessert:"🍮"};
 const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId, selectedRecipeIds = [], onDone }) => {
-  const [query, setQuery] = React.useState("");
-  const [recentNames, setRecentNames] = React.useState([]);
+  const [query, setQuery] = useState("");
+  const [recentNames, setRecentNames] = useState([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from("cook_logs")
         .select("recipe_name").eq("family_id", familyId)
@@ -3588,10 +3588,10 @@ const MealPickerSearch = ({ recipes, defaultMealType, onSelect, familyId, select
 
 // ─── RECIPE SEARCH ────────────────────────────────────────────────────────────
 const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign, onViewRecipe }) => {
-  const [query, setQuery] = React.useState("");
-  const [filter, setFilter] = React.useState("all");
-  const [cuisine, setCuisine] = React.useState("all");
-  const [assignModal, setAssignModal] = React.useState(null);
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [cuisine, setCuisine] = useState("all");
+  const [assignModal, setAssignModal] = useState(null);
 
   const mealTypes = ["all","breakfast","lunch","dinner","snack","healthy"];
 
@@ -3766,10 +3766,10 @@ const RecipeSearch = ({ recipes, pantry, familyId, todayStr, mealPlan, onAssign,
 
 // ─── WHAT CAN I COOK ──────────────────────────────────────────────────────────
 const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
-  const [filter, setFilter] = React.useState("all");
-  const [cookLogs, setCookLogs] = React.useState([]);
-  const [ingredients, setIngredients] = React.useState({}); // recipeId -> ingredients[]
-  const [loadingIngredients, setLoadingIngredients] = React.useState(true);
+  const [filter, setFilter] = useState("all");
+  const [cookLogs, setCookLogs] = useState([]);
+  const [ingredients, setIngredients] = useState({}); // recipeId -> ingredients[]
+  const [loadingIngredients, setLoadingIngredients] = useState(true);
 
   const loadData = React.useCallback(async () => {
     setLoadingIngredients(true);
@@ -3799,7 +3799,7 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
     setLoadingIngredients(false);
   }, [familyId]);
 
-  React.useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const cookCount = React.useMemo(() => {
     const map = {};
@@ -3923,7 +3923,7 @@ const WhatCanICook = ({ recipes, pantry, onSelectRecipe, familyId }) => {
 
 // ─── AUTO PLAN BAR ───────────────────────────────────────────────────────────
 const AutoPlanBar = ({ familyId, recipes, pantry, refreshMeal, weekDates }) => {
-  const [autoPlanning, setAutoPlanning] = React.useState(false);
+  const [autoPlanning, setAutoPlanning] = useState(false);
 
   const shuffle = arr => [...arr].sort(() => Math.random()-0.5);
 
