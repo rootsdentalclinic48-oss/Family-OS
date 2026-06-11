@@ -706,3 +706,54 @@ export default function SmartGrocery({ familyId }) {
   );
 }
 // cache bust Wed Jun 10 09:24:28 UTC 2026
+
+// ── PriceLogRow — editable price log entry ────────────────────────────────────
+function PriceLogRow({ h, onDelete, onEdit }) {
+  const [editing, setEditing] = React.useState(false);
+  const [val, setVal] = React.useState(h.price);
+  const fmt2 = n => '₹' + Number(n).toLocaleString('en-IN');
+  const PLAT = { blinkit:'Blinkit', instamart:'Instamart', zepto:'Zepto', bigbasket:'BigBasket', amazon:'Amazon', flipkart:'Flipkart', local:'Local' };
+  const PLAT_COLOR = { blinkit:'#e6ac00', instamart:'#FF6600', zepto:'#7B2FBE', bigbasket:'#4a8c00', amazon:'#c45000', flipkart:'#1a5ec7', local:'#6b7280' };
+
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 14px', borderRadius:10, border:'1px solid #e5e7eb', background:'#fff', marginBottom:8 }}>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:14, fontWeight:700, color:'#111827' }}>{h.item_name}</div>
+        <div style={{ fontSize:11, color:'#6b7280', marginTop:2, display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+          <span>{new Date(h.logged_at).toLocaleDateString('en-IN')}</span>
+          {h.platform && <span style={{ background: PLAT_COLOR[h.platform]||'#6b7280', color:'#fff', padding:'1px 7px', borderRadius:20, fontSize:10, fontWeight:700 }}>{PLAT[h.platform]||h.platform}</span>}
+          <span style={{ background: h.source==='manual'?'#f0fdf4':'#e0f2fe', color: h.source==='manual'?'#15803d':'#0369a1', padding:'1px 6px', borderRadius:20, fontSize:10, fontWeight:700 }}>
+            {h.source==='bill_import'?'Bill':h.source==='manual'?'Manual':'Google'}
+          </span>
+        </div>
+      </div>
+      {editing ? (
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <span style={{ fontSize:14, color:'#6b7280' }}>₹</span>
+          <input
+            type="number" value={val} onChange={e=>setVal(e.target.value)}
+            autoFocus
+            style={{ width:80, padding:'6px 8px', borderRadius:8, border:'2px solid #7c3aed', fontSize:15, fontWeight:700, color:'#111827', textAlign:'center', fontFamily:'inherit', outline:'none' }}
+            onKeyDown={e=>{ if(e.key==='Enter'){onEdit(h.id,val);setEditing(false);} if(e.key==='Escape')setEditing(false); }}
+          />
+          <button onClick={()=>{onEdit(h.id,val);setEditing(false);}}
+            style={{ padding:'6px 10px', borderRadius:8, border:'none', background:'#15803d', color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>✓</button>
+          <button onClick={()=>setEditing(false)}
+            style={{ padding:'6px 10px', borderRadius:8, border:'1px solid #e5e7eb', background:'#fff', color:'#6b7280', fontSize:12, cursor:'pointer' }}>✕</button>
+        </div>
+      ) : (
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ fontSize:15, fontWeight:800, color: parseFloat(h.price)<1?'#b91c1c':'#111827', cursor:'pointer' }}
+            onClick={()=>setEditing(true)}>
+            {fmt2(h.price)}
+            {parseFloat(h.price)<1 && <span style={{ fontSize:10, color:'#b91c1c', marginLeft:4 }}>⚠️ wrong?</span>}
+          </div>
+          <button onClick={()=>setEditing(true)}
+            style={{ padding:'5px 8px', borderRadius:7, border:'1px solid #e5e7eb', background:'#f9fafb', color:'#6b7280', fontSize:11, cursor:'pointer' }}>✏️</button>
+          <button onClick={()=>{ if(window.confirm('Delete this price log?')) onDelete(h.id); }}
+            style={{ padding:'5px 8px', borderRadius:7, border:'1px solid #fca5a5', background:'#fee2e2', color:'#b91c1c', fontSize:11, cursor:'pointer' }}>🗑</button>
+        </div>
+      )}
+    </div>
+  );
+}
