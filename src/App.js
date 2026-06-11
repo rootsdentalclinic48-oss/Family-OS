@@ -4654,7 +4654,7 @@ const Nav = ({ active, go }) => (
       {id:"ai",      icon:"ai",      lbl:"AI"},
       {id:"profile", icon:"profile", lbl:"Me"},
     ].map(it=>(
-      <div key={it.id} className={`nav-btn ${active===it.id?"on":""}`} onClick={()=>go(it.id)}>
+      <div key={it.id} className={`nav-btn ${active===it.id?"on":""}`} onClick={()=>{ go(it.id); setTimeout(()=>{ const el=document.querySelector('.screen'); if(el) el.scrollTop=0; window.scrollTo(0,0); },50); }}>
         <I n={it.icon} s={19} c={active===it.id?T.accent:T.muted}/>
         <span className="nav-lbl" style={{color:active===it.id?T.accent:T.muted}}>{it.lbl}</span>
       </div>
