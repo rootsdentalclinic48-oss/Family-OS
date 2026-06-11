@@ -595,6 +595,42 @@ export default function SmartGrocery({ familyId }) {
                   </div>
                 </div>
 
+                {/* Price log status + refresh */}
+                {(()=>{
+                  const logged = compareRes.cartNames.filter(name => priceLog.some(h => h.item_name?.toLowerCase() === name.toLowerCase()));
+                  const missing = compareRes.cartNames.filter(name => !priceLog.some(h => h.item_name?.toLowerCase() === name.toLowerCase()));
+                  return (
+                    <div style={{ background:'#f0f9ff', border:'1px solid #bae6fd', borderRadius:12, padding:'12px 14px', marginTop:14, marginBottom:0 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:'#0369a1', marginBottom:8 }}>📊 Price Log Status</div>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:10 }}>
+                        <div style={{ background:'#dcfce7', borderRadius:8, padding:'8px', textAlign:'center' }}>
+                          <div style={{ fontSize:18, fontWeight:800, color:'#15803d' }}>{logged.length}</div>
+                          <div style={{ fontSize:11, color:'#6b7280' }}>prices logged</div>
+                        </div>
+                        <div style={{ background:'#fee2e2', borderRadius:8, padding:'8px', textAlign:'center' }}>
+                          <div style={{ fontSize:18, fontWeight:800, color:'#b91c1c' }}>{missing.length}</div>
+                          <div style={{ fontSize:11, color:'#6b7280' }}>no price data</div>
+                        </div>
+                      </div>
+                      {missing.length > 0 && (
+                        <div style={{ fontSize:12, color:'#6b7280', lineHeight:1.7, marginBottom:10 }}>
+                          <strong style={{ color:'#b91c1c' }}>Missing:</strong> {missing.slice(0,6).join(', ')}{missing.length>6 ? ` +${missing.length-6} more` : ''}
+                          <div style={{ fontSize:11, marginTop:4 }}>💡 AI tab → Import Bill → Log Prices Only</div>
+                        </div>
+                      )}
+                      <div style={{ display:'flex', gap:8 }}>
+                        <button onClick={async()=>{ await load(); showToast('Refreshed ✓'); }}
+                          style={{ flex:1, padding:'9px', borderRadius:9, border:'1px solid #7c3aed', background:'#fff', color:'#7c3aed', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                          🔄 Refresh
+                        </button>
+                        <button onClick={compareAll}
+                          style={{ flex:2, padding:'9px', borderRadius:9, border:'none', background:'#7c3aed', color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                          ⚡ Re-compare
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
                 {/* Log price form */}
                 <div style={{ ...S.card, marginTop: 16 }}>
                   <span style={S.lbl}>Log a price to improve comparisons</span>
