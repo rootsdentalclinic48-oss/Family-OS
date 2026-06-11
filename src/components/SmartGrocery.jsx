@@ -672,17 +672,12 @@ export default function SmartGrocery({ familyId }) {
             ) : (
               <>
                 <div style={{ fontSize: 12, color: C.text3, marginBottom: 10, fontWeight: 600 }}>{priceLog.length} price logs</div>
-                {priceLog.slice(0, 100).map(h => (
-                  <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.cardBg, marginBottom: 8 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text1 }}>{h.item_name}</div>
-                      <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>{new Date(h.logged_at).toLocaleDateString('en-IN')}</div>
-                    </div>
-                    <Badge slug={h.platform} />
-                    <div style={{ fontSize: 15, fontWeight: 800, color: C.text1, marginLeft: 8 }}>{fmt(h.price)}</div>
-                    {h.delivery_fee > 0 && <div style={{ fontSize: 11, color: C.text3 }}>+{fmt(h.delivery_fee)}</div>}
-                  </div>
-                ))}
+                 {priceLog.slice(0, 100).map(h => (
+                   <PriceLogRow key={h.id} h={h}
+                     onDelete={async(id)=>{ await supabase.from('grocery_price_history').delete().eq('id',id); load(); showToast('Deleted ✓'); }}
+                     onEdit={async(id,newPrice)=>{ await supabase.from('grocery_price_history').update({price:parseFloat(newPrice)}).eq('id',id); load(); showToast('Updated ✓'); }}
+                   />
+                 ))}
               </>
             )}
           </>
