@@ -590,7 +590,14 @@ const QuickAddModal = ({ onClose, familyId, defaultType = "expense" }) => {
 // ─── GLOBAL FAB ───────────────────────────────────────────────────────────────
 const GlobalFAB = ({ screen, familyId }) => {
   const [open, setOpen] = useState(false);
-  const [quickAddType, setQuickAddType] = useState(null);if (screen === "ai") return null;
+  const [quickAddType, setQuickAddType] = useState(null);
+  const openQuickAdd = (typeId) => { setOpen(false); setQuickAddType(typeId); };
+  useEffect(() => {
+    const handler = (e) => { if (e.key === "Escape") { setOpen(false); setQuickAddType(null); } };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+  if (screen === "ai") return null;
   const openQuickAdd = (typeId) => { setOpen(false); setQuickAddType(typeId); };
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") { setOpen(false); setQuickAddType(null); } };
