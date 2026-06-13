@@ -288,12 +288,19 @@ const Styles = () => (
     .root{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;max-width:430px;margin:0 auto;background:${T.bg};position:relative;}
     .screen{flex:1;padding-bottom:calc(72px + env(safe-area-inset-bottom, 16px));overflow-y:auto;-webkit-overflow-scrolling:touch;animation:fadeUp .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-    .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:all .18s;box-shadow:0 1px 4px rgba(0,0,0,0.12);}
-    .card-tap{cursor:pointer;}
-    .card-tap:active{transform:scale(0.982);background:${T.cardHover};}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    .stagger-1{animation:fadeIn .3s cubic-bezier(.16,1,.3,1) .05s both;}
+    .stagger-2{animation:fadeIn .3s cubic-bezier(.16,1,.3,1) .12s both;}
+    .stagger-3{animation:fadeIn .3s cubic-bezier(.16,1,.3,1) .19s both;}
+    .stagger-4{animation:fadeIn .3s cubic-bezier(.16,1,.3,1) .26s both;}
+    .stagger-5{animation:fadeIn .3s cubic-bezier(.16,1,.3,1) .33s both;}
+    @media(prefers-reduced-motion:reduce){.stagger-1,.stagger-2,.stagger-3,.stagger-4,.stagger-5{animation:none;}}
+    .card{background:${T.card};border:1px solid ${T.border};border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:transform .15s cubic-bezier(.34,1.56,.64,1),background .18s,box-shadow .18s;box-shadow:0 1px 4px rgba(0,0,0,0.12);}
+    .card-tap{cursor:pointer;will-change:transform;}
+    .card-tap:active{transform:scale(0.97);background:${T.cardHover};box-shadow:0 1px 2px rgba(0,0,0,0.08);}
     .btn{border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
     .btn-primary{background:${T.accent};color:#fff !important;border-radius:14px;padding:0 22px;height:52px;font-size:15px;font-weight:700;box-shadow:0 4px 20px ${T.accentGlow};border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;width:100%;-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:52px;}
-    .btn-primary:active{transform:scale(0.97);opacity:0.9;}
+    .btn-primary:active{transform:scale(0.96);opacity:0.92;box-shadow:0 2px 8px ${T.accentGlow};}
     .btn-primary:disabled{opacity:0.45;cursor:not-allowed;}
     .input{width:100%;background:#FAFAF8;border:0.5px solid ${T.border};border-radius:14px;padding:0 16px;height:52px;color:${T.text};font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;outline:none;transition:all .18s;-webkit-appearance:none;appearance:none;}
     .input:focus{border-color:${T.accent};background:#FFFFFF;}
@@ -303,7 +310,7 @@ const Styles = () => (
     .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;padding:8px 2px calc(8px + env(safe-area-inset-bottom, 0px));background:rgba(8,8,16,0.92);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-top:1px solid ${T.border};display:flex;justify-content:space-around;align-items:center;z-index:100;}
     .nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 8px;border-radius:12px;transition:all .18s;flex:1;min-height:44px;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
     .nav-btn.on{background:rgba(125,157,124,0.12);}
-    .nav-btn:active{transform:scale(0.88);}
+    .nav-btn:active{transform:scale(0.86);transition:transform .1s cubic-bezier(.34,1.56,.64,1);}
     .nav-lbl{font-size:11px;font-weight:700;letter-spacing:.01em;margin-top:2px;}
     .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
@@ -319,7 +326,7 @@ const Styles = () => (
     .sec-link{font-size:12.5px;color:${T.accent};font-weight:600;cursor:pointer;padding:4px 0;min-height:44px;display:flex;align-items:center;}
     .chip{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:100px;background:#FAFAF8;border:0.5px solid ${T.border};font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap;min-height:36px;-webkit-tap-highlight-color:transparent;}
     .chip.on{background:#7D9D7C;border-color:#7D9D7C;color:white;}
-    .chip:active{transform:scale(0.94);}
+    .chip:active{transform:scale(0.93);transition:transform .1s cubic-bezier(.34,1.56,.64,1);}
     .scroll-x{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
     .scroll-x::-webkit-scrollbar{display:none;}
     .list-row{display:flex;align-items:center;gap:13px;padding:16px 0;border-bottom:1px solid ${T.border};cursor:pointer;transition:opacity .15s;min-height:60px;}
@@ -344,7 +351,7 @@ const Styles = () => (
     .alert-bar{padding:12px 15px;border-radius:14px;display:flex;gap:10px;align-items:center;margin-bottom:8px;}
     .fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both;}
     .fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom, 0px));right:max(16px, calc(50vw - 199px));width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,${T.accent},#6D5CE8);box-shadow:0 4px 24px ${T.accentGlow},0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:150;transition:all .25s cubic-bezier(.16,1,.3,1);border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
-    .fab:active{transform:scale(0.91);}
+    .fab:active{transform:scale(0.89);transition:transform .12s cubic-bezier(.34,1.56,.64,1);}
     .fab.open{transform:rotate(45deg);background:linear-gradient(135deg,#C4603A,#E55);}
     .fab-menu{position:fixed;bottom:calc(148px + env(safe-area-inset-bottom, 0px));right:max(16px, calc(50vw - 206px));z-index:149;display:flex;flex-direction:column;gap:8px;align-items:flex-end;animation:fabMenuIn .25s cubic-bezier(.16,1,.3,1);}
     @keyframes fabMenuIn{from{opacity:0;transform:translateY(16px) scale(0.94);}to{opacity:1;transform:translateY(0) scale(1);}}
@@ -361,8 +368,8 @@ const Styles = () => (
     .toast-container{position:fixed;top:calc(16px + env(safe-area-inset-top, 0px));left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:8px;width:calc(100% - 28px);max-width:402px;pointer-events:none;}
     .toast{background:#2D2721;border:1px solid rgba(255,255,255,0.11);border-radius:16px;padding:12px 14px;display:flex;gap:11px;align-items:flex-start;pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.55),0 2px 8px rgba(0,0,0,0.3);animation:toastIn .3s cubic-bezier(.16,1,.3,1);}
     @keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(0.96);}to{opacity:1;transform:translateY(0) scale(1);}}
-    .toast.out{animation:toastOut .28s cubic-bezier(.4,0,1,1) forwards;}
-    @keyframes toastOut{to{opacity:0;transform:translateY(-10px) scale(0.96);}}
+    .toast.out{animation:toastOut .32s cubic-bezier(.4,0,1,1) forwards;}
+    @keyframes toastOut{to{opacity:0;transform:translateY(-16px) scale(0.94);}}
     .toast-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
     .toast-title{font-size:14px;font-weight:700;color:#EEECf8;line-height:1.3;}
     .toast-body{font-size:11.5px;color:rgba(238,236,248,0.5);margin-top:2px;line-height:1.4;}
@@ -750,9 +757,7 @@ const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
     <div style={{padding:"12px 20px 0"}}>
       <div style={{background:"linear-gradient(135deg,rgba(109,155,107,0.12),rgba(139,124,248,0.10))",border:`1px solid rgba(52,211,153,0.22)`,borderRadius:20,padding:"16px 18px",marginBottom:10,cursor:"pointer"}} onClick={()=>navigate("finance")}>
         <div style={{fontSize:12,color:T.muted,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em"}}>Available Balance</div>
-        <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:bal.available>=0?T.green:T.red,fontFamily:"'JetBrains Mono',monospace"}}>
-          {bal.available<0?"-":""}₹{Math.abs(bal.available).toLocaleString("en-IN")}
-        </div>
+        <AnimatedBalance value={bal.available}/>
         <div style={{fontSize:11,color:T.muted,marginTop:3}}>{bal.available>=0?"✅ Saving money this month":"⚠️ Expenses exceed income"}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12,paddingTop:12,borderTop:`1px solid ${T.border}`}}>
           {[
@@ -867,9 +872,9 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         </div>
       )}
 
-      <InlineBalanceWidget txns={txns} navigate={navigate} pendingTasks={pendingTasks}/>
+      <div className="stagger-1"><InlineBalanceWidget txns={txns} navigate={navigate} pendingTasks={pendingTasks}/></div>
 
-      <div className="quick-actions">
+      <div className="quick-actions stagger-2">
         {[
           {emoji:"🏥",label:"Income",color:T.green,action:()=>openModal("income")},
           {emoji:"💸",label:"Expense",color:T.accent,action:()=>openModal("expense")},
@@ -883,7 +888,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         ))}
       </div>
 
-      <div style={{padding:"16px 18px 0"}}>
+      <div style={{padding:"16px 18px 0"}} className="stagger-3">
         <div className="row" style={{marginBottom:12}}>
           <span className="sec-title">Pending Tasks</span>
           <span className="sec-link" onClick={()=>navigate("household")}>{pendingTasks.length} total</span>
@@ -905,7 +910,7 @@ const HomeScreen = ({ navigate, openModal, familyId, user }) => {
         }
       </div>
 
-      <div style={{padding:"16px 18px 0"}}>
+      <div style={{padding:"16px 18px 0"}} className="stagger-4">
         <div className="row" style={{marginBottom:12}}>
           <span className="sec-title">Recent</span>
           <span className="sec-link" onClick={()=>navigate("finance")}>All</span>
