@@ -30,6 +30,15 @@ const T = {
   teal: "#4A9B8E",    tealSoft: "rgba(74,155,142,0.12)",
 };
 
+// ─── NUTRITION TARGETS ────────────────────────────────────────────────────────
+const NUTRITION_TARGETS = {
+  Mayank: { calories: 2000, protein: 100, carbs: 250, fat: 65, fiber: 30 },
+  Simmi:  { calories: 1600, protein: 70,  carbs: 200, fat: 55, fiber: 25 },
+  Veda:   { calories: 1200, protein: 40,  carbs: 150, fat: 40, fiber: 15 },
+};
+const MEMBERS = ["Mayank", "Simmi", "Veda"];
+const MEMBER_EMOJI = { Mayank: "👨‍⚕️", Simmi: "👩", Veda: "👶" };
+
 const inr = n => "₹" + Math.abs(Number(n) || 0).toLocaleString("en-IN");
 const pct = (a, b) => b ? Math.min(100, Math.round((a / b) * 100)) : 0;
 const today = () => new Date().toISOString().split("T")[0];
@@ -3461,6 +3470,87 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
   );
 };
 
+// ─── ENHANCED COOK LOG FORM WITH NUTRITION ───────────────────────────────────
+const NutritionCookLog = ({ meal, recipe, familyId, onDone }) => {
+  const unitOptions = recipe?.meal_type === "breakfast"
+    ? ["paranthas","idlis","dosas","chillas","portions","pieces","cups","plates"]
+    : ["portions","bowls","servings","cups","plates","pieces"];
+  const [qty, setQty] = useState(recipe?.servings || 3);
+  const [unit, setUnit] = useState(unitOptions[0]);
+  const [portions, setPortions] = useState({ Mayank: 1, Simmi: 1, Veda: 1 });
+  const [logging, setLogging] = useState(false);
+
+  const handleLog = async () => {
+    setLogging(true);
+    try {
+      let nutrition = { calories: 300, protein: 10, carbs: 40, fat: 8, fiber: 3 };
+      try {
+        const prompt = `Estimate nutrition per portion for Indian dish "${recipe?.name || "mixed meal"}". Return ONLY JSON no markdown: {"calories":0,"protein":0,"carbs":0,"fat":0,"fiber":0}`;
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.REACT_APP_GROQ_API_KEY },
+          body: JSON.stringify({ model: "llama-3.1-8b-instant", max_tokens: 80, messages: [{ role: "user", content: prompt }] })
+        });
+        const data = await res.json();
+        const text = (data.choices?.[0]?.message?.content || "{}").replace(/```json|```/g,"").trim();
+        nutrition = JSON.parse(text);
+      } catch(e) { console.log("Using default nutrition"); }
+      const today_ = new Date().toISOString().split("T")[0];
+      for (const m of MEMBERS) {
+        const p = portions[m];
+        if (p > 0) {
+          await supabase.from("nutrition_logs").insert([{
+            family_id: familyId, member: m, meal_type: meal.meal_type, meal_date: today_,
+            food_description: recipe?.name || meal.meal_type,
+            calories: Math.round((nutrition.calories||0)*p),
+            protein: Math.round((nutrition.protein||0)*p*10)/10,
+            carbs: Math.round((nutrition.carbs||0)*p*10)/10,
+            fat: Math.round((nutrition.fat||0)*p*10)/10,
+            fiber: Math.round((nutrition.fiber||0)*p*10)/10,
+          }]);
+        }
+      }
+      onDone({ quantityMade: qty, unitLabel: unit, adults: 2, children: 1, guests: 0, leftovers: 0 });
+    } catch(e) { console.error(e); }
+    setLogging(false);
+  };
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      <div style={{display:"flex",gap:10}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:5}}>Quantity Made</div>
+          <input className="input" type="number" value={qty} min={1} onChange={e=>setQty(Number(e.target.value))}/>
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:5}}>Unit</div>
+          <select className="input" value={unit} onChange={e=>setUnit(e.target.value)}>
+            {unitOptions.map(u=><option key={u}>{u}</option>)}
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style={{fontSize:11,fontWeight:700,color:T.muted,textTransform:"uppercase",letterSpacing:".07em",marginBottom:8}}>Who Ate How Many?</div>
+        {MEMBERS.map(m=>(
+          <div key={m} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,marginBottom:6}}>
+            <span style={{fontSize:16}}>{MEMBER_EMOJI[m]}</span>
+            <span style={{flex:1,fontSize:14,fontWeight:600}}>{m}</span>
+            <div onClick={()=>setPortions(p=>({...p,[m]:Math.max(0,p[m]-0.5)}))} style={{width:28,height:28,borderRadius:8,background:T.card,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18,fontWeight:700}}>−</div>
+            <span style={{fontSize:16,fontWeight:700,minWidth:24,textAlign:"center"}}>{portions[m]}</span>
+            <div onClick={()=>setPortions(p=>({...p,[m]:p[m]+0.5}))} style={{width:28,height:28,borderRadius:8,background:T.card,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:18,fontWeight:700}}>+</div>
+          </div>
+        ))}
+      </div>
+      <div style={{padding:"8px 12px",background:T.greenSoft,borderRadius:10,fontSize:12,color:T.green,fontWeight:600}}>
+        📦 Pantry auto-deducts · 🤖 AI estimates nutrition per person
+      </div>
+      <button onClick={handleLog} disabled={logging} className="btn-primary">
+        {logging ? "🤖 Analysing nutrition..." : "✅ Log Meal & Track Nutrition"}
+      </button>
+    </div>
+  );
+};
+
 
 
 // ─── MEAL PICKER SEARCH ───────────────────────────────────────────────────────
@@ -4004,6 +4094,99 @@ const AutoPlanBar = ({ familyId, recipes, pantry, refreshMeal, weekDates }) => {
   );
 };
 
+
+// ─── HEALTH ANALYSIS TAB ─────────────────────────────────────────────────────
+const HealthAnalysisTab = ({ familyId }) => {
+  const [member, setMember] = useState("Mayank");
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [insight, setInsight] = useState("");
+  const [loadingInsight, setLoadingInsight] = useState(false);
+  const todayStr = new Date().toISOString().split("T")[0];
+  useEffect(() => {
+    const fetchLogs = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("nutrition_logs").select("*").eq("family_id", familyId).eq("meal_date", todayStr).order("logged_at", { ascending: true });
+      setLogs(data || []);
+      setLoading(false);
+    };
+    fetchLogs();
+  }, [familyId, todayStr]);
+  const memberLogs = logs.filter(l => l.member === member);
+  const totals = memberLogs.reduce((a,l) => ({ calories: a.calories+(l.calories||0), protein: a.protein+(l.protein||0), carbs: a.carbs+(l.carbs||0), fat: a.fat+(l.fat||0), fiber: a.fiber+(l.fiber||0) }), { calories:0,protein:0,carbs:0,fat:0,fiber:0 });
+  const targets = NUTRITION_TARGETS[member];
+  const getInsight = async () => {
+    setLoadingInsight(true);
+    try {
+      const prompt = `You are Munshi Jee. ${member} ate today: ${memberLogs.map(l=>l.food_description).join(", ")}. Totals: ${totals.calories} cal, ${totals.protein}g protein. Target: ${targets.calories} cal, ${targets.protein}g protein. Give brief friendly health tip in Hinglish. Max 2 sentences.`;
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + process.env.REACT_APP_GROQ_API_KEY },
+        body: JSON.stringify({ model: "llama-3.1-8b-instant", max_tokens: 120, messages: [{ role: "user", content: prompt }] })
+      });
+      const data = await res.json();
+      setInsight(data.choices?.[0]?.message?.content || "");
+    } catch(e) { setInsight("Could not load insight."); }
+    setLoadingInsight(false);
+  };
+  const NutrBar = ({ label, val, target, color }) => {
+    const p = target > 0 ? Math.min(100, Math.round((val/target)*100)) : 0;
+    return (
+      <div style={{marginBottom:10}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+          <span style={{fontSize:13,fontWeight:600}}>{label}</span>
+          <span style={{fontSize:12,color:T.muted}}>{val} / {target}</span>
+        </div>
+        <div className="progress" style={{height:8}}>
+          <div className="progress-fill" style={{width:`${p}%`,background:p>=100?T.green:p>=60?T.amber:color}}/>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div>
+      <div style={{display:"flex",gap:8,marginBottom:16}}>
+        {MEMBERS.map(m=>(
+          <div key={m} onClick={()=>setMember(m)} style={{flex:1,padding:"8px",borderRadius:12,border:`1px solid ${member===m?T.accent:T.border}`,background:member===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",transition:"all .18s"}}>
+            <div style={{fontSize:18}}>{MEMBER_EMOJI[m]}</div>
+            <div style={{fontSize:11,fontWeight:600,color:member===m?T.accent:T.muted,marginTop:2}}>{m}</div>
+          </div>
+        ))}
+      </div>
+      {loading ? <div style={{textAlign:"center",padding:40,color:T.muted}}>Loading...</div>
+      : memberLogs.length === 0 ? <div className="empty"><div className="empty-icon">🥗</div><div className="empty-text">No meals logged today for {member}.</div></div>
+      : <>
+        <div className="card" style={{padding:"16px",marginBottom:12}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.muted,marginBottom:12,textTransform:"uppercase",letterSpacing:".06em"}}>Today — {member}</div>
+          <NutrBar label="🔥 Calories" val={totals.calories} target={targets.calories} color={T.accent}/>
+          <NutrBar label="💪 Protein (g)" val={totals.protein} target={targets.protein} color={T.blue}/>
+          <NutrBar label="🍚 Carbs (g)" val={totals.carbs} target={targets.carbs} color={T.amber}/>
+          <NutrBar label="🥑 Fat (g)" val={totals.fat} target={targets.fat} color={T.pink}/>
+          <NutrBar label="🌿 Fiber (g)" val={totals.fiber} target={targets.fiber} color={T.green}/>
+        </div>
+        <div className="card" style={{padding:"2px 14px",marginBottom:12}}>
+          {memberLogs.map(l=>(
+            <div key={l.id} className="list-row">
+              <div style={{fontSize:16}}>{l.meal_type==="breakfast"?"🌅":l.meal_type==="lunch"?"☀️":l.meal_type==="snack"?"🍎":"🌙"}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:500}}>{l.food_description}</div>
+                <div style={{fontSize:11.5,color:T.muted,textTransform:"capitalize"}}>{l.meal_type}</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:13,fontWeight:700,color:T.accent}}>{l.calories} cal</div>
+                <div style={{fontSize:11,color:T.muted}}>{l.protein}g protein</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={getInsight} disabled={loadingInsight} className="btn-primary" style={{marginBottom:12}}>
+          {loadingInsight ? "🤖 Analysing..." : "🤖 Get Health Insight"}
+        </button>
+        {insight && <div style={{padding:"14px",background:T.accentSoft,border:`1px solid ${T.accent}33`,borderRadius:14,fontSize:14,lineHeight:1.6}}>{insight}</div>}
+      </>}
+    </div>
+  );
+};
 // ─── KITCHEN SCREEN ───────────────────────────────────────────────────────────
 const KitchenScreen = ({ familyId }) => {
   const [tab, setTab] = useState("today");
@@ -4177,6 +4360,7 @@ const KitchenScreen = ({ familyId }) => {
             {id:"suggest",label:"💡 Can Cook"},
             {id:"pantry", label:"🧺 Pantry"},
             {id:"shop",   label:"🛒 Shop"},
+            {id:"health", label:"❤️ Health"},
           ].map(t => (
             <div key={t.id} className={`chip ${tab===t.id?"on":""}`} onClick={()=>setTab(t.id)}>{t.label}</div>
           ))}
@@ -4458,6 +4642,7 @@ const KitchenScreen = ({ familyId }) => {
         )}
 
         {/* SHOP */}
+        {tab==="health" && <HealthAnalysisTab familyId={familyId}/>}
         {tab==="shop" && (
           <>
             <div style={{display:"flex",gap:8,marginBottom:14}}>
@@ -4849,7 +5034,7 @@ const KitchenScreen = ({ familyId }) => {
                 <I n="x" s={15} c={T.muted}/>
               </div>
             </div>
-            <CookLogForm meal={cookLogModal.meal} recipe={cookLogModal.recipe} familyId={familyId} recipes={recipes} pantry={pantry} onDone={async (logData) => { setCooking(cookLogModal.meal.id); setCookLogModal(null); try { const ratio = logData.quantityMade / (cookLogModal.recipe?.servings || 3); const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", cookLogModal.meal.recipe_id); const deducted = []; const lowStockItems = []; for (const ing of (ingredients || [])) { const needed = Number(ing.quantity) * ratio; const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase()); if (pantryItem) { const newQty = Math.max(0, Number(pantryItem.quantity) - needed); await supabase.from("pantry").update({ quantity: newQty, updated_at: new Date().toISOString() }).eq("id", pantryItem.id); deducted.push({ name: ing.pantry_item_name, used: needed, unit: ing.unit, remaining: newQty }); if (newQty <= Number(pantryItem.par_level)) { lowStockItems.push({ name: pantryItem.name, qty: newQty, unit: pantryItem.unit, category: pantryItem.category }); } } } const { data: cookLog } = await supabase.from("cook_logs").insert([{ family_id: familyId, recipe_id: cookLogModal.meal.recipe_id, recipe_name: cookLogModal.recipe?.name || "Unknown", quantity_made: logData.quantityMade, unit_label: logData.unitLabel, people_served_adults: logData.adults, people_served_children: logData.children, people_served_guests: logData.guests, leftovers: logData.leftovers, cooked_at: new Date().toISOString() }]).select().single(); for (const d of deducted) { await supabase.from("pantry_transactions").insert([{ family_id: familyId, pantry_item_name: d.name, quantity_used: d.used, unit: d.unit, recipe_name: cookLogModal.recipe?.name || "Unknown", cook_log_id: cookLog?.id || null, transaction_date: new Date().toISOString().split("T")[0] }]); } await supabase.from("meal_plan").update({ cooked: true, cooked_at: new Date().toISOString() }).eq("id", cookLogModal.meal.id); for (const item of lowStockItems) { const { data: ex } = await supabase.from("shopping_list").select("id").eq("family_id", familyId).eq("item_name", item.name).eq("purchased", false); if (!ex?.length) { await supabase.from("shopping_list").insert([{ family_id: familyId, item_name: item.name, quantity_needed: item.qty <= 0 ? 1 : item.qty, unit: item.unit, category: item.category, purchased: false }]); } notifyPantryLow(familyId, { name: item.name, quantity: item.qty, unit: item.unit }); } await refreshPantry(); await refreshMeal(); showToast({ title: "🍽 Meal Logged!", body: logData.quantityMade + " " + logData.unitLabel + " cooked. " + deducted.length + " ingredients deducted.", icon: "🍽", color: "#6D9B6B" }); } catch(e) { console.error(e); } setCooking(null); }} onClose={()=>setCookLogModal(null)}/>
+            <NutritionCookLog meal={cookLogModal.meal} recipe={cookLogModal.recipe} familyId={familyId} onDone={async (logData) => { setCooking(cookLogModal.meal.id); setCookLogModal(null); try { const ratio = logData.quantityMade / (cookLogModal.recipe?.servings || 3); const { data: ingredients } = await supabase.from("recipe_ingredients").select("*").eq("recipe_id", cookLogModal.meal.recipe_id); const deducted = []; const lowStockItems = []; for (const ing of (ingredients || [])) { const needed = Number(ing.quantity) * ratio; const pantryItem = pantry.find(p => p.name.toLowerCase() === ing.pantry_item_name.toLowerCase()); if (pantryItem) { const newQty = Math.max(0, Number(pantryItem.quantity) - needed); await supabase.from("pantry").update({ quantity: newQty, updated_at: new Date().toISOString() }).eq("id", pantryItem.id); deducted.push({ name: ing.pantry_item_name, used: needed, unit: ing.unit, remaining: newQty }); if (newQty <= Number(pantryItem.par_level)) { lowStockItems.push({ name: pantryItem.name, qty: newQty, unit: pantryItem.unit, category: pantryItem.category }); } } } const { data: cookLog } = await supabase.from("cook_logs").insert([{ family_id: familyId, recipe_id: cookLogModal.meal.recipe_id, recipe_name: cookLogModal.recipe?.name || "Unknown", quantity_made: logData.quantityMade, unit_label: logData.unitLabel, people_served_adults: logData.adults, people_served_children: logData.children, people_served_guests: logData.guests, leftovers: logData.leftovers, cooked_at: new Date().toISOString() }]).select().single(); for (const d of deducted) { await supabase.from("pantry_transactions").insert([{ family_id: familyId, pantry_item_name: d.name, quantity_used: d.used, unit: d.unit, recipe_name: cookLogModal.recipe?.name || "Unknown", cook_log_id: cookLog?.id || null, transaction_date: new Date().toISOString().split("T")[0] }]); } await supabase.from("meal_plan").update({ cooked: true, cooked_at: new Date().toISOString() }).eq("id", cookLogModal.meal.id); for (const item of lowStockItems) { const { data: ex } = await supabase.from("shopping_list").select("id").eq("family_id", familyId).eq("item_name", item.name).eq("purchased", false); if (!ex?.length) { await supabase.from("shopping_list").insert([{ family_id: familyId, item_name: item.name, quantity_needed: item.qty <= 0 ? 1 : item.qty, unit: item.unit, category: item.category, purchased: false }]); } notifyPantryLow(familyId, { name: item.name, quantity: item.qty, unit: item.unit }); } await refreshPantry(); await refreshMeal(); showToast({ title: "🍽 Meal Logged!", body: logData.quantityMade + " " + logData.unitLabel + " cooked. " + deducted.length + " ingredients deducted.", icon: "🍽", color: "#6D9B6B" }); } catch(e) { console.error(e); } setCooking(null); }} onClose={()=>setCookLogModal(null)}/>
           </div>
         </div>
       )}
