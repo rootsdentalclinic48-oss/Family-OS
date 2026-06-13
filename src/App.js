@@ -4414,6 +4414,12 @@ const KitchenScreen = ({ familyId }) => {
                         style={{width:32,height:32,borderRadius:10,background:T.accentSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
                         <I n="edit" s={14} c={T.accent}/>
                       </div>
+                      {meal && !meal.cooked && (
+                        <div onClick={()=>removeRecipeFromSlot(meal.id)}
+                          style={{width:32,height:32,borderRadius:10,background:T.redSoft,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                          <I n="trash" s={14} c={T.red}/>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {recipe && (
