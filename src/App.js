@@ -4113,7 +4113,9 @@ const AutoPlanBar = ({ familyId, recipes, pantry, refreshMeal, weekDates }) => {
 // ─── HEALTH ANALYSIS TAB ─────────────────────────────────────────────────────
 const HealthAnalysisTab = ({ familyId }) => {
   const [member, setMember] = useState("Mayank");
+  const [healthTab, setHealthTab] = useState("today");
   const [logs, setLogs] = useState([]);
+  const [allLogs, setAllLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [insight, setInsight] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
@@ -4121,8 +4123,10 @@ const HealthAnalysisTab = ({ familyId }) => {
   useEffect(() => {
     const fetchLogs = async () => {
       setLoading(true);
-      const { data } = await supabase.from("nutrition_logs").select("*").eq("family_id", familyId).eq("meal_date", todayStr).order("logged_at", { ascending: true });
-      setLogs(data || []);
+      const { data: todayData } = await supabase.from("nutrition_logs").select("*").eq("family_id", familyId).eq("meal_date", todayStr).order("logged_at", { ascending: true });
+      const { data: allData } = await supabase.from("nutrition_logs").select("*").eq("family_id", familyId).order("meal_date", { ascending: true });
+      setLogs(todayData || []);
+      setAllLogs(allData || []);
       setLoading(false);
     };
     fetchLogs();
@@ -4130,6 +4134,17 @@ const HealthAnalysisTab = ({ familyId }) => {
   const memberLogs = logs.filter(l => l.member === member);
   const totals = memberLogs.reduce((a,l) => ({ calories: a.calories+(l.calories||0), protein: a.protein+(l.protein||0), carbs: a.carbs+(l.carbs||0), fat: a.fat+(l.fat||0), fiber: a.fiber+(l.fiber||0) }), { calories:0,protein:0,carbs:0,fat:0,fiber:0 });
   const targets = NUTRITION_TARGETS[member];
+
+  // Overall stats
+  const memberAllLogs = allLogs.filter(l => l.member === member);
+  const uniqueDays = [...new Set(memberAllLogs.map(l => l.meal_date))];
+  const totalDays = uniqueDays.length || 1;
+  const allTotals = memberAllLogs.reduce((a,l) => ({ calories: a.calories+(l.calories||0), protein: a.protein+(l.protein||0), carbs: a.carbs+(l.carbs||0), fat: a.fat+(l.fat||0), fiber: a.fiber+(l.fiber||0) }), { calories:0,protein:0,carbs:0,fat:0,fiber:0 });
+  const avgTotals = { calories: Math.round(allTotals.calories/totalDays), protein: Math.round(allTotals.protein/totalDays*10)/10, carbs: Math.round(allTotals.carbs/totalDays*10)/10, fat: Math.round(allTotals.fat/totalDays*10)/10, fiber: Math.round(allTotals.fiber/totalDays*10)/10 };
+  const foodFreq = memberAllLogs.reduce((a,l) => { a[l.food_description]=(a[l.food_description]||0)+1; return a; }, {});
+  const topFoods = Object.entries(foodFreq).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const firstDate = uniqueDays[0];
+  const totalMealsLogged = memberAllLogs.length;
   const getInsight = async () => {
     setLoadingInsight(true);
     try {
@@ -4160,7 +4175,7 @@ const HealthAnalysisTab = ({ familyId }) => {
   };
   return (
     <div>
-      <div style={{display:"flex",gap:8,marginBottom:16}}>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
         {MEMBERS.map(m=>(
           <div key={m} onClick={()=>setMember(m)} style={{flex:1,padding:"8px",borderRadius:12,border:`1px solid ${member===m?T.accent:T.border}`,background:member===m?T.accentSoft:"transparent",textAlign:"center",cursor:"pointer",transition:"all .18s"}}>
             <div style={{fontSize:18}}>{MEMBER_EMOJI[m]}</div>
@@ -4168,9 +4183,55 @@ const HealthAnalysisTab = ({ familyId }) => {
           </div>
         ))}
       </div>
-      {loading ? <div style={{textAlign:"center",padding:40,color:T.muted}}>Loading...</div>
-      : memberLogs.length === 0 ? <div className="empty"><div className="empty-icon">🥗</div><div className="empty-text">No meals logged today for {member}.</div></div>
-      : <>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
+        {["today","overall"].map(t=>(
+          <div key={t} onClick={()=>setHealthTab(t)} className={`chip ${healthTab===t?"on":""}`} style={{textTransform:"capitalize",flex:1,justifyContent:"center"}}>{t==="today"?"📅 Today":"📊 Overall"}</div>
+        ))}
+      </div>
+
+      {healthTab==="overall" && (
+        memberAllLogs.length===0
+        ? <div className="empty"><div className="empty-icon">📊</div><div className="empty-text">No meals logged yet.<br/>Start logging to see overall stats.</div></div>
+        : <div>
+            <div className="card" style={{padding:"16px",marginBottom:12}}>
+              <div style={{fontSize:12,fontWeight:700,color:T.muted,marginBottom:12,textTransform:"uppercase",letterSpacing:".06em"}}>All-Time Averages — {member}</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+                {[
+                  {l:"📅 Days Tracked",v:totalDays},
+                  {l:"🍽 Meals Logged",v:totalMealsLogged},
+                  {l:"🔥 Avg Calories",v:avgTotals.calories+" kcal"},
+                  {l:"💪 Avg Protein",v:avgTotals.protein+"g"},
+                  {l:"🍚 Avg Carbs",v:avgTotals.carbs+"g"},
+                  {l:"🌿 Avg Fiber",v:avgTotals.fiber+"g"},
+                ].map(s=>(
+                  <div key={s.l} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"10px 12px"}}>
+                    <div style={{fontSize:11,color:T.muted,fontWeight:600}}>{s.l}</div>
+                    <div style={{fontSize:16,fontWeight:700,color:T.text,marginTop:3}}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:12,color:T.muted,marginBottom:6,fontWeight:600}}>vs Daily Targets</div>
+              <NutrBar label="🔥 Calories" val={avgTotals.calories} target={targets.calories} color={T.accent}/>
+              <NutrBar label="💪 Protein" val={avgTotals.protein} target={targets.protein} color={T.blue}/>
+            </div>
+            {topFoods.length>0 && (
+              <div className="card" style={{padding:"14px 16px",marginBottom:12}}>
+                <div style={{fontSize:12,fontWeight:700,color:T.muted,marginBottom:10,textTransform:"uppercase",letterSpacing:".06em"}}>Most Eaten</div>
+                {topFoods.map(([food,count])=>(
+                  <div key={food} className="list-row" style={{minHeight:40}}>
+                    <div style={{fontSize:14,flex:1,fontWeight:500}}>{food}</div>
+                    <div style={{fontSize:13,color:T.accent,fontWeight:700}}>{count}x</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {firstDate && <div style={{fontSize:11,color:T.dim,textAlign:"center",marginBottom:12}}>Tracking since {firstDate}</div>}
+          </div>
+      )}
+
+      {healthTab==="today" && loading ? <div style={{textAlign:"center",padding:40,color:T.muted}}>Loading...</div>
+      : healthTab==="today" && memberLogs.length === 0 ? <div className="empty"><div className="empty-icon">🥗</div><div className="empty-text">No meals logged today for {member}.</div></div>
+      : healthTab==="today" && <>
         <div className="card" style={{padding:"16px",marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:700,color:T.muted,marginBottom:12,textTransform:"uppercase",letterSpacing:".06em"}}>Today — {member}</div>
           <NutrBar label="🔥 Calories" val={totals.calories} target={targets.calories} color={T.accent}/>
