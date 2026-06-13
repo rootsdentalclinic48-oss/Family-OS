@@ -751,6 +751,37 @@ const BellButton = ({ familyId }) => {
 };
 
 // ─── INLINE BALANCE WIDGET ────────────────────────────────────────────────────
+
+// ─── COUNTUP HOOK ─────────────────────────────────────────────────────────────
+function useCountUp(target, duration = 700) {
+  const [val, setVal] = useState(Math.abs(target));
+  const prev = useRef(Math.abs(target));
+  useEffect(() => {
+    const start = prev.current;
+    const end = Math.abs(target);
+    if (start === end) return;
+    const startTime = performance.now();
+    const tick = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setVal(Math.round(start + (end - start) * ease));
+      if (progress < 1) requestAnimationFrame(tick);
+      else { prev.current = end; setVal(end); }
+    };
+    requestAnimationFrame(tick);
+  }, [target, duration]);
+  return val;
+}
+
+const AnimatedBalance = ({ value }) => {
+  const animated = useCountUp(value, 700);
+  return (
+    <div style={{fontSize:28,fontWeight:900,letterSpacing:"-1px",marginTop:3,color:value>=0?"#6D9B6B":"#C4603A",fontFamily:"'JetBrains Mono',monospace"}}>
+      {value<0?"-":""}₹{animated.toLocaleString("en-IN")}
+    </div>
+  );
+};
+
 const InlineBalanceWidget = ({ txns, navigate, pendingTasks }) => {
   const bal = calcBalance(txns);
   return (
