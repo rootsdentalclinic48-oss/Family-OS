@@ -3432,7 +3432,11 @@ const markMealCooked = async (familyId, mealPlanRow, recipes, pantryRows) => {
 
 // ─── COOK LOG FORM ────────────────────────────────────────────────────────────
 const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose }) => {
-  const unitOptions = recipe?.meal_type === "breakfast"
+  const name_ = (recipe?.name || "").toLowerCase();
+  const isDrink = name_.includes("coffee") || name_.includes("tea") || name_.includes("chai") || name_.includes("juice") || name_.includes("shake") || name_.includes("smoothie") || name_.includes("milk") || name_.includes("lassi");
+  const unitOptions = isDrink
+    ? ["glasses","cups","ml","servings"]
+    : recipe?.meal_type === "breakfast"
     ? ["paranthas","idlis","dosas","chillas","portions","pieces","cups","plates"]
     : ["portions","bowls","servings","cups","plates","pieces"];
   const [qty, setQty] = useState(recipe?.servings || 3);
@@ -3472,7 +3476,11 @@ const CookLogForm = ({ meal, recipe, familyId, recipes, pantry, onDone, onClose 
 
 // ─── ENHANCED COOK LOG FORM WITH NUTRITION ───────────────────────────────────
 const NutritionCookLog = ({ meal, recipe, familyId, onDone }) => {
-  const unitOptions = recipe?.meal_type === "breakfast"
+  const name_ = (recipe?.name || "").toLowerCase();
+  const isDrink = name_.includes("coffee") || name_.includes("tea") || name_.includes("chai") || name_.includes("juice") || name_.includes("shake") || name_.includes("smoothie") || name_.includes("milk") || name_.includes("lassi");
+  const unitOptions = isDrink
+    ? ["glasses","cups","ml","servings"]
+    : recipe?.meal_type === "breakfast"
     ? ["paranthas","idlis","dosas","chillas","portions","pieces","cups","plates"]
     : ["portions","bowls","servings","cups","plates","pieces"];
   const [qty, setQty] = useState(recipe?.servings || 3);
@@ -3510,6 +3518,13 @@ const NutritionCookLog = ({ meal, recipe, familyId, onDone }) => {
           }]);
         }
       }
+      sendEmail("meal_logged", {
+        recipe_name: recipe?.name || meal.meal_type,
+        meal_type: meal.meal_type,
+        portions_mayank: portions.Mayank,
+        portions_simmi: portions.Simmi,
+        portions_veda: portions.Veda,
+      });
       onDone({ quantityMade: qty, unitLabel: unit, adults: 2, children: 1, guests: 0, leftovers: 0 });
     } catch(e) { console.error(e); }
     setLogging(false);
